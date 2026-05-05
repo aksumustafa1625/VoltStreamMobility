@@ -1,0 +1,14 @@
+# Screenshot folder
+
+Capture the demo here as PNG files. Suggested set:
+
+- `01-app-launcher.png`     — App Launcher with Resellers tab visible
+- `02-reseller-list.png`    — All Resellers list view (6 records seeded)
+- `03-reseller-detail.png`  — Single Reseller detail page (Steigenberger)
+- `04-opportunity-edit.png` — New Opportunity form, Channel Partner section
+- `05-opportunity-detail.png` — Opportunity with auto-populated Reseller lookup
+- `06-trigger-test-run.png` — Apex test results showing 63/63 passing
+- `07-soql-verify.png`      — `sf data query` output proving the trigger fired
+
+The README references this folder; once you drop the PNGs in,
+the markdown image tags below the demo section will render.

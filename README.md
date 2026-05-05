@@ -34,6 +34,32 @@ VoltStream Mobility GmbH (fictional) is a B2B supplier of EV charging hardware a
 
 ---
 
+## Demo
+
+> Screenshots live in [`docs/screenshots/`](docs/screenshots/) — drop PNGs there
+> matching the suggested filenames and they will render inline below.
+
+| | |
+|---|---|
+| ![App Launcher](docs/screenshots/01-app-launcher.png) | ![All Resellers list](docs/screenshots/02-reseller-list.png) |
+| App Launcher with the Resellers tab | All Resellers list view (6 seeded records) |
+| ![Reseller detail](docs/screenshots/03-reseller-detail.png) | ![Opportunity edit form](docs/screenshots/04-opportunity-edit.png) |
+| Reseller record detail | Opportunity edit — Channel Partner section |
+| ![Opportunity with auto-lookup](docs/screenshots/05-opportunity-detail.png) | ![Test run output](docs/screenshots/06-trigger-test-run.png) |
+| Opportunity with the Reseller lookup auto-populated by the trigger | Apex test run — 63/63 passing, 100% coverage |
+
+The fastest way to reproduce the demo end to end:
+
+```bash
+sf project deploy start --source-dir force-app --test-level RunLocalTests
+sf org assign permset --name VoltStream_Reseller_Access
+sf apex run --file scripts/apex/seedData.apex
+sf org open
+```
+
+Then open Sales > Resellers > "All Resellers" and any seeded Opportunity to
+see the auto-linked Reseller.
+
 ## Data model
 
 ```mermaid
