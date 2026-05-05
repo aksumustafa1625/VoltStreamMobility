@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Reseller_Email__c</fullName>
+    <description>Reseller company email entered by the sales rep when creating or updating the Opportunity. The OpportunityTriggerHandler matches this against Reseller__c.Company_Email__c (case-insensitive) and auto-populates the Reseller lookup. Leave blank for direct deals (no channel partner).</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Enter the channel partner's company email if this deal came through a reseller. Match is case-insensitive. Leave blank for direct deals.</inlineHelpText>
+    <label>Reseller Email</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>Email</type>
+</CustomField>
