@@ -84,15 +84,23 @@ public with sharing class OpportunityTriggerHelper {
             return;
         }
 
-        // Step 2: single bulkified SOQL — only ACTIVE resellers participate.
-        // Reseller emails are also normalized through StringUtils so the Map
-        // keys are consistent with the lookup keys we collected above.
+        // Step 2: single bulkified SOQL — only ACTIVE resellers whose email
+        // is in the candidate set. Two scalability wins over a fetch-all-active
+        // approach:
+        //   1. The Company_Email__c index (it's marked External ID) turns this
+        //      into an index seek even at hundreds of thousands of resellers.
+        //   2. The defensive LIMIT 50000 caps the worst case at the platform
+        //      ceiling — never silently fan out beyond that.
+        // Salesforce SOQL '=' and 'IN' on text fields are case-insensitive, so
+        // a stored 'Partner@x.de' still matches a normalized 'partner@x.de' in
+        // the candidate set.
         Map<String, Id> emailToResellerId = new Map<String, Id>();
         for (Reseller__c r : [
             SELECT Id, Company_Email__c
             FROM Reseller__c
-            WHERE Company_Email__c != null
+            WHERE Company_Email__c IN :emailsToMatch
             AND Active__c = true
+            LIMIT 50000
         ]) {
             emailToResellerId.put(StringUtils.normalizeEmail(r.Company_Email__c), r.Id);
         }
