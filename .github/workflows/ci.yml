@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 # Cancel in-progress runs on the same branch when a newer commit lands.
-# Prevents the 'Cancelled after 15m' artifact when several commits push
+# Prevents the 'Cancelled after Nm' artifact when several commits push
 # back-to-back (the older run is correctly superseded instead of racing).
 concurrency:
   group: ci-${{ github.ref }}
@@ -60,12 +60,36 @@ jobs:
             --rulesets pmd-ruleset.xml \
             --format text \
             --threads 4 || true
-        # `--no-fail-on-violation` keeps CI green while we tune the ruleset;
-        # remove the flag once the codebase is clean to make violations a hard
-        # CI failure.
 
   # ---------------------------------------------------------------------------
-  # Deploy + test job: only runs when the SFDX_AUTH_URL secret is configured.
+  # Preflight: tiny job that checks whether the SFDX_AUTH_URL secret is
+  # configured and exposes the answer as a job output. Keeps the (heavy)
+  # scratch-org-tests job out of the queue entirely when there is no secret,
+  # so the run shows 'Skipped' cleanly at the job level instead of running a
+  # runner that no-ops every step for 15 minutes and then gets cancelled.
+  # ---------------------------------------------------------------------------
+  preflight:
+    name: Check deploy prerequisites
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    outputs:
+      can-deploy: ${{ steps.check.outputs.value }}
+    steps:
+      - name: Check for SFDX_AUTH_URL
+        id: check
+        env:
+          AUTH_URL: ${{ secrets.SFDX_AUTH_URL }}
+        run: |
+          if [ -z "$AUTH_URL" ]; then
+            echo "::notice::SFDX_AUTH_URL secret is not configured. Scratch-org tests will be skipped — see CONTRIBUTING.md for one-time setup."
+            echo "value=false" >> $GITHUB_OUTPUT
+          else
+            echo "value=true" >> $GITHUB_OUTPUT
+          fi
+
+  # ---------------------------------------------------------------------------
+  # Deploy + test job: only runs when preflight reports can-deploy=true,
+  # which only happens if the SFDX_AUTH_URL secret has been configured.
   #
   # Authorizes a DevHub via the secret, spins up a 1-day scratch org, deploys
   # the project, assigns the permission set, and runs the full test suite with
@@ -81,41 +105,30 @@ jobs:
   scratch-org-tests:
     name: Scratch org deploy + test
     runs-on: ubuntu-latest
-    needs: lint
-    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+    needs: [lint, preflight]
+    if: needs.preflight.outputs.can-deploy == 'true'
+    timeout-minutes: 30
     steps:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Skip if SFDX_AUTH_URL secret is not configured
-        id: gate
-        run: |
-          if [ -z "${{ secrets.SFDX_AUTH_URL }}" ]; then
-            echo "Skipping scratch-org tests: SFDX_AUTH_URL secret is not set."
-            echo "skip=true" >> $GITHUB_OUTPUT
-          else
-            echo "skip=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Set up Node.js
-        if: steps.gate.outputs.skip != 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Install Salesforce CLI
-        if: steps.gate.outputs.skip != 'true'
         run: npm install -g @salesforce/cli
 
       - name: Authorize DevHub
-        if: steps.gate.outputs.skip != 'true'
+        env:
+          AUTH_URL: ${{ secrets.SFDX_AUTH_URL }}
         run: |
-          echo "${{ secrets.SFDX_AUTH_URL }}" > authurl.txt
+          echo "$AUTH_URL" > authurl.txt
           sf org login sfdx-url --sfdx-url-file authurl.txt --alias DevHub --set-default-dev-hub
           rm authurl.txt
 
       - name: Create scratch org
-        if: steps.gate.outputs.skip != 'true'
         run: |
           sf org create scratch \
             --definition-file config/project-scratch-def.json \
@@ -124,15 +137,12 @@ jobs:
             --set-default
 
       - name: Deploy source
-        if: steps.gate.outputs.skip != 'true'
         run: sf project deploy start --source-dir force-app
 
       - name: Assign permission set
-        if: steps.gate.outputs.skip != 'true'
         run: sf org assign permset --name VoltStream_Reseller_Access
 
       - name: Run Apex tests with coverage
-        if: steps.gate.outputs.skip != 'true'
         run: |
           sf apex run test \
             --test-level RunLocalTests \
@@ -142,5 +152,5 @@ jobs:
             --wait 10
 
       - name: Delete scratch org
-        if: always() && steps.gate.outputs.skip != 'true'
+        if: always()
         run: sf org delete scratch --no-prompt --target-org VoltStreamCI || true
