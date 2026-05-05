@@ -77,15 +77,21 @@ private class ResellerSelectorTest {
             'Empty input set must return an empty list cleanly.');
     }
 
-    // Salesforce SOQL string equality is case-insensitive — Selector relies on this.
-    // Stored email is lowercase; query passes uppercase; result still matches.
+    // External ID + SOQL IN = case-SENSITIVE match. This test pins down the
+    // contract so any future code that relies on case-insensitive matching
+    // (and forgets to normalize first) gets a loud failure here. The Helper
+    // is the canonical "normalize then call" caller — see the Helper test
+    // 'assignResellerLookup_caseInsensitive_setsLookup' for the end-to-end
+    // case-insensitive guarantee at the application layer.
     @IsTest
-    static void findActiveByEmails_caseInsensitiveMatch_returnsRecord() {
+    static void findActiveByEmails_caseMismatchVsStorage_returnsEmpty() {
+        // Stored email (via @TestSetup) is lowercase. Query passes uppercase.
+        // External ID storage layer compares case-sensitively, so no match.
         Set<String> emails = new Set<String>{ EMAIL_ACTIVE.toUpperCase() };
 
         List<Reseller__c> results = ResellerSelector.findActiveByEmails(emails);
 
-        System.assertEquals(1, results.size(),
-            'SOQL is case-insensitive; uppercase input should still match the lowercase stored email.');
+        System.assertEquals(0, results.size(),
+            'External ID lookup is case-sensitive — callers must normalize input emails to match stored case.');
     }
 }

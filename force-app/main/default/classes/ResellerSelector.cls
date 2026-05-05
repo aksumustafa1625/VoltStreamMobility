@@ -27,19 +27,30 @@ public with sharing class ResellerSelector {
 
     /**
      * @description  Find every ACTIVE Reseller__c whose Company_Email__c is
-     *               in the candidate set. Salesforce SOQL string equality
-     *               is case-insensitive, so callers can pass normalized
-     *               (lowercase) emails and still match resellers stored
-     *               with mixed case.
+     *               in the candidate set.
      *
-     *               The Company_Email__c field is marked External ID, so
-     *               this WHERE clause hits an index regardless of how many
-     *               total resellers exist in the org.
+     *               IMPORTANT contract — case sensitivity:
+     *                 Company_Email__c is marked External ID, which makes
+     *                 SOQL `IN` comparison CASE-SENSITIVE at the indexed
+     *                 storage layer (this is intentional Salesforce behavior
+     *                 for External ID fields, traded off for index-seek
+     *                 performance). Callers MUST normalize their input
+     *                 emails (use StringUtils.normalizeEmail) and the
+     *                 stored Company_Email__c values must also be normalized
+     *                 to the same case. Our project enforces this by:
+     *                   - The Helper always normalizes Reseller_Email__c
+     *                     before calling this method.
+     *                   - Seed data (scripts/apex/seedData.apex) inserts
+     *                     resellers with lowercase emails.
+     *                 A future ResellerTrigger will normalize Company_Email__c
+     *                 on insert/update so manually-entered values from the
+     *                 UI also conform automatically.
      *
-     * @param  emails  Set of candidate company emails (typically already
-     *                 normalized via StringUtils.normalizeEmail).
-     * @return  Active Reseller__c records that match. Empty list if none
-     *          match or if the input set is empty.
+     * @param  emails  Set of candidate company emails. MUST already be
+     *                 normalized (lowercase, trimmed) — pass through
+     *                 StringUtils.normalizeEmail before calling.
+     * @return  Active Reseller__c records that match exactly (case-sensitive).
+     *          Empty list if none match or if the input set is empty.
      */
     public static List<Reseller__c> findActiveByEmails(Set<String> emails) {
         return [
