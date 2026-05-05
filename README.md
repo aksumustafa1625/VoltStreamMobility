@@ -5,7 +5,7 @@
 [![Trigger framework](https://img.shields.io/badge/trigger--framework-Kevin%20O%27Hara-blue)](https://github.com/kevinohara80/sfdc-trigger-framework)
 [![API version](https://img.shields.io/badge/API-65.0-orange)]()
 [![Test coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)]()
-[![Tests](https://img.shields.io/badge/tests-24%2F24%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-33%2F33%20passing-brightgreen)]()
 
 ---
 
@@ -118,7 +118,8 @@ The Helper runs **one bulkified SOQL** per batch (handles 200-record inserts wit
 | `OpportunityTrigger` | Route | One-line trigger; delegates to handler | 100% |
 | `OpportunityTriggerHandler` | Dispatch | Thin dispatcher; routes contexts to helper methods | 100% |
 | `OpportunityTriggerHelper` | Logic | Stateless matching algorithm, bulkified, case-insensitive | 100% |
-| `OpportunityTriggerHandlerTest` | Tests | 10 methods covering every branch + bulk + bypass | — |
+| `OpportunityTriggerHandlerTest` | Integration tests | 10 methods — DML-based, prove the trigger fires end-to-end | — |
+| `OpportunityTriggerHelperTest` | Unit tests | 8 methods — direct static-method calls, no Opportunity DML | — |
 
 ### UI
 
@@ -150,7 +151,8 @@ force-app/main/default/
 │   ├── TriggerHandler_Test.cls       (framework tests)
 │   ├── OpportunityTriggerHandler.cls (dispatcher)
 │   ├── OpportunityTriggerHelper.cls  (matching logic)
-│   └── OpportunityTriggerHandlerTest.cls
+│   ├── OpportunityTriggerHandlerTest.cls  (integration tests)
+│   └── OpportunityTriggerHelperTest.cls   (unit tests)
 ├── triggers/
 │   └── OpportunityTrigger.trigger
 ├── objects/
@@ -225,9 +227,14 @@ Run the Apex test suite locally with code coverage:
 sf apex run test --test-level RunLocalTests --code-coverage --result-format human --synchronous
 ```
 
-Expected: **24 tests pass, 100% coverage on custom code, 0 failures.**
+Expected: **33 tests pass, 100% coverage on custom code, 0 failures.**
 
-The `OpportunityTriggerHandlerTest` covers every branch of the matching logic:
+The suite is **layered**:
+
+- **`OpportunityTriggerHelperTest`** — unit tests that call the Helper's static methods directly, without inserting any Opportunities. Fast, focused, and prove the matching algorithm is correct in isolation.
+- **`OpportunityTriggerHandlerTest`** — integration tests that go through DML so the trigger actually fires. Prove the Trigger → Handler → Helper chain wires end-to-end in a real transaction.
+
+`OpportunityTriggerHandlerTest` covers every branch of the matching logic:
 
 - Email match (lowercase) → lookup populated
 - Case-insensitive match (`PARTNER@X.DE` matches `partner@x.de`)
@@ -252,6 +259,7 @@ A few non-obvious choices, called out so reviewers don't have to guess:
 - **No-match is silent.** A missing reseller must never block an Opportunity from saving — channel attribution is a nice-to-have, not a gating field.
 - **Update path is optimised.** On update, the trigger only re-queries when `Reseller_Email__c` actually changed (using `Trigger.oldMap`), so editing unrelated fields adds zero SOQL.
 - **Tier picklist (Bronze/Silver/Gold/Platinum) is intentionally deferred** to a future phase to keep the first iteration focused on the matching mechanic.
+- **Every Apex class ships with its own `*Test.cls`.** No untested classes land on `main`. Helpers get unit tests (no DML); Triggers and Handlers get integration tests (via DML).
 
 ---
 
