@@ -1,21 +1,29 @@
 /**
- * VoltStream Mobility — demo seed script.
+ * @description  VoltStream Mobility demo seed script. Wipes prior demo
+ *               records and re-seeds a clean baseline of 6 Resellers and
+ *               10 Opportunities so the OpportunityTrigger can be observed
+ *               in a real org transaction (matched, no-match, inactive,
+ *               direct-deal, and case-insensitive scenarios).
  *
- * Resets demo data in the connected org and recreates a clean baseline:
- *   - 6 Reseller__c records, one per channel-partner segment (one inactive)
- *   - 10 Opportunity records spanning multiple stages and reseller emails,
- *     including matched, unmatched, inactive-reseller, and direct-deal cases
+ *               IDEMPOTENT: every run first deletes any existing demo
+ *               records (Opportunities with the '[Demo]' name prefix and
+ *               Resellers matching the seeded email set), so it is safe
+ *               to run repeatedly during testing or right before recording
+ *               the portfolio demo.
  *
- * The script is IDEMPOTENT: every run first deletes any existing demo
- * records (those whose Name starts with the [Demo] prefix on Opportunity
- * or whose email matches the seeded reseller emails), so it is safe to
- * run repeatedly during testing or right before the portfolio demo video.
+ *               Run from project root:
+ *                 sf apex run --file scripts/apex/seedData.apex
  *
- * Run from project root with:
- *   sf apex run --file scripts/apex/seedData.apex
+ *               After it finishes, query Opportunity to see the trigger
+ *               in action:
+ *                 sf data query --query "SELECT Name, Reseller_Email__c, \
+ *                                               Reseller__r.Name \
+ *                                        FROM Opportunity \
+ *                                        WHERE Name LIKE '[Demo]%'"
  *
- * After it finishes, query Opportunity to see the trigger in action:
- *   sf data query --query "SELECT Name, Reseller_Email__c, Reseller__r.Name FROM Opportunity WHERE Name LIKE '[Demo]%'"
+ * @group        VoltStream Channel Partner Management — Scripts
+ * @author       Mustafa Aksu
+ * @date         2026-05-05
  */
 
 // ============================================================
