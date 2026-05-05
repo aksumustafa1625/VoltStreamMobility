@@ -6,6 +6,5 @@
     <inlineHelpText>Enter the channel partner's company email if this deal came through a reseller. Match is case-insensitive. Leave blank for direct deals.</inlineHelpText>
     <label>Reseller Email</label>
     <required>false</required>
-    <trackHistory>true</trackHistory>
     <type>Email</type>
 </CustomField>
