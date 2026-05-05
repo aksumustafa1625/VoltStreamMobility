@@ -4,19 +4,21 @@
  *               this class so that:
  *                 1. The Handler stays a thin dispatcher (one method per
  *                    trigger context).
- *                 2. The logic is unit-testable WITHOUT a trigger context
- *                    (tests can call these statics directly with synthetic
- *                    lists, no DML required).
+ *                 2. The logic is unit-testable WITHOUT a trigger context.
  *                 3. Multiple Handler methods (beforeInsert + beforeUpdate)
  *                    share the same matching code path without duplication.
  *
- *               Email normalization is delegated to StringUtils so that the
- *               case-insensitive matching contract lives in ONE place — when
- *               normalization rules change (e.g. strip plus-addressing),
- *               only StringUtils changes.
+ *               This Helper holds NO SOQL — every Reseller__c query goes
+ *               through ResellerSelector. Email normalization goes through
+ *               StringUtils. Both choices keep this class focused on the
+ *               matching algorithm itself: collect candidate records,
+ *               ask for the matching resellers, assign the lookup.
  *
- *               Three-layer Kevin O'Hara pattern:
- *                 Trigger -> Handler (extends TriggerHandler) -> Helper (this)
+ *               Five-layer Kevin O'Hara pattern as it stands today:
+ *                 Trigger -> Handler (dispatch) -> Helper (this — algorithm)
+ *                                                        |
+ *                                              ResellerSelector (SOQL)
+ *                                              StringUtils (normalization)
  *
  * @group        VoltStream Channel Partner Management
  * @author       Mustafa Aksu
@@ -27,9 +29,9 @@ public with sharing class OpportunityTriggerHelper {
     /**
      * @description  Look up the matching Reseller__c for each Opportunity by
      *               company email (case-insensitive via StringUtils, active
-     *               resellers only) and populate the Reseller__c lookup
-     *               field. Bulkified — one SOQL per call regardless of
-     *               batch size.
+     *               resellers only via ResellerSelector) and populate the
+     *               Reseller__c lookup field. Bulkified — at most one SOQL
+     *               per call regardless of batch size.
      *
      *               Behavior:
      *                 - On insert (oldMap == null): process every record with
@@ -42,7 +44,7 @@ public with sharing class OpportunityTriggerHelper {
      *                 - No match found -> leave the lookup null silently
      *                   (never block the save).
      *                 - Inactive resellers (Active__c = false) are excluded
-     *                   from matching at the SOQL level.
+     *                   from matching by ResellerSelector.
      *
      * @param  opps    Trigger.new list of Opportunity records (mutated
      *                 in-place — the Reseller__c field is set on records
@@ -50,7 +52,7 @@ public with sharing class OpportunityTriggerHelper {
      * @param  oldMap  Trigger.oldMap on update; pass null on insert.
      */
     public static void assignResellerLookup(List<Opportunity> opps, Map<Id, Opportunity> oldMap) {
-        // Step 1: collect normalized emails for records that need matching.
+        // Step 1: figure out which records need a fresh match and what emails to query.
         Set<String> emailsToMatch = new Set<String>();
         List<Opportunity> oppsNeedingMatch = new List<Opportunity>();
 
@@ -79,29 +81,15 @@ public with sharing class OpportunityTriggerHelper {
             oppsNeedingMatch.add(opp);
         }
 
-        // Short-circuit when no records need a SOQL — protects governor limits on no-op updates.
+        // Short-circuit: nothing to query, nothing to assign.
         if (emailsToMatch.isEmpty()) {
             return;
         }
 
-        // Step 2: single bulkified SOQL — only ACTIVE resellers whose email
-        // is in the candidate set. Two scalability wins over a fetch-all-active
-        // approach:
-        //   1. The Company_Email__c index (it's marked External ID) turns this
-        //      into an index seek even at hundreds of thousands of resellers.
-        //   2. The defensive LIMIT 50000 caps the worst case at the platform
-        //      ceiling — never silently fan out beyond that.
-        // Salesforce SOQL '=' and 'IN' on text fields are case-insensitive, so
-        // a stored 'Partner@x.de' still matches a normalized 'partner@x.de' in
-        // the candidate set.
+        // Step 2: ask the Selector for the matching active resellers, then
+        // build a lookup map keyed by normalized email.
         Map<String, Id> emailToResellerId = new Map<String, Id>();
-        for (Reseller__c r : [
-            SELECT Id, Company_Email__c
-            FROM Reseller__c
-            WHERE Company_Email__c IN :emailsToMatch
-            AND Active__c = true
-            LIMIT 50000
-        ]) {
+        for (Reseller__c r : ResellerSelector.findActiveByEmails(emailsToMatch)) {
             emailToResellerId.put(StringUtils.normalizeEmail(r.Company_Email__c), r.Id);
         }
 
