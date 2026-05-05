@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Company_Email__c</fullName>
+    <description>Primary contact email for the reseller company. Used as the matching key by OpportunityTriggerHandler to auto-populate the Reseller lookup on Opportunities.</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Enter the reseller's primary company email. This is the matching key for incoming Opportunities.</inlineHelpText>
+    <label>Company Email</label>
+    <required>true</required>
+    <trackHistory>true</trackHistory>
+    <type>Email</type>
+    <unique>true</unique>
+</CustomField>
