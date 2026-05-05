@@ -5,6 +5,11 @@
  *               transactions. This complements OpportunityTriggerHelperTest,
  *               which exercises the algorithm in isolation without DML.
  *
+ *               Test data construction is delegated to TestDataFactory so
+ *               that schema changes (e.g. adding a required field to
+ *               Reseller__c) only need to update the factory — never each
+ *               test method.
+ *
  *               Each test method isolates one scenario from the channel-partner
  *               matching flow: insert paths, update paths, bulk behavior, and
  *               the TriggerHandler bypass API inherited from Kevin O'Hara's
@@ -28,51 +33,16 @@ private class OpportunityTriggerHandlerTest {
     @TestSetup
     static void setupResellers() {
         insert new List<Reseller__c>{
-            new Reseller__c(
-                Name = 'Steigenberger Hotels',
-                Company_Email__c = EMAIL_HOTEL,
-                Reseller_Type__c = 'Hotel Chain',
-                Country__c = 'Germany',
-                Active__c = true
-            ),
-            new Reseller__c(
-                Name = 'Mercedes-Benz Berlin',
-                Company_Email__c = EMAIL_AUTO,
-                Reseller_Type__c = 'Auto Dealer',
-                Country__c = 'Germany',
-                Active__c = true
-            ),
-            new Reseller__c(
-                Name = 'Churned Partner GmbH',
-                Company_Email__c = EMAIL_INACTIVE,
-                Reseller_Type__c = 'Electrical Contractor',
-                Country__c = 'Germany',
-                Active__c = false
-            )
+            TestDataFactory.buildReseller('Steigenberger Hotels', EMAIL_HOTEL, 'Hotel Chain'),
+            TestDataFactory.buildReseller('Mercedes-Benz Berlin', EMAIL_AUTO, 'Auto Dealer'),
+            TestDataFactory.buildInactiveReseller('Churned Partner GmbH', EMAIL_INACTIVE, 'Electrical Contractor')
         };
-    }
-
-    /**
-     * @description  Build an Opportunity with the minimum required fields plus
-     *               the reseller email under test. Centralised so individual
-     *               test methods stay focused on assertions.
-     * @param  name           Opportunity Name (visible in test log on failure).
-     * @param  resellerEmail  Reseller_Email__c value the trigger will act on.
-     * @return  Unsaved Opportunity ready for DML.
-     */
-    private static Opportunity buildOpp(String name, String resellerEmail) {
-        return new Opportunity(
-            Name = name,
-            StageName = 'Prospecting',
-            CloseDate = Date.today().addDays(30),
-            Reseller_Email__c = resellerEmail
-        );
     }
 
     // Insert with a matching email -> the Reseller lookup must be populated.
     @IsTest
     static void insert_emailMatches_populatesLookup() {
-        Opportunity opp = buildOpp('Hotel deal', EMAIL_HOTEL);
+        Opportunity opp = TestDataFactory.buildOpportunity('Hotel deal', EMAIL_HOTEL);
 
         Test.startTest();
         insert opp;
@@ -87,7 +57,7 @@ private class OpportunityTriggerHandlerTest {
     // Uppercase input must match a lowercase reseller email — case-insensitive contract.
     @IsTest
     static void insert_caseInsensitiveMatch_populatesLookup() {
-        Opportunity opp = buildOpp('Case test', 'PARTNER@STEIGENBERGER.DE');
+        Opportunity opp = TestDataFactory.buildOpportunity('Case test', 'PARTNER@STEIGENBERGER.DE');
 
         Test.startTest();
         insert opp;
@@ -101,7 +71,7 @@ private class OpportunityTriggerHandlerTest {
     // Inactive resellers must be excluded from matching at SOQL level.
     @IsTest
     static void insert_resellerInactive_lookupStaysNull() {
-        Opportunity opp = buildOpp('Inactive reseller deal', EMAIL_INACTIVE);
+        Opportunity opp = TestDataFactory.buildOpportunity('Inactive reseller deal', EMAIL_INACTIVE);
 
         Test.startTest();
         insert opp;
@@ -115,7 +85,7 @@ private class OpportunityTriggerHandlerTest {
     // Unknown email -> silent null. Never throw an exception that blocks the save.
     @IsTest
     static void insert_noMatch_lookupStaysNull() {
-        Opportunity opp = buildOpp('Unknown reseller', 'nobody@unknown-co.de');
+        Opportunity opp = TestDataFactory.buildOpportunity('Unknown reseller', 'nobody@unknown-co.de');
 
         Test.startTest();
         insert opp;
@@ -129,7 +99,7 @@ private class OpportunityTriggerHandlerTest {
     // Direct deal (no reseller email) must save cleanly with no lookup assignment.
     @IsTest
     static void insert_nullEmail_skipsAndSavesCleanly() {
-        Opportunity opp = buildOpp('Direct deal', null);
+        Opportunity opp = TestDataFactory.buildOpportunity('Direct deal', null);
 
         Test.startTest();
         insert opp;
@@ -146,7 +116,7 @@ private class OpportunityTriggerHandlerTest {
         List<Opportunity> opps = new List<Opportunity>();
         for (Integer i = 0; i < 200; i++) {
             String email = (Math.mod(i, 2) == 0) ? EMAIL_HOTEL : EMAIL_AUTO;
-            opps.add(buildOpp('Bulk deal ' + i, email));
+            opps.add(TestDataFactory.buildOpportunity('Bulk deal ' + i, email));
         }
 
         Test.startTest();
@@ -166,7 +136,7 @@ private class OpportunityTriggerHandlerTest {
     // Update with changed email -> trigger re-runs the match against the new value.
     @IsTest
     static void update_emailChanged_reMatchesToNewReseller() {
-        Opportunity opp = buildOpp('Switching partner', EMAIL_HOTEL);
+        Opportunity opp = TestDataFactory.buildOpportunity('Switching partner', EMAIL_HOTEL);
         insert opp;
         Reseller__c hotel = [SELECT Id FROM Reseller__c WHERE Company_Email__c = :EMAIL_HOTEL];
         System.assertEquals(hotel.Id,
@@ -188,7 +158,7 @@ private class OpportunityTriggerHandlerTest {
     // Update that clears the email must also clear the Reseller lookup (data integrity).
     @IsTest
     static void update_emailCleared_clearsLookup() {
-        Opportunity opp = buildOpp('To be cleared', EMAIL_HOTEL);
+        Opportunity opp = TestDataFactory.buildOpportunity('To be cleared', EMAIL_HOTEL);
         insert opp;
         System.assertNotEquals(null,
             [SELECT Reseller__c FROM Opportunity WHERE Id = :opp.Id].Reseller__c);
@@ -207,7 +177,7 @@ private class OpportunityTriggerHandlerTest {
     // Update that doesn't touch the email must leave the lookup unchanged.
     @IsTest
     static void update_emailUnchanged_lookupStaysSame() {
-        Opportunity opp = buildOpp('Stable lookup test', EMAIL_HOTEL);
+        Opportunity opp = TestDataFactory.buildOpportunity('Stable lookup test', EMAIL_HOTEL);
         insert opp;
         Id originalLookup = [SELECT Reseller__c FROM Opportunity WHERE Id = :opp.Id].Reseller__c;
         System.assertNotEquals(null, originalLookup, 'Pre-update lookup should be set.');
@@ -230,7 +200,7 @@ private class OpportunityTriggerHandlerTest {
     static void bypass_handlerSkipped_lookupNotPopulated() {
         TriggerHandler.bypass('OpportunityTriggerHandler');
 
-        Opportunity opp = buildOpp('Bypassed deal', EMAIL_HOTEL);
+        Opportunity opp = TestDataFactory.buildOpportunity('Bypassed deal', EMAIL_HOTEL);
 
         Test.startTest();
         insert opp;

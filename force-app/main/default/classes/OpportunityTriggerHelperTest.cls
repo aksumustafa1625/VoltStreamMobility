@@ -1,11 +1,11 @@
 /**
  * @description  Direct unit tests for OpportunityTriggerHelper. These tests
  *               call the static Helper methods in isolation — Opportunity
- *               records are constructed in memory and passed in as method
- *               arguments rather than inserted via DML. That means the
- *               Opportunity trigger does NOT fire during these tests; we are
- *               exercising the algorithm itself, not the
- *               Trigger -> Handler -> Helper plumbing.
+ *               records are constructed in memory via TestDataFactory and
+ *               passed in as method arguments rather than inserted via DML.
+ *               That means the Opportunity trigger does NOT fire during
+ *               these tests; we are exercising the algorithm itself, not
+ *               the Trigger -> Handler -> Helper plumbing.
  *
  *               Why a Helper test class on top of OpportunityTriggerHandlerTest:
  *                 - Faster feedback when the algorithm changes (no Opportunity
@@ -41,51 +41,17 @@ private class OpportunityTriggerHelperTest {
     @TestSetup
     static void setupResellers() {
         insert new List<Reseller__c>{
-            new Reseller__c(
-                Name = 'Helper Test Hotel',
-                Company_Email__c = EMAIL_HOTEL,
-                Reseller_Type__c = 'Hotel Chain',
-                Country__c = 'Germany',
-                Active__c = true
-            ),
-            new Reseller__c(
-                Name = 'Helper Test Auto',
-                Company_Email__c = EMAIL_AUTO,
-                Reseller_Type__c = 'Auto Dealer',
-                Country__c = 'Germany',
-                Active__c = true
-            ),
-            new Reseller__c(
-                Name = 'Helper Test Inactive',
-                Company_Email__c = EMAIL_INACTIVE,
-                Reseller_Type__c = 'Energy Company',
-                Country__c = 'Germany',
-                Active__c = false
-            )
+            TestDataFactory.buildReseller('Helper Test Hotel', EMAIL_HOTEL, 'Hotel Chain'),
+            TestDataFactory.buildReseller('Helper Test Auto', EMAIL_AUTO, 'Auto Dealer'),
+            TestDataFactory.buildInactiveReseller('Helper Test Inactive', EMAIL_INACTIVE, 'Energy Company')
         };
-    }
-
-    /**
-     * @description  Build an UNSAVED Opportunity for direct Helper invocation.
-     *               The trigger does not fire because we never insert.
-     * @param  name           Opportunity Name (helps identify failures in logs).
-     * @param  resellerEmail  Reseller_Email__c the Helper will act on.
-     * @return  Unsaved in-memory Opportunity record.
-     */
-    private static Opportunity buildOpp(String name, String resellerEmail) {
-        return new Opportunity(
-            Name = name,
-            StageName = 'Prospecting',
-            CloseDate = Date.today().addDays(30),
-            Reseller_Email__c = resellerEmail
-        );
     }
 
     // Direct call with a matching email -> Helper sets the lookup in memory.
     @IsTest
     static void assignResellerLookup_emailMatch_setsLookup() {
         List<Opportunity> opps = new List<Opportunity>{
-            buildOpp('Direct call match', EMAIL_HOTEL)
+            TestDataFactory.buildOpportunity('Direct call match', EMAIL_HOTEL)
         };
 
         Test.startTest();
@@ -101,7 +67,7 @@ private class OpportunityTriggerHelperTest {
     @IsTest
     static void assignResellerLookup_caseInsensitive_setsLookup() {
         List<Opportunity> opps = new List<Opportunity>{
-            buildOpp('Uppercase email', 'PARTNER@HELPER-TEST-HOTEL.DE')
+            TestDataFactory.buildOpportunity('Uppercase email', 'PARTNER@HELPER-TEST-HOTEL.DE')
         };
 
         OpportunityTriggerHelper.assignResellerLookup(opps, null);
@@ -114,7 +80,7 @@ private class OpportunityTriggerHelperTest {
     @IsTest
     static void assignResellerLookup_inactiveReseller_lookupStaysNull() {
         List<Opportunity> opps = new List<Opportunity>{
-            buildOpp('Inactive partner', EMAIL_INACTIVE)
+            TestDataFactory.buildOpportunity('Inactive partner', EMAIL_INACTIVE)
         };
 
         OpportunityTriggerHelper.assignResellerLookup(opps, null);
@@ -127,7 +93,7 @@ private class OpportunityTriggerHelperTest {
     @IsTest
     static void assignResellerLookup_unknownEmail_lookupStaysNull() {
         List<Opportunity> opps = new List<Opportunity>{
-            buildOpp('Unknown reseller', 'nobody@nowhere-' + System.now().getTime() + '.de')
+            TestDataFactory.buildOpportunity('Unknown reseller', 'nobody@nowhere-' + System.now().getTime() + '.de')
         };
 
         OpportunityTriggerHelper.assignResellerLookup(opps, null);
@@ -140,7 +106,7 @@ private class OpportunityTriggerHelperTest {
     @IsTest
     static void assignResellerLookup_nullEmail_skipsCleanly() {
         List<Opportunity> opps = new List<Opportunity>{
-            buildOpp('Direct deal', null)
+            TestDataFactory.buildOpportunity('Direct deal', null)
         };
 
         OpportunityTriggerHelper.assignResellerLookup(opps, null);
@@ -168,9 +134,9 @@ private class OpportunityTriggerHelperTest {
     @IsTest
     static void assignResellerLookup_mixedBatch_matchesEachIndependently() {
         List<Opportunity> opps = new List<Opportunity>{
-            buildOpp('Match',     EMAIL_HOTEL),
-            buildOpp('No match',  'unknown@nowhere.de'),
-            buildOpp('Direct',    null)
+            TestDataFactory.buildOpportunity('Match',     EMAIL_HOTEL),
+            TestDataFactory.buildOpportunity('No match',  'unknown@nowhere.de'),
+            TestDataFactory.buildOpportunity('Direct',    null)
         };
 
         OpportunityTriggerHelper.assignResellerLookup(opps, null);
@@ -185,7 +151,7 @@ private class OpportunityTriggerHelperTest {
     static void assignResellerLookup_bulkInput_singleSoql() {
         List<Opportunity> opps = new List<Opportunity>();
         for (Integer i = 0; i < 200; i++) {
-            opps.add(buildOpp('Bulk ' + i, Math.mod(i, 2) == 0 ? EMAIL_HOTEL : EMAIL_AUTO));
+            opps.add(TestDataFactory.buildOpportunity('Bulk ' + i, Math.mod(i, 2) == 0 ? EMAIL_HOTEL : EMAIL_AUTO));
         }
 
         Integer queriesBefore = Limits.getQueries();
