@@ -36,6 +36,8 @@ VoltStream Mobility GmbH (fictional) is a B2B supplier of EV charging hardware a
 
 ## Architecture
 
+The project follows the **four-layer Kevin O'Hara enterprise pattern**: each class has exactly one responsibility, so the trigger file stays trivially small, the handler is a pure dispatcher, and the matching logic lives in a stateless helper that's testable in isolation.
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                     Opportunity (standard)                      │
@@ -49,25 +51,41 @@ VoltStream Mobility GmbH (fictional) is a B2B supplier of EV charging hardware a
                 │  insert / update           │  matched Id
                 ▼                            │
 ┌─────────────────────────────────────────────────────────────────┐
-│   OpportunityTrigger (1 line)                                   │
+│   OpportunityTrigger (3 lines — ROUTE)                          │
 │      new OpportunityTriggerHandler().run();                     │
 └────────────────────────────┬────────────────────────────────────┘
-                             │ delegates via dispatch
+                             │ delegates
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│   OpportunityTriggerHandler extends TriggerHandler              │
-│   - beforeInsert():  bulk-match emails to Reseller__c           │
-│   - beforeUpdate():  re-match only when email changed           │
+│   OpportunityTriggerHandler extends TriggerHandler (DISPATCH)   │
+│   - beforeInsert()  ──► OpportunityTriggerHelper.assign...      │
+│   - beforeUpdate()  ──► OpportunityTriggerHelper.assign...      │
+│   No business logic here; only context-to-helper routing.       │
 └────────────────────────────┬────────────────────────────────────┘
-                             │ extends
+                             │ calls static methods
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│   TriggerHandler (Kevin O'Hara framework)                       │
-│   - context dispatch, recursion control, bypass API             │
+│   OpportunityTriggerHelper (LOGIC — stateless statics)          │
+│   - assignResellerLookup(opps, oldMap):                         │
+│       1. Collect non-null, lowercase emails                     │
+│       2. Skip records whose email did not change (on update)    │
+│       3. ONE bulkified SOQL: WHERE Active__c = true             │
+│       4. Map<lowercase email, Reseller Id>                      │
+│       5. Assign lookup; null if no match (silent fail)          │
+└─────────────────────────────────────────────────────────────────┘
+
+         (Handler also extends ↓ for context dispatch + bypass API)
+┌─────────────────────────────────────────────────────────────────┐
+│   TriggerHandler (Kevin O'Hara framework — verbatim)            │
+│   - run() switches on Trigger context to call beforeInsert etc. │
+│   - bypass() / clearBypass() for test setup and bulk loads      │
+│   - setMaxLoopCount() for recursion protection                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-The trigger runs **one bulkified SOQL** per batch (handles 200-record inserts within governor limits) and fails safely — if no reseller matches, the lookup stays null instead of blocking the save.
+**Why four layers?** Each class has one job, so reviews are quick, tests can target a single layer, and adding a new context (e.g. `afterInsert` for an audit-log feature later) is a one-line override that points at a new Helper method — no risk of touching the matching algorithm.
+
+The Helper runs **one bulkified SOQL** per batch (handles 200-record inserts within governor limits) and fails safely — if no reseller matches, the lookup stays null instead of blocking the save.
 
 ---
 
@@ -93,13 +111,14 @@ The trigger runs **one bulkified SOQL** per batch (handles 200-record inserts wi
 
 ### Apex
 
-| Class | Purpose | Coverage |
-|---|---|---|
-| `TriggerHandler` | Kevin O'Hara framework base class (verbatim copy) | 100% |
-| `TriggerHandler_Test` | Kevin O'Hara framework test class | — |
-| `OpportunityTrigger` | One-line trigger, delegates to handler | 100% |
-| `OpportunityTriggerHandler` | Channel-partner matching logic, bulkified, case-insensitive | 100% |
-| `OpportunityTriggerHandlerTest` | 10 test methods covering every branch + bulk + bypass | — |
+| Class | Layer | Purpose | Coverage |
+|---|---|---|---|
+| `TriggerHandler` | Framework | Kevin O'Hara base class (verbatim copy) | 100% |
+| `TriggerHandler_Test` | Framework | Kevin O'Hara framework test class | — |
+| `OpportunityTrigger` | Route | One-line trigger; delegates to handler | 100% |
+| `OpportunityTriggerHandler` | Dispatch | Thin dispatcher; routes contexts to helper methods | 100% |
+| `OpportunityTriggerHelper` | Logic | Stateless matching algorithm, bulkified, case-insensitive | 100% |
+| `OpportunityTriggerHandlerTest` | Tests | 10 methods covering every branch + bulk + bypass | — |
 
 ### UI
 
@@ -127,9 +146,10 @@ The trigger runs **one bulkified SOQL** per batch (handles 200-record inserts wi
 ```
 force-app/main/default/
 ├── classes/                  Apex classes + tests
-│   ├── TriggerHandler.cls
-│   ├── TriggerHandler_Test.cls
-│   ├── OpportunityTriggerHandler.cls
+│   ├── TriggerHandler.cls            (framework base)
+│   ├── TriggerHandler_Test.cls       (framework tests)
+│   ├── OpportunityTriggerHandler.cls (dispatcher)
+│   ├── OpportunityTriggerHelper.cls  (matching logic)
 │   └── OpportunityTriggerHandlerTest.cls
 ├── triggers/
 │   └── OpportunityTrigger.trigger
@@ -226,7 +246,7 @@ The `OpportunityTriggerHandlerTest` covers every branch of the matching logic:
 
 A few non-obvious choices, called out so reviewers don't have to guess:
 
-- **Kevin O'Hara framework is non-negotiable.** Every trigger in this project goes through `TriggerHandler.run()`. No business logic lives in trigger files. This is the de-facto enterprise pattern; copying it ships recursion control, bypass API, and max-loop protection for free.
+- **Kevin O'Hara framework is non-negotiable, AND we apply the full four-layer separation.** Every trigger goes through `TriggerHandler.run()`. The Trigger only routes; the Handler only dispatches contexts; the Helper only holds business logic. This is the de-facto enterprise pattern — copying it ships recursion control, bypass API, and max-loop protection for free, and the Helper layer keeps the matching algorithm unit-testable without DML.
 - **Lookup is read-only on the layout** — even though Salesforce permits manual editing, the permission set restricts `Opportunity.Reseller__c` to read-only. The trigger is the single source of truth; allowing manual edits would mislead users.
 - **Inactive resellers are excluded at SOQL level**, not in post-query Apex. Cheaper and explicit.
 - **No-match is silent.** A missing reseller must never block an Opportunity from saving — channel attribution is a nice-to-have, not a gating field.
