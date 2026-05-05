@@ -10,11 +10,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Reseller__c.Company_Email__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>Reseller__c.Country__c</field>
         <readable>true</readable>
     </fieldPermissions>
