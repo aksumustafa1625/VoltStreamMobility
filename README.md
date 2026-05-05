@@ -286,6 +286,21 @@ sf org open
 
 Navigate: **App Launcher → Sales → Resellers** (switch the list view from "Recently Viewed" to "All Resellers"). Open any reseller to see its related Opportunities, populated by the trigger.
 
+### Validation deploy (recommended before merging changes)
+
+Run a dry-run deploy that runs all tests but doesn't actually commit any
+changes to the org. Use this on every feature branch before merging:
+
+```bash
+sf project deploy validate --source-dir force-app --test-level RunLocalTests
+```
+
+The `validate` flag wraps the deployment and tests in a transaction that is
+rolled back when the validation finishes — your org is unchanged regardless
+of the result. If validation succeeds, the same deploy run can be promoted
+to a real deploy via `sf project deploy quick --job-id <validateJobId>`,
+without re-running tests, in production change-set workflows.
+
 ---
 
 ## Testing
