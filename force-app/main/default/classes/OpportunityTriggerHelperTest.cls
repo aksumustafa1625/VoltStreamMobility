@@ -1,23 +1,28 @@
 /**
- * Direct unit tests for OpportunityTriggerHelper.
+ * @description  Direct unit tests for OpportunityTriggerHelper. These tests
+ *               call the static Helper methods in isolation — Opportunity
+ *               records are constructed in memory and passed in as method
+ *               arguments rather than inserted via DML. That means the
+ *               Opportunity trigger does NOT fire during these tests; we are
+ *               exercising the algorithm itself, not the
+ *               Trigger -> Handler -> Helper plumbing.
  *
- * These tests call the static Helper methods in isolation — Opportunity
- * records are constructed in memory and passed in as method arguments
- * rather than inserted via DML. That means the Opportunity trigger does
- * NOT fire during these tests; we are exercising the algorithm itself,
- * not the Trigger -> Handler -> Helper plumbing.
+ *               Why a Helper test class on top of OpportunityTriggerHandlerTest:
+ *                 - Faster feedback when the algorithm changes (no Opportunity
+ *                   DML cost).
+ *                 - Clearer failure messages — a broken assertion here points
+ *                   straight at the algorithm; a broken assertion in the
+ *                   Handler test could mean the algorithm OR the dispatch wiring.
+ *                 - Documents that the Helper is callable from non-trigger
+ *                   contexts (e.g. a future batch job or scheduled class could
+ *                   call OpportunityTriggerHelper.assignResellerLookup() directly).
  *
- * Why a Helper test class on top of OpportunityTriggerHandlerTest:
- *   - Faster feedback when the algorithm changes (no Opportunity DML cost).
- *   - Clearer failure messages — a broken assertion here points straight
- *     at the algorithm; a broken assertion in the Handler test could mean
- *     the algorithm OR the dispatch wiring.
- *   - Documents that the Helper is callable from non-trigger contexts
- *     (e.g. a future batch job or scheduled class could call
- *     OpportunityTriggerHelper.assignResellerLookup() directly).
+ *               Resellers ARE inserted via DML in @TestSetup because the
+ *               Helper's SOQL needs them to exist; that one DML is unavoidable.
  *
- * Resellers ARE inserted via DML in @TestSetup because the Helper's SOQL
- * needs them to exist; that one DML is unavoidable.
+ * @group        VoltStream Channel Partner Management — Tests
+ * @author       Mustafa Aksu
+ * @date         2026-05-05
  */
 @IsTest
 private class OpportunityTriggerHelperTest {
@@ -26,6 +31,13 @@ private class OpportunityTriggerHelperTest {
     private static final String EMAIL_AUTO     = 'fleet@helper-test-auto.de';
     private static final String EMAIL_INACTIVE = 'old@helper-test-inactive.de';
 
+    /**
+     * @description  Seed three Reseller__c records (two active, one inactive)
+     *               for the Helper to query against. Shared across all tests
+     *               in this class. Resellers MUST be DML-inserted because the
+     *               Helper queries them via SOQL — the in-memory shortcut
+     *               only applies to the Opportunity records themselves.
+     */
     @TestSetup
     static void setupResellers() {
         insert new List<Reseller__c>{
@@ -53,7 +65,13 @@ private class OpportunityTriggerHelperTest {
         };
     }
 
-    /** Build an unsaved Opportunity. The trigger does NOT fire because we never insert. */
+    /**
+     * @description  Build an UNSAVED Opportunity for direct Helper invocation.
+     *               The trigger does not fire because we never insert.
+     * @param  name           Opportunity Name (helps identify failures in logs).
+     * @param  resellerEmail  Reseller_Email__c the Helper will act on.
+     * @return  Unsaved in-memory Opportunity record.
+     */
     private static Opportunity buildOpp(String name, String resellerEmail) {
         return new Opportunity(
             Name = name,
@@ -63,6 +81,7 @@ private class OpportunityTriggerHelperTest {
         );
     }
 
+    // Direct call with a matching email -> Helper sets the lookup in memory.
     @IsTest
     static void assignResellerLookup_emailMatch_setsLookup() {
         List<Opportunity> opps = new List<Opportunity>{
@@ -78,6 +97,7 @@ private class OpportunityTriggerHelperTest {
             'Direct Helper call with matching email should set the lookup.');
     }
 
+    // Uppercase input must match against the lowercase stored email.
     @IsTest
     static void assignResellerLookup_caseInsensitive_setsLookup() {
         List<Opportunity> opps = new List<Opportunity>{
@@ -90,6 +110,7 @@ private class OpportunityTriggerHelperTest {
             'Uppercase input should match the lowercase reseller email.');
     }
 
+    // Helper must respect Active__c = false at the SOQL filter level.
     @IsTest
     static void assignResellerLookup_inactiveReseller_lookupStaysNull() {
         List<Opportunity> opps = new List<Opportunity>{
@@ -102,6 +123,7 @@ private class OpportunityTriggerHelperTest {
             'Inactive resellers must be excluded from matching.');
     }
 
+    // Unknown email -> silent null, never an exception.
     @IsTest
     static void assignResellerLookup_unknownEmail_lookupStaysNull() {
         List<Opportunity> opps = new List<Opportunity>{
@@ -114,6 +136,7 @@ private class OpportunityTriggerHelperTest {
             'Unknown emails must result in a null lookup, not an exception.');
     }
 
+    // Null email -> Helper short-circuits without assignment.
     @IsTest
     static void assignResellerLookup_nullEmail_skipsCleanly() {
         List<Opportunity> opps = new List<Opportunity>{
@@ -126,6 +149,7 @@ private class OpportunityTriggerHelperTest {
             'Null email must not trigger any lookup assignment.');
     }
 
+    // Empty input list -> no SOQL issued at all (proven via Limits.getQueries).
     @IsTest
     static void assignResellerLookup_emptyList_returnsCleanly() {
         // Empty input must not throw, must not query, must not crash.
@@ -140,9 +164,9 @@ private class OpportunityTriggerHelperTest {
             'Empty input must short-circuit before issuing any SOQL.');
     }
 
+    // Mixed batch (match + no-match + null) — every record handled independently in one call.
     @IsTest
     static void assignResellerLookup_mixedBatch_matchesEachIndependently() {
-        // One match, one no-match, one null email — all in a single call.
         List<Opportunity> opps = new List<Opportunity>{
             buildOpp('Match',     EMAIL_HOTEL),
             buildOpp('No match',  'unknown@nowhere.de'),
@@ -156,6 +180,7 @@ private class OpportunityTriggerHelperTest {
         System.assertEquals(null, opps[2].Reseller__c,    'Third record (null email) should be skipped.');
     }
 
+    // 200 records -> exactly ONE SOQL. Bulkification proven via Limits.getQueries().
     @IsTest
     static void assignResellerLookup_bulkInput_singleSoql() {
         List<Opportunity> opps = new List<Opportunity>();

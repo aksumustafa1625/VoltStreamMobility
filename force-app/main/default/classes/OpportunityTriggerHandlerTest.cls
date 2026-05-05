@@ -1,9 +1,18 @@
 /**
- * Test coverage for OpportunityTriggerHandler.
+ * @description  Integration tests for OpportunityTrigger + OpportunityTriggerHandler.
+ *               Tests fire DML on Opportunity to exercise the full
+ *               Trigger -> Handler -> Helper chain end-to-end in real org
+ *               transactions. This complements OpportunityTriggerHelperTest,
+ *               which exercises the algorithm in isolation without DML.
  *
- * Each test isolates one scenario from the channel-partner matching flow:
- * insert paths, update paths, bulk behavior, and the TriggerHandler bypass API
- * inherited from Kevin O'Hara's framework. Coverage target: >90%.
+ *               Each test method isolates one scenario from the channel-partner
+ *               matching flow: insert paths, update paths, bulk behavior, and
+ *               the TriggerHandler bypass API inherited from Kevin O'Hara's
+ *               framework. Coverage target: 100%.
+ *
+ * @group        VoltStream Channel Partner Management — Tests
+ * @author       Mustafa Aksu
+ * @date         2026-05-05
  */
 @IsTest
 private class OpportunityTriggerHandlerTest {
@@ -12,6 +21,10 @@ private class OpportunityTriggerHandlerTest {
     private static final String EMAIL_AUTO     = 'fleet@mercedes-berlin.de';
     private static final String EMAIL_INACTIVE = 'old@churned-partner.de';
 
+    /**
+     * @description  Seed three Reseller__c records (two active, one inactive)
+     *               that every test method shares. Runs once per test class.
+     */
     @TestSetup
     static void setupResellers() {
         insert new List<Reseller__c>{
@@ -39,6 +52,14 @@ private class OpportunityTriggerHandlerTest {
         };
     }
 
+    /**
+     * @description  Build an Opportunity with the minimum required fields plus
+     *               the reseller email under test. Centralised so individual
+     *               test methods stay focused on assertions.
+     * @param  name           Opportunity Name (visible in test log on failure).
+     * @param  resellerEmail  Reseller_Email__c value the trigger will act on.
+     * @return  Unsaved Opportunity ready for DML.
+     */
     private static Opportunity buildOpp(String name, String resellerEmail) {
         return new Opportunity(
             Name = name,
@@ -48,6 +69,7 @@ private class OpportunityTriggerHandlerTest {
         );
     }
 
+    // Insert with a matching email -> the Reseller lookup must be populated.
     @IsTest
     static void insert_emailMatches_populatesLookup() {
         Opportunity opp = buildOpp('Hotel deal', EMAIL_HOTEL);
@@ -62,9 +84,9 @@ private class OpportunityTriggerHandlerTest {
             'Matching email should populate the Reseller lookup.');
     }
 
+    // Uppercase input must match a lowercase reseller email — case-insensitive contract.
     @IsTest
     static void insert_caseInsensitiveMatch_populatesLookup() {
-        // The reseller's stored email is lowercase; the input is uppercase.
         Opportunity opp = buildOpp('Case test', 'PARTNER@STEIGENBERGER.DE');
 
         Test.startTest();
@@ -76,6 +98,7 @@ private class OpportunityTriggerHandlerTest {
             'Uppercase input should still match the lowercase reseller email.');
     }
 
+    // Inactive resellers must be excluded from matching at SOQL level.
     @IsTest
     static void insert_resellerInactive_lookupStaysNull() {
         Opportunity opp = buildOpp('Inactive reseller deal', EMAIL_INACTIVE);
@@ -89,6 +112,7 @@ private class OpportunityTriggerHandlerTest {
             'Inactive resellers must be excluded from matching.');
     }
 
+    // Unknown email -> silent null. Never throw an exception that blocks the save.
     @IsTest
     static void insert_noMatch_lookupStaysNull() {
         Opportunity opp = buildOpp('Unknown reseller', 'nobody@unknown-co.de');
@@ -102,6 +126,7 @@ private class OpportunityTriggerHandlerTest {
             'No match must leave the lookup null silently — no exception.');
     }
 
+    // Direct deal (no reseller email) must save cleanly with no lookup assignment.
     @IsTest
     static void insert_nullEmail_skipsAndSavesCleanly() {
         Opportunity opp = buildOpp('Direct deal', null);
@@ -115,10 +140,9 @@ private class OpportunityTriggerHandlerTest {
             'Null Reseller_Email__c must not assign any lookup.');
     }
 
+    // 200-record insert proves bulkification — would hit 100-SOQL governor limit otherwise.
     @IsTest
     static void insert_bulk200_allMatchedNoGovernorLimit() {
-        // If the trigger were not bulkified (e.g. one SOQL per record), this would
-        // hit the 100-query governor limit at record 101 and throw.
         List<Opportunity> opps = new List<Opportunity>();
         for (Integer i = 0; i < 200; i++) {
             String email = (Math.mod(i, 2) == 0) ? EMAIL_HOTEL : EMAIL_AUTO;
@@ -139,6 +163,7 @@ private class OpportunityTriggerHandlerTest {
         }
     }
 
+    // Update with changed email -> trigger re-runs the match against the new value.
     @IsTest
     static void update_emailChanged_reMatchesToNewReseller() {
         Opportunity opp = buildOpp('Switching partner', EMAIL_HOTEL);
@@ -160,6 +185,7 @@ private class OpportunityTriggerHandlerTest {
             'Updating the email should re-match to the new reseller.');
     }
 
+    // Update that clears the email must also clear the Reseller lookup (data integrity).
     @IsTest
     static void update_emailCleared_clearsLookup() {
         Opportunity opp = buildOpp('To be cleared', EMAIL_HOTEL);
@@ -178,6 +204,7 @@ private class OpportunityTriggerHandlerTest {
             'Clearing the email must also clear the Reseller lookup.');
     }
 
+    // Update that doesn't touch the email must leave the lookup unchanged.
     @IsTest
     static void update_emailUnchanged_lookupStaysSame() {
         Opportunity opp = buildOpp('Stable lookup test', EMAIL_HOTEL);
@@ -197,9 +224,10 @@ private class OpportunityTriggerHandlerTest {
             'Lookup must remain unchanged when Reseller_Email__c did not change.');
     }
 
+    // Bypass API: when active, the handler must be skipped entirely.
+    // Proves the Kevin O'Hara framework's bypass mechanism is wired up.
     @IsTest
     static void bypass_handlerSkipped_lookupNotPopulated() {
-        // Using the bypass API inherited from TriggerHandler — proves the framework is wired up.
         TriggerHandler.bypass('OpportunityTriggerHandler');
 
         Opportunity opp = buildOpp('Bypassed deal', EMAIL_HOTEL);
