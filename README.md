@@ -5,7 +5,7 @@
 [![Trigger framework](https://img.shields.io/badge/trigger--framework-Kevin%20O%27Hara-blue)](https://github.com/kevinohara80/sfdc-trigger-framework)
 [![API version](https://img.shields.io/badge/API-65.0-orange)]()
 [![Test coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)]()
-[![Tests](https://img.shields.io/badge/tests-63%2F63%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-80%2F80%20passing-brightgreen)]()
 
 ---
 
@@ -175,11 +175,16 @@ The Helper runs **one bulkified SOQL** per batch (handles 200-record inserts wit
 | `OpportunityTrigger` | Route | One-line trigger; delegates to handler | 100% |
 | `OpportunityTriggerHandler` | Dispatch | Thin dispatcher; routes contexts to helper methods | 100% |
 | `OpportunityTriggerHelper` | Logic | Stateless matching algorithm, bulkified, case-insensitive at the application layer | 100% |
+| `ResellerTrigger` | Route | One-line trigger; delegates to ResellerTriggerHandler | 100% |
+| `ResellerTriggerHandler` | Dispatch | Thin dispatcher — beforeInsert and beforeUpdate route to the Helper | 100% |
+| `ResellerTriggerHelper` | Logic | Boundary-level normalization: every Reseller field passes through StringUtils on save (closes the External ID case-sensitivity loophole at the source) | 100% |
 | `ResellerSelector` | Data access | Selector pattern (FFLib-style) — single home for every Reseller__c SOQL query. Helper calls in here instead of inlining queries. | 100% |
 | `StringUtils` | Utility | Centralized string normalization (email lowercasing, phone formatting, whitespace cleanup). Single source of truth — Helper delegates here. | 100% |
 | `TestDataFactory` | Test utility | Centralized Reseller / Opportunity builder used by every test class. Schema changes update one factory method, never per-test boilerplate. | 100% |
 | `OpportunityTriggerHandlerTest` | Integration tests | 10 methods — DML-based, prove the trigger fires end-to-end | — |
 | `OpportunityTriggerHelperTest` | Unit tests | 8 methods — direct static-method calls, no Opportunity DML | — |
+| `ResellerTriggerHandlerTest` | Integration tests | 7 methods — DML-based, including end-to-end Selector match proof | — |
+| `ResellerTriggerHelperTest` | Unit tests | 10 methods — direct static-method calls, no Reseller DML | — |
 | `ResellerSelectorTest` | Unit tests | 5 methods — verifies query contracts (active filter, empty input, case-sensitive External ID lookup) | — |
 | `StringUtilsTest` | Unit tests | 18 methods — every branch of every utility, including null-safe edge cases | — |
 | `TestDataFactoryTest` | Unit tests | 4 methods — pins the documented defaults so other tests can rely on them | — |
@@ -214,14 +219,21 @@ force-app/main/default/
 │   ├── TriggerHandler_Test.cls       (framework tests)
 │   ├── OpportunityTriggerHandler.cls (dispatcher)
 │   ├── OpportunityTriggerHelper.cls  (matching algorithm)
+│   ├── ResellerTriggerHandler.cls    (dispatcher)
+│   ├── ResellerTriggerHelper.cls     (boundary-level normalization)
 │   ├── ResellerSelector.cls          (Reseller SOQL — Selector pattern)
 │   ├── StringUtils.cls               (centralized string normalization)
 │   ├── TestDataFactory.cls           (shared test record builder)
 │   ├── OpportunityTriggerHandlerTest.cls  (integration tests)
 │   ├── OpportunityTriggerHelperTest.cls   (unit tests)
+│   ├── ResellerTriggerHandlerTest.cls     (integration tests)
+│   ├── ResellerTriggerHelperTest.cls      (unit tests)
 │   ├── ResellerSelectorTest.cls           (unit tests)
 │   ├── StringUtilsTest.cls                (unit tests)
 │   └── TestDataFactoryTest.cls            (unit tests)
+└── triggers/
+    ├── OpportunityTrigger.trigger    (route to OpportunityTriggerHandler)
+    └── ResellerTrigger.trigger       (route to ResellerTriggerHandler)
 ├── triggers/
 │   └── OpportunityTrigger.trigger
 ├── objects/
@@ -311,7 +323,7 @@ Run the Apex test suite locally with code coverage:
 sf apex run test --test-level RunLocalTests --code-coverage --result-format human --synchronous
 ```
 
-Expected: **63 tests pass, 100% coverage on custom code, 0 failures.**
+Expected: **80 tests pass, 100% coverage on custom code, 0 failures.**
 
 The suite is **layered**:
 
@@ -346,7 +358,8 @@ A few non-obvious choices, called out so reviewers don't have to guess:
 - **Every Apex class ships with its own `*Test.cls`.** No untested classes land on `main`. Helpers get unit tests (no DML); Triggers and Handlers get integration tests (via DML).
 - **String normalization is centralized in `StringUtils`.** Email lowercasing, phone formatting, whitespace cleanup — none are inlined anywhere. When the rule changes, it changes in one place. Null-safe contract: blank in -> null out, never throws.
 - **All Reseller SOQL goes through `ResellerSelector` (Selector pattern).** Helpers and Handlers don't write inline SOQL. When a query needs new fields, an index hint, or a different WHERE clause, exactly one file changes. FFLib Apex Common's de-facto enterprise convention.
-- **`Reseller__c.Company_Email__c` is marked External ID** for indexed lookups. Trade-off: SOQL `IN` against External ID is case-sensitive at the storage layer. The Helper compensates by always normalizing with `StringUtils.normalizeEmail()` before passing emails to the Selector, and seed data is inserted lowercase. A future ResellerTrigger will normalize manually-entered values too — see Roadmap.
+- **`Reseller__c.Company_Email__c` is marked External ID** for indexed lookups. SOQL `IN` against External ID is case-sensitive at the storage layer, but every save path through Salesforce passes through `ResellerTrigger -> Handler -> Helper -> StringUtils.normalizeEmail()` so stored values are guaranteed lowercase. There is no save path that bypasses normalization (UI form, API insert, Data Loader, scratch-org seed — all go through the trigger).
+- **Boundary-level normalization on Reseller__c.** `ResellerTriggerHelper.normalizeFields()` runs on every insert and update, lowercasing emails, formatting phones to `(NNN) NNN NN-NN`, and trimming whitespace from name and country. Mirrors the OpportunityTrigger family structurally — both objects with trigger logic share the same Trigger -> Handler -> Helper layout.
 - **Test data is built via `TestDataFactory`.** No test class re-implements the Reseller / Opportunity constructor pattern. Schema changes propagate through one file.
 
 ---
@@ -360,7 +373,7 @@ Planned next phases (not built yet):
 - **Dashboard** combining the above with bar / pie / KPI tiles
 - **Notification on new match**: post a Chatter message to the reseller's Chatter feed when a new Opportunity is auto-linked
 - **Lightning Web Component**: "My Channel Pipeline" tile for the rep home page
-- **CI**: GitHub Actions workflow that deploys to a scratch org and runs the test suite on every PR
+- **Async Apex** (Batch / Queueable): nightly reseller sync from an external partner master
 
 ---
 
