@@ -10,6 +10,11 @@
  *                 3. Multiple Handler methods (beforeInsert + beforeUpdate)
  *                    share the same matching code path without duplication.
  *
+ *               Email normalization is delegated to StringUtils so that the
+ *               case-insensitive matching contract lives in ONE place — when
+ *               normalization rules change (e.g. strip plus-addressing),
+ *               only StringUtils changes.
+ *
  *               Three-layer Kevin O'Hara pattern:
  *                 Trigger -> Handler (extends TriggerHandler) -> Helper (this)
  *
@@ -21,49 +26,56 @@ public with sharing class OpportunityTriggerHelper {
 
     /**
      * @description  Look up the matching Reseller__c for each Opportunity by
-     *               company email (case-insensitive, active resellers only) and
-     *               populate the Reseller__c lookup field. Bulkified — one
-     *               SOQL per call regardless of batch size.
+     *               company email (case-insensitive via StringUtils, active
+     *               resellers only) and populate the Reseller__c lookup
+     *               field. Bulkified — one SOQL per call regardless of
+     *               batch size.
      *
      *               Behavior:
-     *                 - On insert (oldMap == null): process every record with a
-     *                   non-null email.
-     *                 - On update (oldMap != null): only re-match records whose
-     *                   Reseller_Email__c value actually changed; saves SOQL
-     *                   on unrelated field updates.
+     *                 - On insert (oldMap == null): process every record with
+     *                   a non-blank email.
+     *                 - On update (oldMap != null): only re-match records
+     *                   whose normalized Reseller_Email__c changed (so a
+     *                   pure case change like 'A@x.de' -> 'a@x.de' does not
+     *                   trigger a SOQL).
      *                 - Cleared email -> also clear the Reseller lookup.
      *                 - No match found -> leave the lookup null silently
      *                   (never block the save).
      *                 - Inactive resellers (Active__c = false) are excluded
      *                   from matching at the SOQL level.
      *
-     * @param  opps    Trigger.new list of Opportunity records (mutated in-place
-     *                 — the Reseller__c field is set on records that match).
+     * @param  opps    Trigger.new list of Opportunity records (mutated
+     *                 in-place — the Reseller__c field is set on records
+     *                 that match).
      * @param  oldMap  Trigger.oldMap on update; pass null on insert.
      */
     public static void assignResellerLookup(List<Opportunity> opps, Map<Id, Opportunity> oldMap) {
-        // Step 1: collect lowercase emails from records that need matching.
+        // Step 1: collect normalized emails for records that need matching.
         Set<String> emailsToMatch = new Set<String>();
         List<Opportunity> oppsNeedingMatch = new List<Opportunity>();
 
         for (Opportunity opp : opps) {
-            String newEmail = opp.Reseller_Email__c;
+            String normalizedEmail = StringUtils.normalizeEmail(opp.Reseller_Email__c);
 
-            // On update: skip records whose email did not change.
+            // On update: skip records whose normalized email did not change.
+            // Comparing normalized values means a pure case change is treated
+            // as a no-op — saves a SOQL on irrelevant edits.
             if (oldMap != null) {
-                String oldEmail = oldMap.get(opp.Id).Reseller_Email__c;
-                if (newEmail == oldEmail) {
+                String normalizedOldEmail = StringUtils.normalizeEmail(
+                    oldMap.get(opp.Id).Reseller_Email__c
+                );
+                if (normalizedEmail == normalizedOldEmail) {
                     continue;
                 }
             }
 
-            // Email was cleared -> clear the lookup too (data integrity).
-            if (String.isBlank(newEmail)) {
+            // Email was cleared (or was never set) -> clear the lookup too.
+            if (normalizedEmail == null) {
                 opp.Reseller__c = null;
                 continue;
             }
 
-            emailsToMatch.add(newEmail.toLowerCase());
+            emailsToMatch.add(normalizedEmail);
             oppsNeedingMatch.add(opp);
         }
 
@@ -73,7 +85,8 @@ public with sharing class OpportunityTriggerHelper {
         }
 
         // Step 2: single bulkified SOQL — only ACTIVE resellers participate.
-        // Compare lowercase on both sides to honor case-insensitive matching.
+        // Reseller emails are also normalized through StringUtils so the Map
+        // keys are consistent with the lookup keys we collected above.
         Map<String, Id> emailToResellerId = new Map<String, Id>();
         for (Reseller__c r : [
             SELECT Id, Company_Email__c
@@ -81,13 +94,13 @@ public with sharing class OpportunityTriggerHelper {
             WHERE Company_Email__c != null
             AND Active__c = true
         ]) {
-            emailToResellerId.put(r.Company_Email__c.toLowerCase(), r.Id);
+            emailToResellerId.put(StringUtils.normalizeEmail(r.Company_Email__c), r.Id);
         }
 
         // Step 3: assign matches; leave null when no match (silent failure by design).
         for (Opportunity opp : oppsNeedingMatch) {
-            Id matchedId = emailToResellerId.get(opp.Reseller_Email__c.toLowerCase());
-            opp.Reseller__c = matchedId; // null is acceptable — direct deal or unknown reseller
+            Id matchedId = emailToResellerId.get(StringUtils.normalizeEmail(opp.Reseller_Email__c));
+            opp.Reseller__c = matchedId; // null is acceptable — direct deal or unknown reseller.
         }
     }
 }
