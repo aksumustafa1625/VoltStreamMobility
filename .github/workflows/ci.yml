@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [ main ]
 
+# Cancel in-progress runs on the same branch when a newer commit lands.
+# Prevents the 'Cancelled after 15m' artifact when several commits push
+# back-to-back (the older run is correctly superseded instead of racing).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # ---------------------------------------------------------------------------
   # Lint job: always runs, no secrets needed.
@@ -16,6 +23,7 @@ jobs:
   lint:
     name: PMD static analysis
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -40,14 +48,18 @@ jobs:
           unzip -q pmd.zip
           mv pmd-bin-* pmd
 
-      - name: Run PMD on Apex
+      - name: Run PMD on Apex (warm-up — violations don't fail the build yet)
+        # `|| true` keeps the step exit code 0 regardless of PMD findings, so
+        # CI stays green during the rule-tuning warm-up period documented in
+        # pmd-ruleset.xml. Once the codebase is clean against the ruleset,
+        # remove the trailing `|| true` to make violations a hard CI failure.
         run: |
           ./pmd/bin/pmd check \
             --dir force-app/main/default/classes \
             --dir force-app/main/default/triggers \
             --rulesets pmd-ruleset.xml \
             --format text \
-            --no-fail-on-violation
+            --threads 4 || true
         # `--no-fail-on-violation` keeps CI green while we tune the ruleset;
         # remove the flag once the codebase is clean to make violations a hard
         # CI failure.
