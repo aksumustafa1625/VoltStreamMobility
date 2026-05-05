@@ -34,6 +34,37 @@ VoltStream Mobility GmbH (fictional) is a B2B supplier of EV charging hardware a
 
 ---
 
+## Data model
+
+```mermaid
+erDiagram
+    OPPORTUNITY ||--o{ RESELLER : "linked via lookup (auto-populated by trigger)"
+
+    OPPORTUNITY {
+        Id Id PK
+        String Name
+        String StageName "Required"
+        Date CloseDate "Required"
+        Currency Amount
+        Email Reseller_Email__c "Sales rep input"
+        Lookup Reseller "FK — auto-populated, read-only on layout"
+    }
+
+    RESELLER {
+        Id Id PK
+        String Name "Company Name"
+        Email Company_Email__c "External ID, indexed, unique, required"
+        Picklist Reseller_Type__c "6 channel segments"
+        Text Country__c "Default: Germany"
+        Phone Phone__c
+        Boolean Active__c "Default: true; only true resellers participate in matching"
+    }
+```
+
+The relationship is **lookup**, not master-detail — Opportunities survive
+deletion of their Reseller (the lookup goes null via `deleteConstraint=SetNull`)
+because revenue data must outlive partner churn.
+
 ## Architecture
 
 The project follows the **four-layer Kevin O'Hara enterprise pattern**: each class has exactly one responsibility, so the trigger file stays trivially small, the handler is a pure dispatcher, and the matching logic lives in a stateless helper that's testable in isolation.
