@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PermissionSetGroup xmlns="http://soap.sforce.com/2006/04/metadata">
-    <description>Permission Set Group for users who manage VoltStream's channel-partner program — sales operations, channel managers, partner success. Bundles every permission set required to do the day-to-day work so administrators assign the group instead of remembering which individual permsets to attach. Salesforce's recommended pattern for production user provisioning.</description>
+    <description>Permission Set Group for VoltStream channel-partner managers. Bundles every permset needed for day-to-day reseller work; admins assign this group instead of individual permsets (Salesforce's recommended provisioning pattern).</description>
     <hasActivationRequired>false</hasActivationRequired>
     <label>VoltStream Channel Manager</label>
     <permissionSets>VoltStream_Reseller_Access</permissionSets>
