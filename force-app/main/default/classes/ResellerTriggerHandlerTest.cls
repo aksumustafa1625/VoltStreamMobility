@@ -139,21 +139,32 @@ private class ResellerTriggerHandlerTest {
 
     // Bypass API: when active, the trigger is skipped and data is stored raw.
     // Proves the Kevin O'Hara framework's bypass mechanism is wired up.
+    //
+    // Asserted on Phone__c rather than Company_Email__c because Salesforce's
+    // Email-typed-field-with-External-ID storage path independently lowercases
+    // the value at the platform layer, regardless of whether our trigger ran.
+    // Our trigger's email lowercasing is therefore *defense in depth* (it would
+    // matter if External ID were ever removed), but the platform behavior
+    // makes it impossible to OBSERVE the trigger's email work via a bypassed-
+    // -insert assertion. Phone is platform-neutral — Salesforce stores
+    // exactly what Apex passes — so the bypass effect is visible there.
     @IsTest
-    static void bypass_handlerSkipped_dataNotNormalized() {
+    static void bypass_handlerSkipped_phoneNotFormatted() {
         TriggerHandler.bypass('ResellerTriggerHandler');
 
         Reseller__c r = TestDataFactory.buildReseller(
-            'Bypassed', 'BYPASS@X.DE', 'Hotel Chain'
+            'Bypassed', 'bypass@x.de', 'Hotel Chain'
         );
+        r.Phone__c = '1231231212'; // Raw 10 digits — NOT in our canonical format.
 
         Test.startTest();
         insert r;
         Test.stopTest();
 
-        Reseller__c stored = [SELECT Company_Email__c FROM Reseller__c WHERE Id = :r.Id];
-        System.assertEquals('BYPASS@X.DE', stored.Company_Email__c,
-            'When the handler is bypassed, no normalization should run.');
+        Reseller__c stored = [SELECT Phone__c FROM Reseller__c WHERE Id = :r.Id];
+        System.assertEquals('1231231212', stored.Phone__c,
+            'When the handler is bypassed, phone normalization should NOT run; '
+            + 'Salesforce stores Apex-supplied phone values as-is at the platform layer.');
 
         TriggerHandler.clearBypass('ResellerTriggerHandler');
     }
