@@ -69,7 +69,7 @@ List<Reseller__c> resellers = new List<Reseller__c>{
         Company_Email__c = EMAIL_BERLIN_ELEKTRO,
         Reseller_Type__c = 'Electrical Contractor',
         Country__c = 'Germany',
-        Phone__c = '+49 30 1234567',
+        Phone__c = '+49 3012345678',
         Active__c = true
     ),
     new Reseller__c(
@@ -77,7 +77,7 @@ List<Reseller__c> resellers = new List<Reseller__c>{
         Company_Email__c = EMAIL_MERCEDES_BERLIN,
         Reseller_Type__c = 'Auto Dealer',
         Country__c = 'Germany',
-        Phone__c = '+49 30 2345678',
+        Phone__c = '+49 3023456789',
         Active__c = true
     ),
     new Reseller__c(
@@ -85,7 +85,7 @@ List<Reseller__c> resellers = new List<Reseller__c>{
         Company_Email__c = EMAIL_MEDIAMARKT,
         Reseller_Type__c = 'Mall',
         Country__c = 'Germany',
-        Phone__c = '+49 89 3456789',
+        Phone__c = '+49 8934567890',
         Active__c = true
     ),
     new Reseller__c(
@@ -93,7 +93,7 @@ List<Reseller__c> resellers = new List<Reseller__c>{
         Company_Email__c = EMAIL_STEIGENBERGER,
         Reseller_Type__c = 'Hotel Chain',
         Country__c = 'Germany',
-        Phone__c = '+49 69 4567890',
+        Phone__c = '+49 6945678901',
         Active__c = true
     ),
     new Reseller__c(
@@ -101,7 +101,7 @@ List<Reseller__c> resellers = new List<Reseller__c>{
         Company_Email__c = EMAIL_APCOA,
         Reseller_Type__c = 'Parking Operator',
         Country__c = 'Germany',
-        Phone__c = '+49 711 5678901',
+        Phone__c = '+49 7156789012',
         Active__c = true
     ),
     // One inactive partner so the trigger has a reason to NOT match — useful in the demo
@@ -110,7 +110,7 @@ List<Reseller__c> resellers = new List<Reseller__c>{
         Company_Email__c = EMAIL_STADTWERKE,
         Reseller_Type__c = 'Energy Company',
         Country__c = 'Germany',
-        Phone__c = '+49 89 6789012',
+        Phone__c = '+49 8967890123',
         Active__c = false
     )
 };

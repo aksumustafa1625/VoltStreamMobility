@@ -1,24 +1,8 @@
 /**
- * @description  Business logic for Opportunity trigger events. Pure static
- *               utility methods — the OpportunityTriggerHandler delegates to
- *               this class so that:
- *                 1. The Handler stays a thin dispatcher (one method per
- *                    trigger context).
- *                 2. The logic is unit-testable WITHOUT a trigger context.
- *                 3. Multiple Handler methods (beforeInsert + beforeUpdate)
- *                    share the same matching code path without duplication.
- *
- *               This Helper holds NO SOQL — every Reseller__c query goes
- *               through ResellerSelector. Email normalization goes through
- *               StringUtils. Both choices keep this class focused on the
- *               matching algorithm itself: collect candidate records,
- *               ask for the matching resellers, assign the lookup.
- *
- *               Five-layer Kevin O'Hara pattern as it stands today:
- *                 Trigger -> Handler (dispatch) -> Helper (this — algorithm)
- *                                                        |
- *                                              ResellerSelector (SOQL)
- *                                              StringUtils (normalization)
+ * @description  Channel-partner matching logic for Opportunity. SOQL goes
+ *               through ResellerSelector, normalization through StringUtils,
+ *               so this class stays focused on the algorithm.
+ *               Trigger -> Handler -> Helper (this) -> Selector / StringUtils.
  *
  * @group        VoltStream Channel Partner Management
  * @author       Mustafa Aksu
@@ -27,29 +11,14 @@
 public with sharing class OpportunityTriggerHelper {
 
     /**
-     * @description  Look up the matching Reseller__c for each Opportunity by
-     *               company email (case-insensitive via StringUtils, active
-     *               resellers only via ResellerSelector) and populate the
-     *               Reseller__c lookup field. Bulkified — at most one SOQL
-     *               per call regardless of batch size.
+     * @description  Look up the matching Reseller__c by company email and
+     *               populate the lookup field. Bulkified — at most one SOQL
+     *               per call. Insert: process records with non-blank email.
+     *               Update: only re-match when normalized email changed. No
+     *               match -> leave lookup null silently.
      *
-     *               Behavior:
-     *                 - On insert (oldMap == null): process every record with
-     *                   a non-blank email.
-     *                 - On update (oldMap != null): only re-match records
-     *                   whose normalized Reseller_Email__c changed (so a
-     *                   pure case change like 'A@x.de' -> 'a@x.de' does not
-     *                   trigger a SOQL).
-     *                 - Cleared email -> also clear the Reseller lookup.
-     *                 - No match found -> leave the lookup null silently
-     *                   (never block the save).
-     *                 - Inactive resellers (Active__c = false) are excluded
-     *                   from matching by ResellerSelector.
-     *
-     * @param  opps    Trigger.new list of Opportunity records (mutated
-     *                 in-place — the Reseller__c field is set on records
-     *                 that match).
-     * @param  oldMap  Trigger.oldMap on update; pass null on insert.
+     * @param  opps    Trigger.new (mutated in place).
+     * @param  oldMap  Trigger.oldMap on update; null on insert.
      */
     public static void assignResellerLookup(List<Opportunity> opps, Map<Id, Opportunity> oldMap) {
         // Step 1: figure out which records need a fresh match and what emails to query.

@@ -1,18 +1,8 @@
 /**
- * @description  Stateless string normalization utilities used across the
- *               VoltStream codebase. Pure static methods — every public
- *               method is null-safe (blank input returns null, never throws).
- *
- *               Single source of truth for:
- *                 - Email casing and whitespace cleanup (used by
- *                   OpportunityTriggerHelper for case-insensitive matching).
- *                 - Phone number formatting (consistent display format
- *                   across the org regardless of how users typed the input).
- *                 - General whitespace normalization (trim + collapse
- *                   internal multi-spaces).
- *
- *               When normalization rules change, they change in one place —
- *               not scattered across triggers, helpers, batches, and tests.
+ * @description  Stateless string normalization utilities. Single source of
+ *               truth for email casing, phone formatting, and whitespace
+ *               cleanup. Every public method is null-safe (blank in -> null
+ *               out, never throws).
  *
  * @group        VoltStream Channel Partner Management
  * @author       Mustafa Aksu
@@ -21,18 +11,9 @@
 public with sharing class StringUtils {
 
     /**
-     * @description  Normalize an email for storage and case-insensitive
-     *               comparison: trim leading/trailing whitespace and
-     *               lowercase the whole string. RFC-strict local-part case
-     *               sensitivity is intentionally ignored — almost every mail
-     *               server folds case in practice, and case-insensitive
-     *               matching is what business users expect.
-     *
-     * @param  email  Raw email input. May be null, blank, padded with
-     *                whitespace, or in any case.
-     * @return  Lowercase, trimmed email. Returns null when input is blank
-     *          (null, empty, or whitespace-only) so callers can use
-     *          `if (normalized != null)` as a single-check guard.
+     * @description  Trim and lowercase an email for case-insensitive comparison.
+     * @param  email  Raw email; may be null, blank, padded, or in any case.
+     * @return  Lowercase trimmed email, or null when input is blank.
      */
     public static String normalizeEmail(String email) {
         // Null-safe contract: blank in -> null out, never throw.
@@ -43,22 +24,12 @@ public with sharing class StringUtils {
     }
 
     /**
-     * @description  Normalize a phone number to the project's display format.
-     *               Strips every character that is not a digit or a leading
-     *               '+', then groups the digits.
-     *
-     *               Format rules:
-     *                 - 10 digits          -> '(NNN) NNN NN-NN'
-     *                 - Leading '+' kept  -> '+CC (NNN) NNN NN-NN' when the
-     *                                         remainder is exactly 10 digits.
-     *                 - Anything else      -> return cleaned digits (with '+'
-     *                                         preserved if input had one) so
-     *                                         we never silently lose data.
-     *
-     * @param  phone  Raw phone input — may include parentheses, dashes,
-     *                spaces, '+', country code, etc.
-     * @return  Formatted phone string, or null when input is blank or has
-     *          no digits at all.
+     * @description  Format a phone number into the project canonical format.
+     *               10 digits -> '(NNN) NNN NN-NN'. Leading '+' kept with
+     *               country code: '+CC (NNN) NNN NN-NN' for 12-digit input.
+     *               Other lengths return cleaned digits (with '+' if any).
+     * @param  phone  Raw phone input — may include parens, dashes, spaces.
+     * @return  Formatted phone, or null when input is blank or has no digits.
      */
     public static String normalizePhone(String phone) {
         // Null-safe contract.
@@ -100,16 +71,9 @@ public with sharing class StringUtils {
     }
 
     /**
-     * @description  Trim leading/trailing whitespace and collapse any internal
-     *               run of whitespace (spaces, tabs, newlines) down to a
-     *               single space. Useful for free-text fields like company
-     *               names, addresses, or descriptions where users may
-     *               accidentally double-space or paste content with tabs.
-     *
-     * @param  s  Raw string. May be null, empty, or contain inconsistent
-     *            whitespace.
-     * @return  Cleaned string with single spaces between tokens. Returns
-     *          null when input is blank.
+     * @description  Trim and collapse all internal whitespace to single spaces.
+     * @param  s  Raw string; may be null or have inconsistent whitespace.
+     * @return  Cleaned string, or null when input is blank.
      */
     public static String normalizeWhitespace(String s) {
         // Null-safe contract.

@@ -1,13 +1,8 @@
 /**
- * @description  Unit tests for ResellerSelector. Verifies the contract of
- *               every query method: the Active__c filter actually excludes
- *               inactive records, missing emails return an empty list, and
- *               an empty input set short-circuits without errors.
- *
- *               These tests use TestDataFactory for record construction so
- *               schema changes don't ripple here. Each test inserts the
- *               minimum data it needs via @TestSetup, then exercises one
- *               Selector method.
+ * @description  Unit tests for ResellerSelector. Verifies query contracts:
+ *               Active__c filter, missing record returns empty, empty input
+ *               short-circuits, External ID case-sensitive match. Uses
+ *               TestDataFactory for record construction.
  *
  * @group        VoltStream Channel Partner Management — Tests
  * @author       Mustafa Aksu

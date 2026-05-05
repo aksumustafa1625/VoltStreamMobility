@@ -1,24 +1,8 @@
 /**
- * @description  Direct unit tests for OpportunityTriggerHelper. These tests
- *               call the static Helper methods in isolation — Opportunity
- *               records are constructed in memory via TestDataFactory and
- *               passed in as method arguments rather than inserted via DML.
- *               That means the Opportunity trigger does NOT fire during
- *               these tests; we are exercising the algorithm itself, not
- *               the Trigger -> Handler -> Helper plumbing.
- *
- *               Why a Helper test class on top of OpportunityTriggerHandlerTest:
- *                 - Faster feedback when the algorithm changes (no Opportunity
- *                   DML cost).
- *                 - Clearer failure messages — a broken assertion here points
- *                   straight at the algorithm; a broken assertion in the
- *                   Handler test could mean the algorithm OR the dispatch wiring.
- *                 - Documents that the Helper is callable from non-trigger
- *                   contexts (e.g. a future batch job or scheduled class could
- *                   call OpportunityTriggerHelper.assignResellerLookup() directly).
- *
- *               Resellers ARE inserted via DML in @TestSetup because the
- *               Helper's SOQL needs them to exist; that one DML is unavoidable.
+ * @description  Unit tests for OpportunityTriggerHelper. Calls the static
+ *               method directly with in-memory Opportunity records — no DML,
+ *               no trigger fire. Resellers are seeded in @TestSetup (the only
+ *               DML) since the Helper's SOQL needs them present.
  *
  * @group        VoltStream Channel Partner Management — Tests
  * @author       Mustafa Aksu

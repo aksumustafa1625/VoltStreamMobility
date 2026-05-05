@@ -1,15 +1,7 @@
 /**
- * @description  Reseller__c trigger — registers all seven trigger contexts
- *               and delegates execution to ResellerTriggerHandler via the
- *               Kevin O'Hara framework. No business logic lives in this
- *               file by design: the trigger only routes, the Handler
- *               dispatches by context, and the Helper holds the actual
- *               normalization algorithm.
- *
- *               All seven contexts are registered up-front so that future
- *               logic additions (e.g. an audit-log feature on afterUpdate)
- *               only need a one-line override in the Handler — never a
- *               redeploy of the trigger header itself.
+ * @description  Routes Reseller__c events to ResellerTriggerHandler. All
+ *               seven contexts registered so future logic can be added via a
+ *               one-line override on the Handler.
  *
  * @group        VoltStream Channel Partner Management
  * @author       Mustafa Aksu

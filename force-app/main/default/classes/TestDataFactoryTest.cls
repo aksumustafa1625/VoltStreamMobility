@@ -1,11 +1,6 @@
 /**
- * @description  Unit tests for TestDataFactory. Verifies that each builder
- *               returns an unsaved record with the documented defaults so
- *               other test classes can rely on those defaults without
- *               re-asserting them everywhere.
- *
- *               No DML is performed — the factory itself does no DML, and
- *               these tests don't need any to verify field assignment.
+ * @description  Unit tests for TestDataFactory. Verifies each builder returns
+ *               an unsaved record with the documented defaults. No DML.
  *
  * @group        VoltStream Channel Partner Management — Tests
  * @author       Mustafa Aksu

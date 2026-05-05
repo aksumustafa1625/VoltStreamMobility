@@ -1,13 +1,7 @@
 /**
  * @description  Unit tests for StringUtils. Pure static method tests — no
- *               DML, no SOQL, no Limits-bound operations. Every branch of
- *               every public method is exercised, including null / empty /
- *               whitespace-only edge cases that the null-safe contract
- *               promises to handle.
- *
- *               Coverage target: 100%. Because StringUtils has no external
- *               dependencies, the test suite runs in milliseconds and is
- *               cheap to expand whenever a new normalization rule is added.
+ *               DML, no SOQL. Every branch including null-safe edge cases
+ *               is covered.
  *
  * @group        VoltStream Channel Partner Management — Tests
  * @author       Mustafa Aksu

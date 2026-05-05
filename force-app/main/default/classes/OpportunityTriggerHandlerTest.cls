@@ -1,19 +1,8 @@
 /**
- * @description  Integration tests for OpportunityTrigger + OpportunityTriggerHandler.
- *               Tests fire DML on Opportunity to exercise the full
- *               Trigger -> Handler -> Helper chain end-to-end in real org
- *               transactions. This complements OpportunityTriggerHelperTest,
- *               which exercises the algorithm in isolation without DML.
- *
- *               Test data construction is delegated to TestDataFactory so
- *               that schema changes (e.g. adding a required field to
- *               Reseller__c) only need to update the factory — never each
- *               test method.
- *
- *               Each test method isolates one scenario from the channel-partner
- *               matching flow: insert paths, update paths, bulk behavior, and
- *               the TriggerHandler bypass API inherited from Kevin O'Hara's
- *               framework. Coverage target: 100%.
+ * @description  Integration tests for OpportunityTrigger + Handler. Fires DML
+ *               to exercise the full Trigger -> Handler -> Helper chain
+ *               end-to-end. Complements OpportunityTriggerHelperTest (unit-
+ *               level, no DML).
  *
  * @group        VoltStream Channel Partner Management — Tests
  * @author       Mustafa Aksu

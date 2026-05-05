@@ -1,19 +1,7 @@
 /**
- * @description  Direct unit tests for ResellerTriggerHelper. Exercises the
- *               normalization algorithm in isolation by passing in-memory
- *               Reseller__c records (no DML), so the trigger does not fire
- *               and only the Helper's static method runs.
- *
- *               Why a Helper test class on top of ResellerTriggerHandlerTest:
- *                 - Faster feedback when normalization rules change (zero
- *                   DML cost).
- *                 - Clearer failure messages — a broken assertion here
- *                   points at the algorithm, not at trigger plumbing.
- *                 - Documents that the Helper is callable from non-trigger
- *                   contexts (e.g. a one-off data-cleanup script could call
- *                   ResellerTriggerHelper.normalizeFields(records) directly).
- *
- *               Coverage target: 100%.
+ * @description  Unit tests for ResellerTriggerHelper. Calls the static method
+ *               directly with in-memory Reseller records — no DML, no trigger
+ *               fire.
  *
  * @group        VoltStream Channel Partner Management — Tests
  * @author       Mustafa Aksu

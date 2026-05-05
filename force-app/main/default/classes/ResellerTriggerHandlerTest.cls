@@ -1,17 +1,7 @@
 /**
- * @description  Integration tests for ResellerTrigger + ResellerTriggerHandler.
- *               Tests fire DML on Reseller__c to exercise the full
- *               Trigger -> Handler -> Helper chain end-to-end in real org
- *               transactions. Complements ResellerTriggerHelperTest, which
- *               exercises the algorithm in isolation without DML.
- *
- *               These tests prove:
- *                 1. The trigger actually fires on insert and update.
- *                 2. The Handler correctly delegates to the Helper.
- *                 3. The Helper's normalization sticks in the database.
- *                 4. The Kevin O'Hara framework's bypass API works.
- *
- *               Coverage target: 100%.
+ * @description  Integration tests for ResellerTrigger + Handler. Fires DML
+ *               to exercise the full Trigger -> Handler -> Helper chain in
+ *               real org transactions. Complements ResellerTriggerHelperTest.
  *
  * @group        VoltStream Channel Partner Management — Tests
  * @author       Mustafa Aksu
