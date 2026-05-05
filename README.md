@@ -5,7 +5,7 @@
 [![Trigger framework](https://img.shields.io/badge/trigger--framework-Kevin%20O%27Hara-blue)](https://github.com/kevinohara80/sfdc-trigger-framework)
 [![API version](https://img.shields.io/badge/API-65.0-orange)]()
 [![Test coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)]()
-[![Tests](https://img.shields.io/badge/tests-33%2F33%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-53%2F53%20passing-brightgreen)]()
 
 ---
 
@@ -118,8 +118,10 @@ The Helper runs **one bulkified SOQL** per batch (handles 200-record inserts wit
 | `OpportunityTrigger` | Route | One-line trigger; delegates to handler | 100% |
 | `OpportunityTriggerHandler` | Dispatch | Thin dispatcher; routes contexts to helper methods | 100% |
 | `OpportunityTriggerHelper` | Logic | Stateless matching algorithm, bulkified, case-insensitive | 100% |
+| `StringUtils` | Utility | Centralized string normalization (email lowercasing, phone formatting, whitespace cleanup). Single source of truth — Helper delegates here. | 100% |
 | `OpportunityTriggerHandlerTest` | Integration tests | 10 methods — DML-based, prove the trigger fires end-to-end | — |
 | `OpportunityTriggerHelperTest` | Unit tests | 8 methods — direct static-method calls, no Opportunity DML | — |
+| `StringUtilsTest` | Unit tests | 18 methods — every branch of every utility, including null-safe edge cases | — |
 
 ### UI
 
@@ -151,8 +153,10 @@ force-app/main/default/
 │   ├── TriggerHandler_Test.cls       (framework tests)
 │   ├── OpportunityTriggerHandler.cls (dispatcher)
 │   ├── OpportunityTriggerHelper.cls  (matching logic)
+│   ├── StringUtils.cls               (centralized string normalization)
 │   ├── OpportunityTriggerHandlerTest.cls  (integration tests)
-│   └── OpportunityTriggerHelperTest.cls   (unit tests)
+│   ├── OpportunityTriggerHelperTest.cls   (unit tests)
+│   └── StringUtilsTest.cls                (unit tests)
 ├── triggers/
 │   └── OpportunityTrigger.trigger
 ├── objects/
@@ -227,7 +231,7 @@ Run the Apex test suite locally with code coverage:
 sf apex run test --test-level RunLocalTests --code-coverage --result-format human --synchronous
 ```
 
-Expected: **33 tests pass, 100% coverage on custom code, 0 failures.**
+Expected: **53 tests pass, 100% coverage on custom code, 0 failures.**
 
 The suite is **layered**:
 
@@ -260,6 +264,7 @@ A few non-obvious choices, called out so reviewers don't have to guess:
 - **Update path is optimised.** On update, the trigger only re-queries when `Reseller_Email__c` actually changed (using `Trigger.oldMap`), so editing unrelated fields adds zero SOQL.
 - **Tier picklist (Bronze/Silver/Gold/Platinum) is intentionally deferred** to a future phase to keep the first iteration focused on the matching mechanic.
 - **Every Apex class ships with its own `*Test.cls`.** No untested classes land on `main`. Helpers get unit tests (no DML); Triggers and Handlers get integration tests (via DML).
+- **String normalization is centralized in `StringUtils`.** Email lowercasing, phone formatting, whitespace cleanup — none are inlined anywhere. When the rule changes, it changes in one place. Null-safe contract: blank in -> null out, never throws.
 
 ---
 
