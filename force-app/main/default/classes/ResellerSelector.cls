@@ -53,11 +53,17 @@ public with sharing class ResellerSelector {
      *          Empty list if none match or if the input set is empty.
      */
     public static List<Reseller__c> findActiveByEmails(Set<String> emails) {
+        // WITH USER_MODE enforces field- and object-level security based on
+        // the running user's permissions, on top of the class's `with sharing`
+        // record visibility. This is the modern (API 60+) replacement for
+        // Schema.sObjectType.X.isAccessible() guards and is what Salesforce
+        // recommends for any SOQL that runs in user context.
         return [
             SELECT Id, Company_Email__c
             FROM Reseller__c
             WHERE Company_Email__c IN :emails
             AND Active__c = true
+            WITH USER_MODE
             LIMIT 50000
         ];
     }
