@@ -1,13 +1,40 @@
 {
-  "orgName": "Demo company",
+  "orgName": "VoltStream Mobility",
   "edition": "Developer",
-  "features": ["EnableSetPasswordInApi"],
+  "description": "B2B EV charging infrastructure supplier — channel partner CRM scratch org. Apex API 65, German market context, Sales app preconfigured.",
+  "features": [
+    "EnableSetPasswordInApi",
+    "Communities",
+    "ServiceCloud"
+  ],
   "settings": {
     "lightningExperienceSettings": {
       "enableS1DesktopEnabled": true
     },
     "mobileSettings": {
       "enableS1EncryptedStoragePref2": false
+    },
+    "apexSettings": {
+      "enableApexAccessRightsPref": true,
+      "enableAuraApexCtrlAuthUserAccessCheckPref": true,
+      "enableCompileOnDeploy": true
+    },
+    "securitySettings": {
+      "passwordPolicies": {
+        "complexity": "AlphaNumeric",
+        "expiration": "NinetyDays",
+        "minimumPasswordLength": 8
+      },
+      "sessionSettings": {
+        "sessionTimeout": "TwoHours",
+        "lockSessionsToIp": false
+      }
+    },
+    "userManagementSettings": {
+      "enableEnhancedProfileMgmt": true
+    },
+    "languageSettings": {
+      "enableTranslationWorkbench": true
     }
   }
 }
