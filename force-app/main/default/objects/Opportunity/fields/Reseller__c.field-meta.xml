@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Reseller__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Lookup to the Reseller__c record that sourced this Opportunity. Auto-populated by OpportunityTriggerHandler based on Reseller_Email__c. If the Reseller is deleted, this field is set to null (the Opportunity survives).</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Auto-populated by the OpportunityTrigger when the Reseller Email matches a Reseller record. Do not edit manually.</inlineHelpText>
+    <label>Reseller</label>
+    <referenceTo>Reseller__c</referenceTo>
+    <relationshipLabel>Opportunities</relationshipLabel>
+    <relationshipName>Opportunities</relationshipName>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>Lookup</type>
+</CustomField>
