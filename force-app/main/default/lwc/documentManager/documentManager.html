@@ -20,7 +20,7 @@
         <div class="dm-folder-grid">
             <template for:each={folderCards} for:item="card">
                 <div key={card.name} class={card.cssClass} data-category={card.name} onclick={handleFolderClick}>
-                    <lightning-icon icon-name="utility:open_folder" size="small" class="folder-icon"></lightning-icon>
+                    <lightning-icon icon-name="utility:open_folder" size="small" class={card.iconClass}></lightning-icon>
                     <div class="folder-name">{card.name}</div>
                     <div class="folder-count">{card.fileLabel}</div>
                 </div>
@@ -31,7 +31,7 @@
         <div class="dm-files-section">
             <div class="dm-files-header">
                 <div class="dm-folder-title">
-                    <lightning-icon icon-name="utility:open_folder" size="small" class="folder-icon-inline"></lightning-icon>
+                    <lightning-icon icon-name="utility:open_folder" size="small" class={selectedFolderIconClass}></lightning-icon>
                     <span>{selectedFolderTitle}</span>
                     <span class="dm-folder-badge">{selectedFolderCount}</span>
                 </div>

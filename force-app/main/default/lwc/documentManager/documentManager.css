@@ -68,17 +68,38 @@
     color: white;
     border-color: var(--dm-blue);
 }
-.folder-card_selected .folder-icon,
 .folder-card_selected .folder-name,
 .folder-card_selected .folder-count {
     color: white;
 }
-.folder-card_selected .folder-icon {
+/* When a folder card is selected (blue fill) its icon must stay white,
+   overriding any of the per-folder color classes below. */
+.folder-card_selected .folder-icon,
+.folder-card_selected.dm-icon_orange .folder-icon,
+.folder-card_selected.dm-icon_green  .folder-icon,
+.folder-card_selected.dm-icon_purple .folder-icon,
+.folder-card_selected.dm-icon_gray   .folder-icon {
     --sds-c-icon-color-foreground-default: white;
 }
-.folder-icon {
-    --sds-c-icon-color-foreground-default: #f59e0b;
-}
+
+/* Per-folder icon colors — applied via class on the card and on the
+   selected-folder header icon. Each class colors any lightning-icon
+   nested under an element carrying it. */
+.dm-icon_orange .folder-icon,
+.dm-icon_orange.folder-icon-inline,
+lightning-icon.dm-icon_orange { --sds-c-icon-color-foreground-default: #f59e0b; }
+
+.dm-icon_green  .folder-icon,
+.dm-icon_green.folder-icon-inline,
+lightning-icon.dm-icon_green  { --sds-c-icon-color-foreground-default: #10b981; }
+
+.dm-icon_purple .folder-icon,
+.dm-icon_purple.folder-icon-inline,
+lightning-icon.dm-icon_purple { --sds-c-icon-color-foreground-default: #8b5cf6; }
+
+.dm-icon_gray   .folder-icon,
+.dm-icon_gray.folder-icon-inline,
+lightning-icon.dm-icon_gray   { --sds-c-icon-color-foreground-default: #6b7280; }
 .folder-name {
     font-weight: 600;
     font-size: 0.75rem;

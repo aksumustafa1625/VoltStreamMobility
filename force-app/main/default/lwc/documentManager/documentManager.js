@@ -17,6 +17,12 @@ import getCategoryCounts from '@salesforce/apex/DocumentController.getCategoryCo
 import uploadDocument from '@salesforce/apex/DocumentController.uploadDocument';
 
 const CATEGORIES = ['Application Forms', 'Statements', 'Reports', 'Uncategorized'];
+const COLOR_CLASSES = {
+    'Application Forms': 'dm-icon_orange',
+    'Statements':        'dm-icon_green',
+    'Reports':           'dm-icon_purple',
+    'Uncategorized':     'dm-icon_gray'
+};
 
 export default class DocumentManager extends NavigationMixin(LightningElement) {
     selectedCategory = 'Application Forms';
@@ -57,13 +63,22 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
         return CATEGORIES.map((name) => {
             const fileCount = counts[name] || 0;
             const isSelected = name === this.selectedCategory;
+            const colorClass = COLOR_CLASSES[name] || 'dm-icon_gray';
             return {
                 name,
                 fileCount,
                 fileLabel: fileCount === 1 ? '1 file' : `${fileCount} files`,
-                cssClass: isSelected ? 'folder-card folder-card_selected' : 'folder-card'
+                cssClass: isSelected
+                    ? `folder-card folder-card_selected ${colorClass}`
+                    : `folder-card ${colorClass}`,
+                iconClass: `folder-icon ${colorClass}`
             };
         });
+    }
+
+    get selectedFolderIconClass() {
+        const colorClass = COLOR_CLASSES[this.selectedCategory] || 'dm-icon_gray';
+        return `folder-icon-inline ${colorClass}`;
     }
 
     get folderOptions() {
