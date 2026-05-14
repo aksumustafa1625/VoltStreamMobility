@@ -1,0 +1,99 @@
+<template>
+    <div class="dm-container">
+
+        <!-- ======== Top header: title + summary + action buttons ======== -->
+        <div class="dm-header">
+            <div class="dm-title-block">
+                <div class="dm-title">
+                    <lightning-icon icon-name="utility:open_folder" size="small" class="dm-title-icon"></lightning-icon>
+                    <span>Documents</span>
+                </div>
+                <p class="dm-summary">{headerSummary}</p>
+            </div>
+            <div class="dm-header-actions">
+                <lightning-button variant="brand" label="Upload Files" icon-name="utility:upload" onclick={handleUploadClick}></lightning-button>
+                <lightning-button variant="neutral" label="New Folder" icon-name="utility:add" onclick={handleNewFolderClick} class="slds-m-left_x-small"></lightning-button>
+            </div>
+        </div>
+
+        <!-- ======== Folder cards ======== -->
+        <div class="dm-folder-grid">
+            <template for:each={folderCards} for:item="card">
+                <div key={card.name} class={card.cssClass} data-category={card.name} onclick={handleFolderClick}>
+                    <lightning-icon icon-name="utility:open_folder" size="small" class="folder-icon"></lightning-icon>
+                    <div class="folder-name">{card.name}</div>
+                    <div class="folder-count">{card.fileLabel}</div>
+                </div>
+            </template>
+        </div>
+
+        <!-- ======== Selected folder: header + search + sort ======== -->
+        <div class="dm-files-section">
+            <div class="dm-files-header">
+                <div class="dm-folder-title">
+                    <lightning-icon icon-name="utility:open_folder" size="small" class="folder-icon-inline"></lightning-icon>
+                    <span>{selectedFolderTitle}</span>
+                    <span class="dm-folder-badge">{selectedFolderCount}</span>
+                </div>
+                <div class="dm-controls">
+                    <lightning-input type="search" placeholder="Search files..." value={searchTerm} onchange={handleSearchChange} variant="label-hidden" class="dm-search"></lightning-input>
+                    <div class="dm-sort">
+                        <span class="dm-sort-label">Sort by</span>
+                        <lightning-combobox value={sortField} options={sortOptions} onchange={handleSortChange} variant="label-hidden"></lightning-combobox>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======== Files table ======== -->
+            <template if:true={hasFiles}>
+                <table class="dm-table">
+                    <thead>
+                        <tr>
+                            <th>FILE NAME</th>
+                            <th>TYPE</th>
+                            <th>SIZE</th>
+                            <th>UPLOADED BY</th>
+                            <th>DATE</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={filteredDocuments} for:item="row">
+                            <tr key={row.id}>
+                                <td class="dm-file-name">
+                                    <lightning-icon icon-name="utility:file" size="x-small" class="file-icon"></lightning-icon>
+                                    <span>{row.name}</span>
+                                </td>
+                                <td><span class="dm-type-badge">{row.type}</span></td>
+                                <td>{row.size}</td>
+                                <td>{row.uploadedBy}</td>
+                                <td>{row.date}</td>
+                                <td class="dm-actions">
+                                    <button class="dm-action dm-action_view" data-action="View" data-name={row.name} onclick={handleRowAction} title="View">👁</button>
+                                    <button class="dm-action dm-action_download" data-action="Download" data-name={row.name} onclick={handleRowAction} title="Download">⬇</button>
+                                    <button class="dm-action dm-action_share" data-action="Share" data-name={row.name} onclick={handleRowAction} title="Share">↗</button>
+                                    <button class="dm-action dm-action_delete" data-action="Delete" data-name={row.name} onclick={handleRowAction} title="Delete">✕</button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </template>
+
+            <template if:false={hasFiles}>
+                <div class="dm-empty">No files in this folder yet.</div>
+            </template>
+        </div>
+
+        <!-- ======== Recent activity (placeholder for phase 2) ======== -->
+        <div class="dm-activity">
+            <div class="dm-activity-title">RECENT ACTIVITY</div>
+            <div class="dm-activity-row">
+                <lightning-icon icon-name="utility:open_folder" size="small" class="folder-icon"></lightning-icon>
+                <span class="dm-activity-text">Default folders created automatically for record</span>
+                <span class="dm-activity-time">3d ago</span>
+            </div>
+        </div>
+
+    </div>
+</template>
