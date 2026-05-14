@@ -5,7 +5,9 @@
         <div class="dm-header">
             <div class="dm-title-block">
                 <div class="dm-title">
-                    <lightning-icon icon-name="utility:open_folder" size="small" class="dm-title-icon" style={titleIconStyle}></lightning-icon>
+                    <svg class="dm-svg-icon dm-svg-icon_lg" style={titleIconStyle} viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                        <path fill="currentColor" d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+                    </svg>
                     <span>Documents</span>
                 </div>
                 <p class="dm-summary">{headerSummary}</p>
@@ -20,7 +22,9 @@
         <div class="dm-folder-grid">
             <template for:each={folderCards} for:item="card">
                 <div key={card.name} class={card.cssClass} data-category={card.name} onclick={handleFolderClick}>
-                    <lightning-icon icon-name="utility:open_folder" size="small" class="folder-icon" style={card.iconStyle}></lightning-icon>
+                    <svg class="dm-svg-icon dm-svg-icon_lg" style={card.iconStyle} viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                        <path fill="currentColor" d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+                    </svg>
                     <div class="folder-name">{card.name}</div>
                     <div class="folder-count">{card.fileLabel}</div>
                 </div>
@@ -31,7 +35,9 @@
         <div class="dm-files-section">
             <div class="dm-files-header">
                 <div class="dm-folder-title">
-                    <lightning-icon icon-name="utility:open_folder" size="small" class="folder-icon-inline" style={selectedFolderIconStyle}></lightning-icon>
+                    <svg class="dm-svg-icon dm-svg-icon_lg" style={selectedFolderIconStyle} viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                        <path fill="currentColor" d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+                    </svg>
                     <span>{selectedFolderTitle}</span>
                     <span class="dm-folder-badge">{selectedFolderCount}</span>
                 </div>
@@ -61,7 +67,9 @@
                         <template for:each={filteredDocuments} for:item="row">
                             <tr key={row.id}>
                                 <td class="dm-file-name">
-                                    <lightning-icon icon-name="utility:file" size="x-small" class="file-icon"></lightning-icon>
+                                    <svg class="dm-svg-icon dm-svg-icon_file" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                        <path fill="currentColor" d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                                    </svg>
                                     <a href="javascript:void(0);" class="dm-file-link" data-id={row.id} data-cdid={row.contentDocumentId} onclick={handleNameClick}>{row.name}</a>
                                 </td>
                                 <td><span class="dm-type-badge">{row.type}</span></td>
@@ -101,7 +109,9 @@
             <template if:true={hasRecentActivity}>
                 <template for:each={recentActivity} for:item="row">
                     <div key={row.id} class="dm-activity-row">
-                        <lightning-icon icon-name="utility:open_folder" size="small" class="folder-icon" style={row.iconStyle}></lightning-icon>
+                        <svg class="dm-svg-icon dm-svg-icon_lg" style={row.iconStyle} viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                            <path fill="currentColor" d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+                        </svg>
                         <span class="dm-activity-text">{row.text}</span>
                         <span class="dm-activity-time">{row.time}</span>
                     </div>

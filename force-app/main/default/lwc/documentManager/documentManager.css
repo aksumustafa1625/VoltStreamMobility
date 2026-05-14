@@ -29,8 +29,27 @@
     font-size: 1.25rem;
     font-weight: 600;
 }
-.dm-title-icon {
-    --sds-c-icon-color-foreground-default: #f59e0b;
+
+/* ===== Inline SVG icons =====
+   Folder icons are rendered as raw <svg fill="currentColor"> so the color
+   is controlled by a normal `color` CSS property set inline from JS. This
+   avoids the lightning-icon shadow-DOM CSS-variable issue that left every
+   folder icon dark gray no matter which SLDS hook we set. */
+.dm-svg-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+.dm-svg-icon_lg {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+.dm-svg-icon_file {
+    width: 1rem;
+    height: 1rem;
+    color: var(--dm-blue);
 }
 .dm-summary {
     color: var(--dm-muted);
@@ -72,11 +91,6 @@
 .folder-card_selected .folder-count {
     color: white;
 }
-/* Icon colors are applied inline via the style attribute (built in JS as
-   iconStyle) because CSS-variable inheritance through lightning-icon's
-   shadow DOM is unreliable across SDS / SLDS naming generations. The
-   inline approach sets every relevant variable on the host element so it
-   works regardless of which name lightning-icon's internal CSS reads. */
 .folder-name {
     font-weight: 600;
     font-size: 0.75rem;
@@ -171,9 +185,6 @@
 }
 .dm-file-link:hover {
     text-decoration: underline;
-}
-.file-icon {
-    --sds-c-icon-color-foreground-default: var(--dm-blue);
 }
 .dm-type-badge {
     background: #fee2e2;

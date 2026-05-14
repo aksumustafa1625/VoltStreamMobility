@@ -28,11 +28,10 @@ const CATEGORY_COLORS = {
 const TITLE_COLOR    = '#f59e0b';   // top 'Documents' header — amber to match the mockup
 const SELECTED_COLOR = '#ffffff';   // selected folder card — icon stays white on the blue fill
 
-// Build the multi-variable style string Salesforce uses across SDS / SLDS versions.
+// Folder icons are rendered as inline <svg fill="currentColor">, so a plain
+// `color` declaration is enough — no SLDS CSS variables, no shadow DOM issues.
 function iconStyle(color) {
-    return `--slds-c-icon-color-foreground-default: ${color};`
-         + `--sds-c-icon-color-foreground-default: ${color};`
-         + `--slds-c-icon-color-foreground: ${color};`;
+    return `color: ${color};`;
 }
 
 export default class DocumentManager extends NavigationMixin(LightningElement) {
