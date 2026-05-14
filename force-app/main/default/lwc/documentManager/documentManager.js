@@ -19,12 +19,21 @@ import uploadDocument from '@salesforce/apex/DocumentController.uploadDocument';
 import shareToChatter from '@salesforce/apex/DocumentController.shareToChatter';
 
 const CATEGORIES = ['Application Forms', 'Statements', 'Reports', 'Uncategorized'];
-const COLOR_CLASSES = {
-    'Application Forms': 'dm-icon_orange',
-    'Statements':        'dm-icon_green',
-    'Reports':           'dm-icon_purple',
-    'Uncategorized':     'dm-icon_gray'
+const CATEGORY_COLORS = {
+    'Application Forms': '#f59e0b', // orange
+    'Statements':        '#10b981', // emerald
+    'Reports':           '#8b5cf6', // purple
+    'Uncategorized':     '#6b7280'  // gray
 };
+const TITLE_COLOR    = '#f59e0b';   // top 'Documents' header — amber to match the mockup
+const SELECTED_COLOR = '#ffffff';   // selected folder card — icon stays white on the blue fill
+
+// Build the multi-variable style string Salesforce uses across SDS / SLDS versions.
+function iconStyle(color) {
+    return `--slds-c-icon-color-foreground-default: ${color};`
+         + `--sds-c-icon-color-foreground-default: ${color};`
+         + `--slds-c-icon-color-foreground: ${color};`;
+}
 
 export default class DocumentManager extends NavigationMixin(LightningElement) {
     selectedCategory = 'Application Forms';
@@ -78,22 +87,24 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
         return CATEGORIES.map((name) => {
             const fileCount = counts[name] || 0;
             const isSelected = name === this.selectedCategory;
-            const colorClass = COLOR_CLASSES[name] || 'dm-icon_gray';
+            const baseColor = CATEGORY_COLORS[name] || CATEGORY_COLORS.Uncategorized;
             return {
                 name,
                 fileCount,
                 fileLabel: fileCount === 1 ? '1 file' : `${fileCount} files`,
-                cssClass: isSelected
-                    ? `folder-card folder-card_selected ${colorClass}`
-                    : `folder-card ${colorClass}`,
-                iconClass: `folder-icon ${colorClass}`
+                cssClass: isSelected ? 'folder-card folder-card_selected' : 'folder-card',
+                iconStyle: iconStyle(isSelected ? SELECTED_COLOR : baseColor)
             };
         });
     }
 
-    get selectedFolderIconClass() {
-        const colorClass = COLOR_CLASSES[this.selectedCategory] || 'dm-icon_gray';
-        return `folder-icon-inline ${colorClass}`;
+    get titleIconStyle() {
+        return iconStyle(TITLE_COLOR);
+    }
+
+    get selectedFolderIconStyle() {
+        const color = CATEGORY_COLORS[this.selectedCategory] || CATEGORY_COLORS.Uncategorized;
+        return iconStyle(color);
     }
 
     // ---- Computed: Recent Activity strip ----
@@ -101,12 +112,12 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
     get recentActivity() {
         const rows = (this._wiredRecent && this._wiredRecent.data) || [];
         return rows.map((r) => {
-            const colorClass = COLOR_CLASSES[r.Category__c] || 'dm-icon_gray';
+            const color = CATEGORY_COLORS[r.Category__c] || CATEGORY_COLORS.Uncategorized;
             return {
                 id: r.Id,
                 text: `${r.Name} uploaded to ${r.Category__c}`,
                 time: this._relativeTime(r.CreatedDate),
-                iconClass: `folder-icon ${colorClass}`
+                iconStyle: iconStyle(color)
             };
         });
     }

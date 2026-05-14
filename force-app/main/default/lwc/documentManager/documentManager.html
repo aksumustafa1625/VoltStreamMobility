@@ -5,7 +5,7 @@
         <div class="dm-header">
             <div class="dm-title-block">
                 <div class="dm-title">
-                    <lightning-icon icon-name="utility:open_folder" size="small" class="dm-title-icon"></lightning-icon>
+                    <lightning-icon icon-name="utility:open_folder" size="small" class="dm-title-icon" style={titleIconStyle}></lightning-icon>
                     <span>Documents</span>
                 </div>
                 <p class="dm-summary">{headerSummary}</p>
@@ -20,7 +20,7 @@
         <div class="dm-folder-grid">
             <template for:each={folderCards} for:item="card">
                 <div key={card.name} class={card.cssClass} data-category={card.name} onclick={handleFolderClick}>
-                    <lightning-icon icon-name="utility:open_folder" size="small" class={card.iconClass}></lightning-icon>
+                    <lightning-icon icon-name="utility:open_folder" size="small" class="folder-icon" style={card.iconStyle}></lightning-icon>
                     <div class="folder-name">{card.name}</div>
                     <div class="folder-count">{card.fileLabel}</div>
                 </div>
@@ -31,7 +31,7 @@
         <div class="dm-files-section">
             <div class="dm-files-header">
                 <div class="dm-folder-title">
-                    <lightning-icon icon-name="utility:open_folder" size="small" class={selectedFolderIconClass}></lightning-icon>
+                    <lightning-icon icon-name="utility:open_folder" size="small" class="folder-icon-inline" style={selectedFolderIconStyle}></lightning-icon>
                     <span>{selectedFolderTitle}</span>
                     <span class="dm-folder-badge">{selectedFolderCount}</span>
                 </div>
@@ -101,7 +101,7 @@
             <template if:true={hasRecentActivity}>
                 <template for:each={recentActivity} for:item="row">
                     <div key={row.id} class="dm-activity-row">
-                        <lightning-icon icon-name="utility:open_folder" size="small" class={row.iconClass}></lightning-icon>
+                        <lightning-icon icon-name="utility:open_folder" size="small" class="folder-icon" style={row.iconStyle}></lightning-icon>
                         <span class="dm-activity-text">{row.text}</span>
                         <span class="dm-activity-time">{row.time}</span>
                     </div>
