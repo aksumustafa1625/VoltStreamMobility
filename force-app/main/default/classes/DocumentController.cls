@@ -76,13 +76,27 @@ public with sharing class DocumentController {
         insert doc;
 
         if (String.isNotBlank(base64Content)) {
+            // Two-step file linkage (FirstPublishLocation is no longer writeable):
+            //   1. Insert ContentVersion -> Salesforce creates a ContentDocument behind it.
+            //   2. Query the new ContentDocumentId, then create a ContentDocumentLink
+            //      pointing at our Document__c so the file shows up under that record.
             ContentVersion cv = new ContentVersion(
                 Title = fileName,
                 PathOnClient = fileName,
-                VersionData = EncodingUtil.base64Decode(base64Content),
-                FirstPublishLocation = doc.Id
+                VersionData = EncodingUtil.base64Decode(base64Content)
             );
             insert cv;
+
+            Id contentDocId = [
+                SELECT ContentDocumentId FROM ContentVersion WHERE Id = :cv.Id LIMIT 1
+            ].ContentDocumentId;
+
+            insert new ContentDocumentLink(
+                ContentDocumentId = contentDocId,
+                LinkedEntityId = doc.Id,
+                ShareType = 'V',
+                Visibility = 'AllUsers'
+            );
         }
 
         return doc.Id;
