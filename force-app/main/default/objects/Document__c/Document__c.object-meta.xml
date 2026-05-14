@@ -46,7 +46,7 @@
     <description>Logical file record that groups documents into folders (Application Forms, Statements, Reports, Uncategorized) for the Documents Lightning Web Component.</description>
     <enableActivities>false</enableActivities>
     <enableBulkApi>true</enableBulkApi>
-    <enableFeeds>false</enableFeeds>
+    <enableFeeds>true</enableFeeds>
     <enableHistory>false</enableHistory>
     <enableReports>true</enableReports>
     <enableSearch>true</enableSearch>
