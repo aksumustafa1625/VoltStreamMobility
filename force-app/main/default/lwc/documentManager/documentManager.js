@@ -9,13 +9,15 @@
  */
 import { LightningElement, wire, track } from 'lwc';
 import { refreshApex } from '@salesforce/apex';
+import { NavigationMixin } from 'lightning/navigation';
+import { deleteRecord } from 'lightning/uiRecordApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getDocuments from '@salesforce/apex/DocumentController.getDocuments';
 import getCategoryCounts from '@salesforce/apex/DocumentController.getCategoryCounts';
 
 const CATEGORIES = ['Application Forms', 'Statements', 'Reports', 'Uncategorized'];
 
-export default class DocumentManager extends LightningElement {
+export default class DocumentManager extends NavigationMixin(LightningElement) {
     selectedCategory = 'Application Forms';
     searchTerm = '';
     sortField = 'date';
@@ -119,16 +121,49 @@ export default class DocumentManager extends LightningElement {
         this._toast('New Folder', 'Custom folders arrive in the next phase.', 'info');
     }
 
-    handleRowAction(event) {
-        const action = event.currentTarget.dataset.action;
-        const name = event.currentTarget.dataset.name;
-        this._toast(action, `${action} clicked for ${name}.`, 'info');
-    }
-
     handleMenuAction(event) {
         const action = event.detail.value;
-        const name = event.currentTarget.dataset.name;
-        this._toast(action, `${action} clicked for ${name}.`, 'info');
+        const recordId = event.currentTarget.dataset.id;
+        const recordName = event.currentTarget.dataset.name;
+
+        switch (action) {
+            case 'View':
+                this._navigateToRecord(recordId);
+                break;
+            case 'Delete':
+                this._deleteDocument(recordId, recordName);
+                break;
+            case 'Download':
+                this._toast('Download', 'File download arrives once real file storage is wired up (phase 2).', 'info');
+                break;
+            case 'Share':
+                this._toast('Share', 'Sharing arrives once real file storage is wired up (phase 2).', 'info');
+                break;
+            default:
+                break;
+        }
+    }
+
+    _navigateToRecord(recordId) {
+        this[NavigationMixin.Navigate]({
+            type: 'standard__recordPage',
+            attributes: {
+                recordId,
+                objectApiName: 'Document__c',
+                actionName: 'view'
+            }
+        });
+    }
+
+    async _deleteDocument(recordId, recordName) {
+        try {
+            await deleteRecord(recordId);
+            this._toast('Deleted', `${recordName} was deleted.`, 'success');
+            this.refresh();
+        } catch (error) {
+            const msg = (error && error.body && error.body.message) || 'Could not delete the record.';
+            this._toast('Error', msg, 'error');
+        }
     }
 
     refresh() {
