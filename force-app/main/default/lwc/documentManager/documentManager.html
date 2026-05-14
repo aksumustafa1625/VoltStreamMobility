@@ -95,14 +95,23 @@
             </template>
         </div>
 
-        <!-- ======== Recent activity (placeholder for phase 3) ======== -->
+        <!-- ======== Recent activity — live from getRecentActivity ======== -->
         <div class="dm-activity">
             <div class="dm-activity-title">RECENT ACTIVITY</div>
-            <div class="dm-activity-row">
-                <lightning-icon icon-name="utility:open_folder" size="small" class="folder-icon"></lightning-icon>
-                <span class="dm-activity-text">Default folders created automatically for record</span>
-                <span class="dm-activity-time">3d ago</span>
-            </div>
+            <template if:true={hasRecentActivity}>
+                <template for:each={recentActivity} for:item="row">
+                    <div key={row.id} class="dm-activity-row">
+                        <lightning-icon icon-name="utility:open_folder" size="small" class={row.iconClass}></lightning-icon>
+                        <span class="dm-activity-text">{row.text}</span>
+                        <span class="dm-activity-time">{row.time}</span>
+                    </div>
+                </template>
+            </template>
+            <template if:false={hasRecentActivity}>
+                <div class="dm-activity-row">
+                    <span class="dm-activity-text">No recent uploads yet.</span>
+                </div>
+            </template>
         </div>
 
         <!-- ======== Upload modal ======== -->
@@ -139,6 +148,39 @@
                         <button class="slds-button slds-button_brand" onclick={handleUploadSubmit} disabled={isUploadDisabled}>
                             <template if:true={isUploading}>Uploading...</template>
                             <template if:false={isUploading}>Upload</template>
+                        </button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+        <!-- ======== Share modal ======== -->
+        <template if:true={showShareModal}>
+            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={closeShareModal} title="Close">
+                            <lightning-icon icon-name="utility:close" size="small" alternative-text="Close"></lightning-icon>
+                        </button>
+                        <h2 class="slds-text-heading_medium">Share to Chatter</h2>
+                        <p class="slds-text-body_small slds-m-top_xx-small">{shareRecordName}</p>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <lightning-textarea
+                            name="message"
+                            label="Message"
+                            value={shareMessage}
+                            onchange={handleShareMessageChange}
+                            placeholder="Write your message..."
+                            max-length="10000">
+                        </lightning-textarea>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <button class="slds-button slds-button_neutral" onclick={closeShareModal}>Cancel</button>
+                        <button class="slds-button slds-button_brand" onclick={handleShareSubmit} disabled={isShareDisabled}>
+                            <template if:true={isSharing}>Posting...</template>
+                            <template if:false={isSharing}>Post to Chatter</template>
                         </button>
                     </footer>
                 </div>

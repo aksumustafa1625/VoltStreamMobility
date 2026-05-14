@@ -14,7 +14,9 @@ import { deleteRecord } from 'lightning/uiRecordApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getDocuments from '@salesforce/apex/DocumentController.getDocuments';
 import getCategoryCounts from '@salesforce/apex/DocumentController.getCategoryCounts';
+import getRecentActivity from '@salesforce/apex/DocumentController.getRecentActivity';
 import uploadDocument from '@salesforce/apex/DocumentController.uploadDocument';
+import shareToChatter from '@salesforce/apex/DocumentController.shareToChatter';
 
 const CATEGORIES = ['Application Forms', 'Statements', 'Reports', 'Uncategorized'];
 const COLOR_CLASSES = {
@@ -41,8 +43,16 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
     // New folder modal state
     showNewFolderModal = false;
 
+    // Share modal state
+    showShareModal = false;
+    shareRecordId = null;
+    shareRecordName = '';
+    shareMessage = '';
+    isSharing = false;
+
     @track _wiredDocs;
     @track _wiredCounts;
+    @track _wiredRecent;
 
     // ---- Wires ----
 
@@ -54,6 +64,11 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
     @wire(getCategoryCounts)
     wiredCounts(result) {
         this._wiredCounts = result;
+    }
+
+    @wire(getRecentActivity)
+    wiredRecent(result) {
+        this._wiredRecent = result;
     }
 
     // ---- Computed: folder cards ----
@@ -79,6 +94,25 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
     get selectedFolderIconClass() {
         const colorClass = COLOR_CLASSES[this.selectedCategory] || 'dm-icon_gray';
         return `folder-icon-inline ${colorClass}`;
+    }
+
+    // ---- Computed: Recent Activity strip ----
+
+    get recentActivity() {
+        const rows = (this._wiredRecent && this._wiredRecent.data) || [];
+        return rows.map((r) => {
+            const colorClass = COLOR_CLASSES[r.Category__c] || 'dm-icon_gray';
+            return {
+                id: r.Id,
+                text: `${r.Name} uploaded to ${r.Category__c}`,
+                time: this._relativeTime(r.CreatedDate),
+                iconClass: `folder-icon ${colorClass}`
+            };
+        });
+    }
+
+    get hasRecentActivity() {
+        return this.recentActivity.length > 0;
     }
 
     get folderOptions() {
@@ -183,7 +217,7 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
                 }
                 break;
             case 'Share':
-                this._toast('Share', 'Sharing arrives in phase 3 (Chatter/external link).', 'info');
+                this._openShareModal(recordId, recordName);
                 break;
             default:
                 break;
@@ -263,6 +297,46 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
         this.showNewFolderModal = false;
     }
 
+    // ---- Share modal ----
+
+    _openShareModal(recordId, recordName) {
+        this.shareRecordId = recordId;
+        this.shareRecordName = recordName;
+        this.shareMessage = `Sharing ${recordName} for review.`;
+        this.showShareModal = true;
+    }
+
+    closeShareModal() {
+        this.showShareModal = false;
+    }
+
+    handleShareMessageChange(event) {
+        this.shareMessage = event.target.value;
+    }
+
+    get isShareDisabled() {
+        return this.isSharing || !this.shareMessage || !this.shareMessage.trim();
+    }
+
+    async handleShareSubmit() {
+        if (this.isShareDisabled) return;
+        this.isSharing = true;
+        try {
+            await shareToChatter({
+                recordId: this.shareRecordId,
+                message: this.shareMessage.trim()
+            });
+            this._toast('Shared', `Posted to ${this.shareRecordName}'s Chatter feed.`, 'success');
+            this.showShareModal = false;
+            this.refresh();
+        } catch (error) {
+            const msg = (error && error.body && error.body.message) || 'Share failed.';
+            this._toast('Error', msg, 'error');
+        } finally {
+            this.isSharing = false;
+        }
+    }
+
     // ---- Helpers ----
 
     _openDocument(recordId, contentDocumentId) {
@@ -309,6 +383,23 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
     refresh() {
         if (this._wiredDocs) refreshApex(this._wiredDocs);
         if (this._wiredCounts) refreshApex(this._wiredCounts);
+        if (this._wiredRecent) refreshApex(this._wiredRecent);
+    }
+
+    _relativeTime(dateString) {
+        if (!dateString) return '';
+        const then = new Date(dateString).getTime();
+        const now = Date.now();
+        const diffSec = Math.max(0, Math.floor((now - then) / 1000));
+        if (diffSec < 60) return 'just now';
+        const diffMin = Math.floor(diffSec / 60);
+        if (diffMin < 60) return `${diffMin}m ago`;
+        const diffHr = Math.floor(diffMin / 60);
+        if (diffHr < 24) return `${diffHr}h ago`;
+        const diffDay = Math.floor(diffHr / 24);
+        if (diffDay < 30) return `${diffDay}d ago`;
+        const diffMon = Math.floor(diffDay / 30);
+        return `${diffMon}mo ago`;
     }
 
     _toast(title, message, variant) {
