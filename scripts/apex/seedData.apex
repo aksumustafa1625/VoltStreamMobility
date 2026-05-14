@@ -229,8 +229,34 @@ for (Opportunity o : verify) {
     }
 }
 
+// ============================================================
+// 5. Seed Documents — populate the documentManager LWC
+// ============================================================
+// Wipe prior [Demo] documents first so this script stays idempotent.
+List<Document__c> oldDocs = [SELECT Id FROM Document__c WHERE Name LIKE '[Demo]%'];
+if (!oldDocs.isEmpty()) {
+    delete oldDocs;
+    System.debug('Deleted ' + oldDocs.size() + ' prior demo Documents.');
+}
+
+List<Document__c> docs = new List<Document__c>{
+    // Application Forms — 3 files (matches the design mockup)
+    new Document__c(Name = '[Demo] Application1.pdf', Category__c = 'Application Forms', File_Type__c = 'PDF', File_Size_KB__c = 59),
+    new Document__c(Name = '[Demo] 2026Application.pdf', Category__c = 'Application Forms', File_Type__c = 'PDF', File_Size_KB__c = 88),
+    new Document__c(Name = '[Demo] Application2.pdf', Category__c = 'Application Forms', File_Type__c = 'PDF', File_Size_KB__c = 74),
+    // Statements — 2 files
+    new Document__c(Name = '[Demo] Q1Statement.pdf', Category__c = 'Statements', File_Type__c = 'PDF', File_Size_KB__c = 142),
+    new Document__c(Name = '[Demo] Q2Statement.pdf', Category__c = 'Statements', File_Type__c = 'PDF', File_Size_KB__c = 156),
+    // Reports — 1 file
+    new Document__c(Name = '[Demo] AnnualReport2025.pdf', Category__c = 'Reports', File_Type__c = 'PDF', File_Size_KB__c = 1240)
+    // Uncategorized intentionally empty so the UI shows a 0-count card.
+};
+insert docs;
+System.debug('Inserted ' + docs.size() + ' Documents across 3 categories.');
+
 System.debug('==========================================');
 System.debug('Seed complete. ' + verify.size() + ' Opportunities total.');
 System.debug('  Matched to a reseller: ' + matched);
 System.debug('  No match (expected for 3 records): ' + unmatched);
+System.debug('Documents seeded: ' + docs.size() + ' (Application Forms: 3, Statements: 2, Reports: 1, Uncategorized: 0)');
 System.debug('==========================================');
