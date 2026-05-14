@@ -35,11 +35,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Document__c.Category__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>Document__c.File_Size_KB__c</field>
         <readable>true</readable>
     </fieldPermissions>
