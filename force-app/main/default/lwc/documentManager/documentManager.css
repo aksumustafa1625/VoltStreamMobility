@@ -164,8 +164,15 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+.dm-file-link {
     color: var(--dm-blue);
     font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+}
+.dm-file-link:hover {
+    text-decoration: underline;
 }
 .file-icon {
     --sds-c-icon-color-foreground-default: var(--dm-blue);

@@ -62,7 +62,7 @@
                             <tr key={row.id}>
                                 <td class="dm-file-name">
                                     <lightning-icon icon-name="utility:file" size="x-small" class="file-icon"></lightning-icon>
-                                    <span>{row.name}</span>
+                                    <a href="javascript:void(0);" class="dm-file-link" data-id={row.id} onclick={handleNameClick}>{row.name}</a>
                                 </td>
                                 <td><span class="dm-type-badge">{row.type}</span></td>
                                 <td>{row.size}</td>

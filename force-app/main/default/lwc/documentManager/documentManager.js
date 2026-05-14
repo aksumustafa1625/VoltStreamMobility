@@ -121,6 +121,12 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
         this._toast('New Folder', 'Custom folders arrive in the next phase.', 'info');
     }
 
+    handleNameClick(event) {
+        event.preventDefault();
+        const recordId = event.currentTarget.dataset.id;
+        this._navigateToRecord(recordId);
+    }
+
     handleMenuAction(event) {
         const action = event.detail.value;
         const recordId = event.currentTarget.dataset.id;
