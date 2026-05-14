@@ -113,10 +113,11 @@ public with sharing class DocumentController {
     }
 
     /**
-     * @description  Post a Chatter (FeedItem) message on a Document__c
-     *               record. Used by the LWC Share action so the file
-     *               can be shared with the team's Chatter feed without
-     *               leaving the page.
+     * @description  Post a Chatter (FeedItem) on a Document__c record. When
+     *               the document has a linked file (ContentVersion), posts a
+     *               ContentPost with the file attached so colleagues can
+     *               open the file straight from the Chatter feed; otherwise
+     *               falls back to a plain TextPost (metadata-only records).
      *
      * @param  recordId  Id of the Document__c to attach the post to.
      * @param  message   Body text of the Chatter post (required).
@@ -127,11 +128,19 @@ public with sharing class DocumentController {
         if (recordId == null || String.isBlank(message)) {
             throw new AuraHandledException('Both recordId and a non-empty message are required.');
         }
+
+        Id contentVersionId = DocumentSelector.getLatestContentVersionId(recordId);
+
         FeedItem post = new FeedItem(
             ParentId = recordId,
-            Body = message,
-            Type = 'TextPost'
+            Body = message
         );
+        if (contentVersionId != null) {
+            post.Type = 'ContentPost';
+            post.RelatedRecordId = contentVersionId;
+        } else {
+            post.Type = 'TextPost';
+        }
         insert post;
         return post.Id;
     }

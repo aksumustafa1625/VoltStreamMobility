@@ -79,19 +79,42 @@ private class DocumentControllerTest {
             'All 3 seeded documents should appear in the recent activity list.');
     }
 
-    // shareToChatter creates a FeedItem on the target Document__c.
+    // shareToChatter on a metadata-only record falls back to a TextPost.
     @IsTest
-    static void shareToChatter_validInput_createsFeedItem() {
+    static void shareToChatter_noFile_createsTextPost() {
         Document__c doc = [SELECT Id FROM Document__c LIMIT 1];
 
         Test.startTest();
         Id postId = DocumentController.shareToChatter(doc.Id, 'Please review this file.');
         Test.stopTest();
 
-        FeedItem post = [SELECT ParentId, Body, Type FROM FeedItem WHERE Id = :postId];
+        FeedItem post = [SELECT ParentId, Body, Type, RelatedRecordId FROM FeedItem WHERE Id = :postId];
         System.assertEquals(doc.Id, post.ParentId, 'Post must be attached to the Document.');
         System.assertEquals('Please review this file.', post.Body);
         System.assertEquals('TextPost', post.Type);
+        System.assertEquals(null, post.RelatedRecordId, 'Metadata-only record has no file to attach.');
+    }
+
+    // shareToChatter on a record with a linked file creates a ContentPost
+    // pointing at the latest ContentVersion so the file shows up in the feed.
+    @IsTest
+    static void shareToChatter_withFile_createsContentPost() {
+        String base64 = EncodingUtil.base64Encode(Blob.valueOf('Share me'));
+        Id docId = DocumentController.uploadDocument(
+            'share-test.pdf', 'Reports', 'PDF', 8, base64
+        );
+
+        Test.startTest();
+        Id postId = DocumentController.shareToChatter(docId, 'Sharing the latest version.');
+        Test.stopTest();
+
+        FeedItem post = [SELECT ParentId, Body, Type, RelatedRecordId FROM FeedItem WHERE Id = :postId];
+        System.assertEquals(docId, post.ParentId);
+        System.assertEquals('ContentPost', post.Type, 'Linked file should produce a ContentPost.');
+        System.assertNotEquals(null, post.RelatedRecordId, 'ContentPost must reference a ContentVersion.');
+
+        ContentVersion cv = [SELECT Id FROM ContentVersion WHERE Id = :post.RelatedRecordId LIMIT 1];
+        System.assertNotEquals(null, cv.Id, 'RelatedRecordId must resolve to a real ContentVersion.');
     }
 
     // shareToChatter with blank message throws.

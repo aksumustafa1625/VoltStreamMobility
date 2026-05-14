@@ -331,14 +331,26 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
     async handleShareSubmit() {
         if (this.isShareDisabled) return;
         this.isSharing = true;
+        const sharedRecordId = this.shareRecordId;
+        const sharedRecordName = this.shareRecordName;
         try {
             await shareToChatter({
-                recordId: this.shareRecordId,
+                recordId: sharedRecordId,
                 message: this.shareMessage.trim()
             });
-            this._toast('Shared', `Posted to ${this.shareRecordName}'s Chatter feed.`, 'success');
+            this._toast('Shared', `Posted to ${sharedRecordName}'s Chatter feed. Opening it now…`, 'success');
             this.showShareModal = false;
             this.refresh();
+            // Land the user on the document's record page so they immediately
+            // see the Chatter conversation their post just started.
+            this[NavigationMixin.Navigate]({
+                type: 'standard__recordPage',
+                attributes: {
+                    recordId: sharedRecordId,
+                    objectApiName: 'Document__c',
+                    actionName: 'view'
+                }
+            });
         } catch (error) {
             const msg = (error && error.body && error.body.message) || 'Share failed.';
             this._toast('Error', msg, 'error');

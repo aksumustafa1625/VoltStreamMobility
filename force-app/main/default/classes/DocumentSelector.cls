@@ -65,6 +65,37 @@ public with sharing class DocumentSelector {
         ];
     }
 
+    /**
+     * @description  Find the latest ContentVersion linked to a given record
+     *               via ContentDocumentLink, so the LWC's Share action can
+     *               attach the actual file binary to its Chatter post
+     *               (FeedItem ContentPost) instead of posting plain text.
+     *               Returns null if the record has no linked file.
+     * @param  recordId  Id of the LinkedEntity (typically a Document__c).
+     * @return  Latest ContentVersion.Id for the record, or null if none.
+     */
+    public static Id getLatestContentVersionId(Id recordId) {
+        List<ContentDocumentLink> links = [
+            SELECT ContentDocumentId
+            FROM ContentDocumentLink
+            WHERE LinkedEntityId = :recordId
+            WITH USER_MODE
+            LIMIT 1
+        ];
+        if (links.isEmpty()) {
+            return null;
+        }
+        List<ContentVersion> versions = [
+            SELECT Id
+            FROM ContentVersion
+            WHERE ContentDocumentId = :links[0].ContentDocumentId
+              AND IsLatest = true
+            WITH USER_MODE
+            LIMIT 1
+        ];
+        return versions.isEmpty() ? null : versions[0].Id;
+    }
+
     public static Map<String, Integer> getCategoryCounts() {
         Map<String, Integer> counts = new Map<String, Integer>{
             'Application Forms' => 0,
