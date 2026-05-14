@@ -44,4 +44,47 @@ private class DocumentControllerTest {
         System.assertEquals(0, counts.get('Reports'));
         System.assertEquals(0, counts.get('Uncategorized'));
     }
+
+    // uploadDocument with base64 content creates both Document__c and ContentVersion.
+    @IsTest
+    static void uploadDocument_withContent_createsBothRecords() {
+        String base64 = EncodingUtil.base64Encode(Blob.valueOf('Hello world'));
+
+        Test.startTest();
+        Id docId = DocumentController.uploadDocument(
+            'unit-test.pdf', 'Reports', 'PDF', 12, base64
+        );
+        Test.stopTest();
+
+        Document__c doc = [
+            SELECT Id, Name, Category__c, File_Type__c, File_Size_KB__c
+            FROM Document__c WHERE Id = :docId
+        ];
+        System.assertEquals('unit-test.pdf', doc.Name);
+        System.assertEquals('Reports', doc.Category__c);
+        System.assertEquals(12, doc.File_Size_KB__c);
+
+        List<ContentDocumentLink> links = [
+            SELECT ContentDocumentId FROM ContentDocumentLink WHERE LinkedEntityId = :docId
+        ];
+        System.assertEquals(1, links.size(),
+            'ContentDocumentLink should be auto-created via FirstPublishLocation.');
+    }
+
+    // uploadDocument without base64 content creates only the metadata row.
+    @IsTest
+    static void uploadDocument_noContent_createsMetadataOnly() {
+        Id docId = DocumentController.uploadDocument(
+            'meta-only.pdf', 'Statements', 'PDF', 50, null
+        );
+
+        Document__c doc = [SELECT Name FROM Document__c WHERE Id = :docId];
+        System.assertEquals('meta-only.pdf', doc.Name);
+
+        List<ContentDocumentLink> links = [
+            SELECT Id FROM ContentDocumentLink WHERE LinkedEntityId = :docId
+        ];
+        System.assertEquals(0, links.size(),
+            'No ContentVersion -> no linked ContentDocument when content is blank.');
+    }
 }

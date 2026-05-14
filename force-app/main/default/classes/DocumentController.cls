@@ -42,4 +42,49 @@ public with sharing class DocumentController {
     public static Map<String, Integer> getCategoryCounts() {
         return DocumentSelector.getCategoryCounts();
     }
+
+    /**
+     * @description  Upload a real file: creates the Document__c metadata
+     *               record AND the matching ContentVersion (so Salesforce
+     *               stores the actual binary). ContentVersion's
+     *               FirstPublishLocation links the file to Document__c, so
+     *               a ContentDocumentLink is auto-created — that's what the
+     *               LWC reads to open the file preview from the View action.
+     *
+     * @param  fileName       Display name on the Document__c row.
+     * @param  category       Category__c picklist value.
+     * @param  fileType       Short type tag (e.g. 'PDF').
+     * @param  fileSizeKB     File size for the SIZE column.
+     * @param  base64Content  Base64-encoded file binary; pass null to create
+     *                        a metadata-only record without real content.
+     * @return  Id of the new Document__c.
+     */
+    @AuraEnabled
+    public static Id uploadDocument(
+        String fileName,
+        String category,
+        String fileType,
+        Decimal fileSizeKB,
+        String base64Content
+    ) {
+        Document__c doc = new Document__c(
+            Name = fileName,
+            Category__c = category,
+            File_Type__c = fileType,
+            File_Size_KB__c = fileSizeKB
+        );
+        insert doc;
+
+        if (String.isNotBlank(base64Content)) {
+            ContentVersion cv = new ContentVersion(
+                Title = fileName,
+                PathOnClient = fileName,
+                VersionData = EncodingUtil.base64Decode(base64Content),
+                FirstPublishLocation = doc.Id
+            );
+            insert cv;
+        }
+
+        return doc.Id;
+    }
 }

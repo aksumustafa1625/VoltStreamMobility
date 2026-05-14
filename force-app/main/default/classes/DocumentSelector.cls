@@ -21,7 +21,8 @@ public with sharing class DocumentSelector {
         if (String.isBlank(category)) {
             return [
                 SELECT Id, Name, Category__c, File_Type__c, File_Size_KB__c,
-                       CreatedDate, CreatedBy.Name
+                       CreatedDate, CreatedBy.Name,
+                       (SELECT ContentDocumentId FROM ContentDocumentLinks LIMIT 1)
                 FROM Document__c
                 WITH USER_MODE
                 ORDER BY CreatedDate DESC
@@ -30,7 +31,8 @@ public with sharing class DocumentSelector {
         }
         return [
             SELECT Id, Name, Category__c, File_Type__c, File_Size_KB__c,
-                   CreatedDate, CreatedBy.Name
+                   CreatedDate, CreatedBy.Name,
+                   (SELECT ContentDocumentId FROM ContentDocumentLinks LIMIT 1)
             FROM Document__c
             WHERE Category__c = :category
             WITH USER_MODE
