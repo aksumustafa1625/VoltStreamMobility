@@ -48,6 +48,23 @@ public with sharing class DocumentSelector {
      *               categories so the UI always has 4 entries.
      * @return  Map<categoryLabel, count>.
      */
+    /**
+     * @description  Return the most recently created documents for the
+     *               Recent Activity strip at the bottom of the LWC. Five
+     *               rows is the design-mockup default; tweak the LIMIT
+     *               here if the section gets resized.
+     * @return  Latest 5 Document__c records by CreatedDate DESC.
+     */
+    public static List<Document__c> getRecentActivity() {
+        return [
+            SELECT Id, Name, Category__c, CreatedDate, CreatedBy.Name
+            FROM Document__c
+            WITH USER_MODE
+            ORDER BY CreatedDate DESC
+            LIMIT 5
+        ];
+    }
+
     public static Map<String, Integer> getCategoryCounts() {
         Map<String, Integer> counts = new Map<String, Integer>{
             'Application Forms' => 0,

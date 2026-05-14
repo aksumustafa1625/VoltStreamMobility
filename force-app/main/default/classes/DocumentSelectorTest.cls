@@ -52,6 +52,27 @@ private class DocumentSelectorTest {
             'Unknown category must return an empty list, not an exception.');
     }
 
+    // getRecentActivity returns the latest 5 documents, newest first.
+    @IsTest
+    static void getRecentActivity_returnsLatestFiveDescending() {
+        // The @TestSetup inserted 4 records, so we should get all 4 back,
+        // ordered with the latest CreatedDate at the top of the list.
+        List<Document__c> recent = DocumentSelector.getRecentActivity();
+
+        System.assert(recent.size() <= 5,
+            'getRecentActivity must never return more than 5 rows.');
+        System.assertEquals(4, recent.size(),
+            'All 4 seeded documents should appear in the recent list.');
+
+        // Order: each next record's CreatedDate must be <= the previous one.
+        for (Integer i = 1; i < recent.size(); i++) {
+            System.assert(
+                recent[i - 1].CreatedDate >= recent[i].CreatedDate,
+                'Recent activity must be ordered DESC by CreatedDate.'
+            );
+        }
+    }
+
     // getCategoryCounts populates all four buckets, even empty ones.
     @IsTest
     static void getCategoryCounts_returnsAllFourBuckets() {

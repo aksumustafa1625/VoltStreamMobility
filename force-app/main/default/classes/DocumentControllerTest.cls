@@ -71,6 +71,41 @@ private class DocumentControllerTest {
             'ContentDocumentLink should be auto-created via FirstPublishLocation.');
     }
 
+    // getRecentActivity returns the latest documents.
+    @IsTest
+    static void getRecentActivity_returnsLatestDocuments() {
+        List<Document__c> recent = DocumentController.getRecentActivity();
+        System.assertEquals(3, recent.size(),
+            'All 3 seeded documents should appear in the recent activity list.');
+    }
+
+    // shareToChatter creates a FeedItem on the target Document__c.
+    @IsTest
+    static void shareToChatter_validInput_createsFeedItem() {
+        Document__c doc = [SELECT Id FROM Document__c LIMIT 1];
+
+        Test.startTest();
+        Id postId = DocumentController.shareToChatter(doc.Id, 'Please review this file.');
+        Test.stopTest();
+
+        FeedItem post = [SELECT ParentId, Body, Type FROM FeedItem WHERE Id = :postId];
+        System.assertEquals(doc.Id, post.ParentId, 'Post must be attached to the Document.');
+        System.assertEquals('Please review this file.', post.Body);
+        System.assertEquals('TextPost', post.Type);
+    }
+
+    // shareToChatter with blank message throws.
+    @IsTest
+    static void shareToChatter_blankMessage_throws() {
+        Document__c doc = [SELECT Id FROM Document__c LIMIT 1];
+        try {
+            DocumentController.shareToChatter(doc.Id, '   ');
+            System.assert(false, 'Should have thrown AuraHandledException on blank message.');
+        } catch (AuraHandledException e) {
+            // expected
+        }
+    }
+
     // uploadDocument without base64 content creates only the metadata row.
     @IsTest
     static void uploadDocument_noContent_createsMetadataOnly() {

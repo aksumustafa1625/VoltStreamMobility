@@ -101,4 +101,38 @@ public with sharing class DocumentController {
 
         return doc.Id;
     }
+
+    /**
+     * @description  Wire-friendly query that backs the Recent Activity
+     *               strip at the bottom of the documentManager LWC.
+     * @return  Latest 5 Document__c records by CreatedDate DESC.
+     */
+    @AuraEnabled(cacheable=true)
+    public static List<Document__c> getRecentActivity() {
+        return DocumentSelector.getRecentActivity();
+    }
+
+    /**
+     * @description  Post a Chatter (FeedItem) message on a Document__c
+     *               record. Used by the LWC Share action so the file
+     *               can be shared with the team's Chatter feed without
+     *               leaving the page.
+     *
+     * @param  recordId  Id of the Document__c to attach the post to.
+     * @param  message   Body text of the Chatter post (required).
+     * @return  Id of the created FeedItem.
+     */
+    @AuraEnabled
+    public static Id shareToChatter(Id recordId, String message) {
+        if (recordId == null || String.isBlank(message)) {
+            throw new AuraHandledException('Both recordId and a non-empty message are required.');
+        }
+        FeedItem post = new FeedItem(
+            ParentId = recordId,
+            Body = message,
+            Type = 'TextPost'
+        );
+        insert post;
+        return post.Id;
+    }
 }
