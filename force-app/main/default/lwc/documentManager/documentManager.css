@@ -42,20 +42,22 @@
     gap: 0.5rem;
 }
 
-/* ===== Folder cards ===== */
+/* ===== Folder cards (compact, single-row) ===== */
 .dm-folder-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 1rem;
 }
 .folder-card {
     background: #f9fafb;
     border: 1px solid var(--dm-border);
     border-radius: var(--dm-radius);
-    padding: 1rem;
+    padding: 0.5rem 0.4rem;
     cursor: pointer;
     transition: all 0.15s ease;
+    text-align: center;
+    min-width: 0;
 }
 .folder-card:hover {
     border-color: var(--dm-blue);
@@ -71,17 +73,25 @@
 .folder-card_selected .folder-count {
     color: white;
 }
+.folder-card_selected .folder-icon {
+    --sds-c-icon-color-foreground-default: white;
+}
 .folder-icon {
     --sds-c-icon-color-foreground-default: #f59e0b;
 }
 .folder-name {
     font-weight: 600;
-    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .folder-count {
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     color: var(--dm-muted);
-    margin-top: 0.25rem;
+    margin-top: 0.125rem;
 }
 
 /* ===== Files section ===== */
@@ -169,23 +179,11 @@
     font-weight: 600;
 }
 
-/* ===== Action buttons ===== */
+/* ===== Action dropdown ===== */
 .dm-actions {
-    display: flex;
-    gap: 0.25rem;
+    text-align: right;
+    white-space: nowrap;
 }
-.dm-action {
-    border: none;
-    border-radius: 4px;
-    padding: 0.25rem 0.5rem;
-    cursor: pointer;
-    font-size: 0.875rem;
-}
-.dm-action_view     { background: #eff6ff; color: var(--dm-blue); }
-.dm-action_download { background: #d1fae5; color: #059669; }
-.dm-action_share    { background: #fef3c7; color: #d97706; }
-.dm-action_delete   { background: #fee2e2; color: #b91c1c; }
-.dm-action:hover    { filter: brightness(0.95); }
 
 /* ===== Empty state ===== */
 .dm-empty {

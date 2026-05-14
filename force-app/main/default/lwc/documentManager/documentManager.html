@@ -69,10 +69,18 @@
                                 <td>{row.uploadedBy}</td>
                                 <td>{row.date}</td>
                                 <td class="dm-actions">
-                                    <button class="dm-action dm-action_view" data-action="View" data-name={row.name} onclick={handleRowAction} title="View">👁</button>
-                                    <button class="dm-action dm-action_download" data-action="Download" data-name={row.name} onclick={handleRowAction} title="Download">⬇</button>
-                                    <button class="dm-action dm-action_share" data-action="Share" data-name={row.name} onclick={handleRowAction} title="Share">↗</button>
-                                    <button class="dm-action dm-action_delete" data-action="Delete" data-name={row.name} onclick={handleRowAction} title="Delete">✕</button>
+                                    <lightning-button-menu
+                                        alternative-text="Actions"
+                                        menu-alignment="right"
+                                        icon-size="x-small"
+                                        variant="border-filled"
+                                        data-name={row.name}
+                                        onselect={handleMenuAction}>
+                                        <lightning-menu-item value="View" label="View" prefix-icon-name="utility:preview"></lightning-menu-item>
+                                        <lightning-menu-item value="Download" label="Download" prefix-icon-name="utility:download"></lightning-menu-item>
+                                        <lightning-menu-item value="Share" label="Share" prefix-icon-name="utility:share"></lightning-menu-item>
+                                        <lightning-menu-item value="Delete" label="Delete" prefix-icon-name="utility:delete"></lightning-menu-item>
+                                    </lightning-button-menu>
                                 </td>
                             </tr>
                         </template>

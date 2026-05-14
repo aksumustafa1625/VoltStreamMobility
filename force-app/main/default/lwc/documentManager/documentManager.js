@@ -125,6 +125,12 @@ export default class DocumentManager extends LightningElement {
         this._toast(action, `${action} clicked for ${name}.`, 'info');
     }
 
+    handleMenuAction(event) {
+        const action = event.detail.value;
+        const name = event.currentTarget.dataset.name;
+        this._toast(action, `${action} clicked for ${name}.`, 'info');
+    }
+
     refresh() {
         if (this._wiredDocs) refreshApex(this._wiredDocs);
         if (this._wiredCounts) refreshApex(this._wiredCounts);
