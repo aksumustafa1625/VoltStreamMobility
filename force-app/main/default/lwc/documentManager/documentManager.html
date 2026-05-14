@@ -62,7 +62,7 @@
                             <tr key={row.id}>
                                 <td class="dm-file-name">
                                     <lightning-icon icon-name="utility:file" size="x-small" class="file-icon"></lightning-icon>
-                                    <a href="javascript:void(0);" class="dm-file-link" data-id={row.id} onclick={handleNameClick}>{row.name}</a>
+                                    <a href="javascript:void(0);" class="dm-file-link" data-id={row.id} data-cdid={row.contentDocumentId} onclick={handleNameClick}>{row.name}</a>
                                 </td>
                                 <td><span class="dm-type-badge">{row.type}</span></td>
                                 <td>{row.size}</td>
@@ -76,6 +76,7 @@
                                         variant="border-filled"
                                         data-id={row.id}
                                         data-name={row.name}
+                                        data-cdid={row.contentDocumentId}
                                         onselect={handleMenuAction}>
                                         <lightning-menu-item value="View" label="View" prefix-icon-name="utility:preview"></lightning-menu-item>
                                         <lightning-menu-item value="Download" label="Download" prefix-icon-name="utility:download"></lightning-menu-item>
@@ -94,7 +95,7 @@
             </template>
         </div>
 
-        <!-- ======== Recent activity (placeholder for phase 2) ======== -->
+        <!-- ======== Recent activity (placeholder for phase 3) ======== -->
         <div class="dm-activity">
             <div class="dm-activity-title">RECENT ACTIVITY</div>
             <div class="dm-activity-row">
@@ -103,6 +104,77 @@
                 <span class="dm-activity-time">3d ago</span>
             </div>
         </div>
+
+        <!-- ======== Upload modal ======== -->
+        <template if:true={showUploadModal}>
+            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={closeUploadModal} title="Close">
+                            <lightning-icon icon-name="utility:close" size="small" alternative-text="Close"></lightning-icon>
+                        </button>
+                        <h2 class="slds-text-heading_medium">Upload File</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <lightning-combobox
+                            name="folder"
+                            label="Folder"
+                            value={uploadCategory}
+                            options={folderOptions}
+                            onchange={handleUploadCategoryChange}
+                            class="slds-m-bottom_small">
+                        </lightning-combobox>
+                        <div class="dm-file-picker">
+                            <label class="slds-form-element__label">Pick a file</label>
+                            <input type="file" onchange={handleFilePicked} class="dm-file-input" />
+                            <template if:true={uploadFileName}>
+                                <p class="slds-text-body_small slds-m-top_x-small">
+                                    Selected: <strong>{uploadFileName}</strong> ({uploadFileSizeKB} KB)
+                                </p>
+                            </template>
+                        </div>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <button class="slds-button slds-button_neutral" onclick={closeUploadModal}>Cancel</button>
+                        <button class="slds-button slds-button_brand" onclick={handleUploadSubmit} disabled={isUploadDisabled}>
+                            <template if:true={isUploading}>Uploading...</template>
+                            <template if:false={isUploading}>Upload</template>
+                        </button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+        <!-- ======== New Folder modal ======== -->
+        <template if:true={showNewFolderModal}>
+            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={closeNewFolderModal} title="Close">
+                            <lightning-icon icon-name="utility:close" size="small" alternative-text="Close"></lightning-icon>
+                        </button>
+                        <h2 class="slds-text-heading_medium">New Folder</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <p class="slds-text-body_regular">
+                            Folders map to picklist values on the <strong>Document.Category</strong> field.
+                            To add a new folder, an admin needs to add a new value in:
+                        </p>
+                        <p class="slds-text-body_regular slds-m-top_small slds-text-color_weak">
+                            Setup &rarr; Object Manager &rarr; Document &rarr; Fields &amp; Relationships &rarr; Category &rarr; <em>New</em>
+                        </p>
+                        <p class="slds-text-body_regular slds-m-top_small">
+                            Once the picklist value is added and saved, it will automatically appear as a new folder card on this page.
+                        </p>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <button class="slds-button slds-button_brand" onclick={closeNewFolderModal}>Got it</button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
 
     </div>
 </template>

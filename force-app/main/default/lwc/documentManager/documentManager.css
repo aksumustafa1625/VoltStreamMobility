@@ -225,3 +225,13 @@
     color: var(--dm-muted);
     font-size: 0.75rem;
 }
+
+/* ===== Upload modal: file picker ===== */
+.dm-file-picker {
+    margin-top: 0.5rem;
+}
+.dm-file-input {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+}

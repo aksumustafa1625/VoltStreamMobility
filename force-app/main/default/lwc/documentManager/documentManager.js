@@ -14,6 +14,7 @@ import { deleteRecord } from 'lightning/uiRecordApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getDocuments from '@salesforce/apex/DocumentController.getDocuments';
 import getCategoryCounts from '@salesforce/apex/DocumentController.getCategoryCounts';
+import uploadDocument from '@salesforce/apex/DocumentController.uploadDocument';
 
 const CATEGORIES = ['Application Forms', 'Statements', 'Reports', 'Uncategorized'];
 
@@ -21,6 +22,18 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
     selectedCategory = 'Application Forms';
     searchTerm = '';
     sortField = 'date';
+
+    // Upload modal state
+    showUploadModal = false;
+    uploadCategory = 'Application Forms';
+    uploadFileName = '';
+    uploadFileBase64 = null;
+    uploadFileSizeKB = 0;
+    uploadFileType = 'PDF';
+    isUploading = false;
+
+    // New folder modal state
+    showNewFolderModal = false;
 
     @track _wiredDocs;
     @track _wiredCounts;
@@ -53,6 +66,10 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
         });
     }
 
+    get folderOptions() {
+        return CATEGORIES.map((c) => ({ label: c, value: c }));
+    }
+
     // ---- Computed: totals shown in the header line ----
 
     get totalFiles() {
@@ -76,14 +93,20 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
         const filtered = term
             ? rows.filter((r) => (r.Name || '').toLowerCase().includes(term))
             : rows;
-        return filtered.map((r) => ({
-            id: r.Id,
-            name: r.Name,
-            type: r.File_Type__c || 'FILE',
-            size: r.File_Size_KB__c ? `${r.File_Size_KB__c} KB` : '—',
-            uploadedBy: r.CreatedBy ? r.CreatedBy.Name : '—',
-            date: r.CreatedDate ? r.CreatedDate.substring(0, 10) : '—'
-        }));
+        return filtered.map((r) => {
+            const links = r.ContentDocumentLinks || {};
+            const linkRows = Array.isArray(links) ? links : (links.records || []);
+            const cdId = linkRows.length > 0 ? linkRows[0].ContentDocumentId : null;
+            return {
+                id: r.Id,
+                name: r.Name,
+                type: r.File_Type__c || 'FILE',
+                size: r.File_Size_KB__c ? `${r.File_Size_KB__c} KB` : '—',
+                uploadedBy: r.CreatedBy ? r.CreatedBy.Name : '—',
+                date: r.CreatedDate ? r.CreatedDate.substring(0, 10) : '—',
+                contentDocumentId: cdId
+            };
+        });
     }
 
     get hasFiles() {
@@ -97,6 +120,10 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
     get selectedFolderCount() {
         const counts = (this._wiredCounts && this._wiredCounts.data) || {};
         return counts[this.selectedCategory] || 0;
+    }
+
+    get isUploadDisabled() {
+        return this.isUploading || !this.uploadFileBase64 || !this.uploadFileName;
     }
 
     // ---- Event handlers ----
@@ -113,51 +140,143 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
         this.sortField = event.detail.value;
     }
 
-    handleUploadClick() {
-        this._toast('Upload Files', 'File upload arrives in the next phase.', 'info');
-    }
-
-    handleNewFolderClick() {
-        this._toast('New Folder', 'Custom folders arrive in the next phase.', 'info');
-    }
-
     handleNameClick(event) {
         event.preventDefault();
         const recordId = event.currentTarget.dataset.id;
-        this._navigateToRecord(recordId);
+        const cdId = event.currentTarget.dataset.cdid;
+        this._openDocument(recordId, cdId);
     }
 
     handleMenuAction(event) {
         const action = event.detail.value;
         const recordId = event.currentTarget.dataset.id;
         const recordName = event.currentTarget.dataset.name;
+        const cdId = event.currentTarget.dataset.cdid;
 
         switch (action) {
             case 'View':
-                this._navigateToRecord(recordId);
+                this._openDocument(recordId, cdId);
                 break;
             case 'Delete':
                 this._deleteDocument(recordId, recordName);
                 break;
             case 'Download':
-                this._toast('Download', 'File download arrives once real file storage is wired up (phase 2).', 'info');
+                if (cdId) {
+                    this._downloadDocument(cdId);
+                } else {
+                    this._toast('Download', 'This is a metadata-only record (no file content). Upload a real file via Upload Files.', 'info');
+                }
                 break;
             case 'Share':
-                this._toast('Share', 'Sharing arrives once real file storage is wired up (phase 2).', 'info');
+                this._toast('Share', 'Sharing arrives in phase 3 (Chatter/external link).', 'info');
                 break;
             default:
                 break;
         }
     }
 
-    _navigateToRecord(recordId) {
+    // ---- Upload modal ----
+
+    handleUploadClick() {
+        this.showUploadModal = true;
+        this.uploadCategory = this.selectedCategory;
+        this.uploadFileName = '';
+        this.uploadFileBase64 = null;
+        this.uploadFileSizeKB = 0;
+        this.uploadFileType = 'PDF';
+    }
+
+    closeUploadModal() {
+        this.showUploadModal = false;
+    }
+
+    handleUploadCategoryChange(event) {
+        this.uploadCategory = event.detail.value;
+    }
+
+    handleFilePicked(event) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) {
+            return;
+        }
+        this.uploadFileName = file.name;
+        this.uploadFileSizeKB = Math.max(1, Math.round(file.size / 1024));
+        const ext = (file.name.split('.').pop() || 'FILE').toUpperCase();
+        this.uploadFileType = ext.substring(0, 10);
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = reader.result || '';
+            this.uploadFileBase64 = result.split(',')[1] || null;
+        };
+        reader.onerror = () => {
+            this._toast('Error', 'Could not read the selected file.', 'error');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async handleUploadSubmit() {
+        if (this.isUploadDisabled) return;
+        this.isUploading = true;
+        try {
+            await uploadDocument({
+                fileName: this.uploadFileName,
+                category: this.uploadCategory,
+                fileType: this.uploadFileType,
+                fileSizeKB: this.uploadFileSizeKB,
+                base64Content: this.uploadFileBase64
+            });
+            this._toast('Uploaded', `${this.uploadFileName} uploaded to ${this.uploadCategory}.`, 'success');
+            this.showUploadModal = false;
+            this.selectedCategory = this.uploadCategory;
+            this.refresh();
+        } catch (error) {
+            const msg = (error && error.body && error.body.message) || 'Upload failed.';
+            this._toast('Error', msg, 'error');
+        } finally {
+            this.isUploading = false;
+        }
+    }
+
+    // ---- New Folder modal ----
+
+    handleNewFolderClick() {
+        this.showNewFolderModal = true;
+    }
+
+    closeNewFolderModal() {
+        this.showNewFolderModal = false;
+    }
+
+    // ---- Helpers ----
+
+    _openDocument(recordId, contentDocumentId) {
+        // If the document has a real linked file, open the Salesforce file preview;
+        // otherwise fall back to the record detail page.
+        if (contentDocumentId) {
+            this[NavigationMixin.Navigate]({
+                type: 'standard__namedPage',
+                attributes: { pageName: 'filePreview' },
+                state: { selectedRecordId: contentDocumentId }
+            });
+        } else {
+            this[NavigationMixin.Navigate]({
+                type: 'standard__recordPage',
+                attributes: {
+                    recordId,
+                    objectApiName: 'Document__c',
+                    actionName: 'view'
+                }
+            });
+        }
+    }
+
+    _downloadDocument(contentDocumentId) {
+        // Salesforce serves the latest file binary at this servlet path.
+        const url = `/sfc/servlet.shepherd/document/download/${contentDocumentId}`;
         this[NavigationMixin.Navigate]({
-            type: 'standard__recordPage',
-            attributes: {
-                recordId,
-                objectApiName: 'Document__c',
-                actionName: 'view'
-            }
+            type: 'standard__webPage',
+            attributes: { url }
         });
     }
 
@@ -176,8 +295,6 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
         if (this._wiredDocs) refreshApex(this._wiredDocs);
         if (this._wiredCounts) refreshApex(this._wiredCounts);
     }
-
-    // ---- Helpers ----
 
     _toast(title, message, variant) {
         this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
