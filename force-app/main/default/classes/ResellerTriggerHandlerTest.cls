@@ -14,7 +14,7 @@ private class ResellerTriggerHandlerTest {
     @IsTest
     static void insert_mixedCaseEmail_storedLowercase() {
         Reseller__c r = TestDataFactory.buildReseller(
-            'Berlin Elektrotechnik', 'KONTAKT@BERLIN-ELEKTRO.DE', 'Electrical Contractor'
+            'Berlin Elektrotechnik', 'KONTAKT@BERLIN-ELEKTRO.EXAMPLE', 'Electrical Contractor'
         );
 
         Test.startTest();
@@ -22,7 +22,7 @@ private class ResellerTriggerHandlerTest {
         Test.stopTest();
 
         Reseller__c stored = [SELECT Company_Email__c FROM Reseller__c WHERE Id = :r.Id];
-        System.assertEquals('kontakt@berlin-elektro.de', stored.Company_Email__c,
+        System.assertEquals('kontakt@berlin-elektro.example', stored.Company_Email__c,
             'Trigger must lowercase the email before insert reaches the database.');
     }
 

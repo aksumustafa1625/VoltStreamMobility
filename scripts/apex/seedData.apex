@@ -29,12 +29,15 @@
 // ============================================================
 // 0. Reseller email keys — single source of truth
 // ============================================================
-final String EMAIL_BERLIN_ELEKTRO  = 'kontakt@berlin-elektrotechnik.de';
-final String EMAIL_MERCEDES_BERLIN = 'fleet@mercedes-benz-berlin-mitte.de';
-final String EMAIL_MEDIAMARKT      = 'partner@mediamarkt.de';
-final String EMAIL_STEIGENBERGER   = 'partner@steigenberger.com';
-final String EMAIL_APCOA           = 'b2b@apcoa-parking.de';
-final String EMAIL_STADTWERKE      = 'channel@swm.de';
+// Demo emails use the RFC 2606 reserved `.example` TLD so the data is
+// unambiguously fictional — they look like plausible B2B German contact
+// addresses for the demo, but they cannot resolve to a real mailbox.
+final String EMAIL_BERLIN_ELEKTRO  = 'kontakt@berlin-elektrotechnik.example';
+final String EMAIL_MERCEDES_BERLIN = 'fleet@mercedes-benz-berlin-mitte.example';
+final String EMAIL_MEDIAMARKT      = 'partner@mediamarkt.example';
+final String EMAIL_STEIGENBERGER   = 'partner@steigenberger.example';
+final String EMAIL_APCOA           = 'b2b@apcoa-parking.example';
+final String EMAIL_STADTWERKE      = 'channel@swm.example';
 
 Set<String> seededEmails = new Set<String>{
     EMAIL_BERLIN_ELEKTRO, EMAIL_MERCEDES_BERLIN, EMAIL_MEDIAMARKT,
@@ -153,7 +156,7 @@ List<Opportunity> opps = new List<Opportunity>{
         StageName = 'Prospecting',
         CloseDate = Date.today().addDays(60),
         Amount = 15000,
-        Reseller_Email__c = 'PARTNER@MEDIAMARKT.DE'
+        Reseller_Email__c = 'PARTNER@MEDIAMARKT.EXAMPLE'
     ),
     // Parking operator — large DC rollout
     new Opportunity(
@@ -193,7 +196,7 @@ List<Opportunity> opps = new List<Opportunity>{
         StageName = 'Prospecting',
         CloseDate = Date.today().addDays(45),
         Amount = 5000,
-        Reseller_Email__c = 'unknown@nobody-knows-this.de'
+        Reseller_Email__c = 'unknown@nobody-knows-this.example'
     ),
     // DIRECT DEAL — null email, lookup stays null
     new Opportunity(

@@ -11,9 +11,11 @@
 @IsTest
 private class OpportunityTriggerHandlerTest {
 
-    private static final String EMAIL_HOTEL    = 'partner@steigenberger.de';
-    private static final String EMAIL_AUTO     = 'fleet@mercedes-berlin.de';
-    private static final String EMAIL_INACTIVE = 'old@churned-partner.de';
+    // Test emails use the RFC 2606 reserved `.example` TLD so test fixtures
+    // can't ever collide with real corporate mailboxes.
+    private static final String EMAIL_HOTEL    = 'partner@steigenberger.example';
+    private static final String EMAIL_AUTO     = 'fleet@mercedes-berlin.example';
+    private static final String EMAIL_INACTIVE = 'old@churned-partner.example';
 
     /**
      * @description  Seed three Reseller__c records (two active, one inactive)
@@ -46,7 +48,7 @@ private class OpportunityTriggerHandlerTest {
     // Uppercase input must match a lowercase reseller email — case-insensitive contract.
     @IsTest
     static void insert_caseInsensitiveMatch_populatesLookup() {
-        Opportunity opp = TestDataFactory.buildOpportunity('Case test', 'PARTNER@STEIGENBERGER.DE');
+        Opportunity opp = TestDataFactory.buildOpportunity('Case test', 'PARTNER@STEIGENBERGER.EXAMPLE');
 
         Test.startTest();
         insert opp;
@@ -74,7 +76,7 @@ private class OpportunityTriggerHandlerTest {
     // Unknown email -> silent null. Never throw an exception that blocks the save.
     @IsTest
     static void insert_noMatch_lookupStaysNull() {
-        Opportunity opp = TestDataFactory.buildOpportunity('Unknown reseller', 'nobody@unknown-co.de');
+        Opportunity opp = TestDataFactory.buildOpportunity('Unknown reseller', 'nobody@unknown-co.example');
 
         Test.startTest();
         insert opp;
