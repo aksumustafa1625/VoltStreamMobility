@@ -59,4 +59,38 @@ public class TestDataFactory {
             Reseller_Email__c = resellerEmail
         );
     }
+
+    /**
+     * @description  Build an unsaved Task tied to a parent record via WhatId.
+     *               Used by the Task rollup tests.
+     * @param  subject  Task subject.
+     * @param  whatId   Parent record Id (Opportunity for the rollup tests).
+     * @param  status   Status value (e.g. 'Completed', 'Not Started').
+     * @return  Unsaved Task record.
+     */
+    public static Task buildTask(String subject, Id whatId, String status) {
+        return new Task(
+            Subject = subject,
+            WhatId = whatId,
+            Status = status
+        );
+    }
+
+    /**
+     * @description  Build an unsaved Completed Task on the given parent.
+     * @param  whatId  Parent record Id.
+     * @return  Unsaved Task with Status = 'Completed'.
+     */
+    public static Task buildCompletedTask(Id whatId) {
+        return buildTask('Completed task', whatId, 'Completed');
+    }
+
+    /**
+     * @description  Build an unsaved open (Not Started) Task on the given parent.
+     * @param  whatId  Parent record Id.
+     * @return  Unsaved Task with Status = 'Not Started'.
+     */
+    public static Task buildOpenTask(Id whatId) {
+        return buildTask('Open task', whatId, 'Not Started');
+    }
 }
