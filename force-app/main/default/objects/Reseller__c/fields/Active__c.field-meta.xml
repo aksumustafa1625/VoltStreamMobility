@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Active__c</fullName>
     <defaultValue>true</defaultValue>
-    <description>Whether this reseller is currently active in the channel program. Inactive resellers should be excluded from new Opportunity matching by future trigger logic enhancements.</description>
+    <description>Whether this reseller is currently active in the channel program. Inactive resellers are excluded from Opportunity matching: ResellerSelector filters on Active__c = true, so the OpportunityTrigger never links a deal to an inactive reseller.</description>
     <externalId>false</externalId>
     <label>Active</label>
     <trackHistory>true</trackHistory>

@@ -46,10 +46,11 @@ public with sharing class DocumentController {
     /**
      * @description  Upload a real file: creates the Document__c metadata
      *               record AND the matching ContentVersion (so Salesforce
-     *               stores the actual binary). ContentVersion's
-     *               FirstPublishLocation links the file to Document__c, so
-     *               a ContentDocumentLink is auto-created — that's what the
-     *               LWC reads to open the file preview from the View action.
+     *               stores the actual binary), then links the two with an
+     *               explicitly inserted ContentDocumentLink. The link is
+     *               created by hand because ContentVersion.FirstPublishLocation
+     *               is no longer writeable; it is what the LWC reads to open
+     *               the file preview from the View action.
      *
      * @param  fileName       Display name on the Document__c row.
      * @param  category       Category__c picklist value.
@@ -87,15 +88,18 @@ public with sharing class DocumentController {
             );
             insert cv;
 
-            Id contentDocId = [
-                SELECT ContentDocumentId FROM ContentVersion WHERE Id = :cv.Id LIMIT 1
-            ].ContentDocumentId;
+            Id contentDocId = DocumentSelector.getContentDocumentIdForVersion(cv.Id);
 
+            // InternalUsers: the Document Manager is an internal sales-team
+            // tool (Lightning app/home/record pages only, no Experience Cloud
+            // site). Keeping the file off external/portal visibility is the
+            // safe default; widen to 'AllUsers' only if a partner portal ever
+            // needs to see these files.
             insert new ContentDocumentLink(
                 ContentDocumentId = contentDocId,
                 LinkedEntityId = doc.Id,
                 ShareType = 'V',
-                Visibility = 'AllUsers'
+                Visibility = 'InternalUsers'
             );
         }
 

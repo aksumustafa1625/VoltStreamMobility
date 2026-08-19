@@ -3,7 +3,7 @@
     <apiVersion>65.0</apiVersion>
     <isExposed>true</isExposed>
     <masterLabel>Documents</masterLabel>
-    <description>Folder-style document manager. Displays four category cards and a filtered files table — the visual mirror of the design mockup in the README screenshot.</description>
+    <description>Folder-style document manager. Displays one folder card per Document__c.Category__c picklist value and a filtered, sortable files table — the visual mirror of the design mockup in the README screenshot.</description>
     <targets>
         <target>lightning__AppPage</target>
         <target>lightning__HomePage</target>

@@ -14,17 +14,27 @@
 
     <!-- Best practices: SOQL injection prevention, debug log pollution, etc. -->
     <rule ref="category/apex/bestpractices.xml">
-        <!-- We have unit-test classes that exist purely to drive coverage on
-             the production class via DML; bare assertions are intentional. -->
+        <!-- Every test method we author asserts (System.assert* with a message).
+             The one assertion-free test is the vendored Kevin O'Hara
+             TriggerHandler_Test.testVirtualMethods, which only exercises the
+             empty virtual hooks — and that file is copied verbatim and never
+             edited (CONTRIBUTING.md). Excluded so the vendored file does not
+             produce a permanent violation; re-evaluate if the framework is
+             ever upgraded or the rule gains a per-file suppression. -->
         <exclude name="ApexUnitTestClassShouldHaveAsserts"/>
     </rule>
 
     <!-- Code style: naming, formatting, structural conventions. -->
     <rule ref="category/apex/codestyle.xml">
-        <!-- Our convention is method names in camelCase ('assignResellerLookup')
-             which PMD's strict rule rejects in favor of underscores. Skip it. -->
+        <!-- Production methods are camelCase, which this rule accepts. Test
+             methods deliberately use underscores to separate
+             scenario_condition_expectation
+             ('insert_emailMatches_populatesLookup'), which the rule's camelCase
+             pattern flags on every test method. Excluded rather than fought. -->
         <exclude name="MethodNamingConventions"/>
-        <!-- Same for class names; we use PascalCase like 'OpportunityTriggerHandler'. -->
+        <!-- Our own classes are PascalCase and pass. The vendored Kevin O'Hara
+             'TriggerHandler_Test' carries an underscore that the rule flags,
+             and that file is copied verbatim and never renamed. -->
         <exclude name="ClassNamingConventions"/>
     </rule>
 

@@ -22,9 +22,10 @@ sf apex run --file scripts/apex/seedData.apex
 
 ## Standing rules
 
-These are the rules every change in this repo must follow. They live in `memory/`
-as `feedback_*.md` notes (project memory for AI-assisted development), but the
-short version is below.
+These are the rules every change in this repo must follow. They also live as
+`feedback_*.md` notes in a local, untracked `memory/` directory (project memory
+for AI-assisted development — not part of the repo), but the short version is
+below.
 
 ### Apex architecture
 
@@ -80,13 +81,21 @@ the upstream author.
 ### Code style
 
 - Apex API version: 65.0.
-- `with sharing` on every class that does DML or SOQL.
+- `with sharing` on every class that does DML or SOQL — except `TaskSelector`
+  and `TaskTriggerHelper`, which are deliberately `without sharing` (the
+  Task -> Opportunity rollup must see every child Task regardless of the
+  running user); the justification lives in each class header.
 - `WITH USER_MODE` on SOQL when running in user context (Selector-level FLS).
+  The same two rollup classes omit it on purpose, for the same reason.
 - Line endings are LF (enforced via `.gitattributes`).
 
 ## Continuous integration
 
 GitHub Actions runs PMD static analysis on every push and pull request to `main`.
+The PMD step is **advisory**: it ends with `|| true`, so violations are printed
+in the job log but never fail the build or block a PR (a deliberate warm-up
+setting — see the comment above the step in `ci.yml` and the rule notes in
+`pmd-ruleset.xml`). Read the log; don't rely on the green check.
 A scratch-org deploy + test job runs when the `SFDX_AUTH_URL` repository secret
 is set (see [.github/workflows/ci.yml](.github/workflows/ci.yml) for the
 authoring details).
@@ -117,7 +126,7 @@ Even on solo work, these should be true at merge time:
 
 - [ ] All tests pass (`sf apex run test --test-level RunLocalTests`)
 - [ ] Coverage stays at 100% on every custom class
-- [ ] PMD lint produces no new violations
+- [ ] PMD lint produces no new violations (check the CI log by hand — the step is advisory and will not fail the build)
 - [ ] Any new class has its `*Test.cls` companion in the same PR
 - [ ] Any new SOQL is in a Selector class, not inline
 - [ ] ApexDoc headers are in place on new classes/methods

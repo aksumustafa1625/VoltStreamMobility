@@ -42,13 +42,6 @@ public with sharing class DocumentSelector {
     }
 
     /**
-     * @description  Aggregate row count per Category__c value, used to render
-     *               the four folder cards at the top of the LWC. Returns a
-     *               map keyed by category label with 0 defaults for empty
-     *               categories so the UI always has 4 entries.
-     * @return  Map<categoryLabel, count>.
-     */
-    /**
      * @description  Return the most recently created documents for the
      *               Recent Activity strip at the bottom of the LWC. Five
      *               rows is the design-mockup default; tweak the LIMIT
@@ -96,6 +89,37 @@ public with sharing class DocumentSelector {
         return versions.isEmpty() ? null : versions[0].Id;
     }
 
+    /**
+     * @description  Resolve the ContentDocument that Salesforce created behind
+     *               a freshly inserted ContentVersion. The upload path needs
+     *               it to build the ContentDocumentLink to Document__c
+     *               (FirstPublishLocation is no longer writeable, so the link
+     *               has to be created by hand). Returns null if the version
+     *               is not visible to the running user — it always is for the
+     *               user who just inserted it.
+     * @param  contentVersionId  Id of the ContentVersion just inserted.
+     * @return  ContentDocumentId of that version, or null if not found.
+     */
+    public static Id getContentDocumentIdForVersion(Id contentVersionId) {
+        List<ContentVersion> versions = [
+            SELECT ContentDocumentId
+            FROM ContentVersion
+            WHERE Id = :contentVersionId
+            WITH USER_MODE
+            LIMIT 1
+        ];
+        return versions.isEmpty() ? null : versions[0].ContentDocumentId;
+    }
+
+    /**
+     * @description  Aggregate row count per Category__c value, used to render
+     *               the folder cards at the top of the LWC. Returns a map
+     *               keyed by category label, pre-seeded with 0 for the four
+     *               canonical categories so the UI never has to null-check;
+     *               any further picklist value that has documents is added on
+     *               top.
+     * @return  Map<categoryLabel, count>.
+     */
     public static Map<String, Integer> getCategoryCounts() {
         Map<String, Integer> counts = new Map<String, Integer>{
             'Application Forms' => 0,

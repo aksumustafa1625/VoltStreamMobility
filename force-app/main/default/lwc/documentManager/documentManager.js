@@ -11,13 +11,19 @@ import { LightningElement, wire, track } from 'lwc';
 import { refreshApex } from '@salesforce/apex';
 import { NavigationMixin } from 'lightning/navigation';
 import { deleteRecord } from 'lightning/uiRecordApi';
+import { getObjectInfo, getPicklistValues } from 'lightning/uiObjectInfoApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import DOCUMENT_OBJECT from '@salesforce/schema/Document__c';
+import CATEGORY_FIELD from '@salesforce/schema/Document__c.Category__c';
 import getDocuments from '@salesforce/apex/DocumentController.getDocuments';
 import getCategoryCounts from '@salesforce/apex/DocumentController.getCategoryCounts';
 import getRecentActivity from '@salesforce/apex/DocumentController.getRecentActivity';
 import uploadDocument from '@salesforce/apex/DocumentController.uploadDocument';
 import shareToChatter from '@salesforce/apex/DocumentController.shareToChatter';
 
+// Fallback used until the Category__c picklist wire resolves (and if it
+// errors) — the live list comes from the picklist so a new value added in
+// Setup shows up as a folder card without a code change.
 const CATEGORIES = ['Application Forms', 'Statements', 'Reports', 'Uncategorized'];
 const CATEGORY_COLORS = {
     'Application Forms': '#f59e0b', // orange
@@ -61,6 +67,8 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
     @track _wiredDocs;
     @track _wiredCounts;
     @track _wiredRecent;
+    _picklistCategories = null;
+    _defaultRecordTypeId;
 
     // ---- Wires ----
 
@@ -79,11 +87,33 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
         this._wiredRecent = result;
     }
 
+    // Document__c has no record types, so the master/default record type id
+    // is what getPicklistValues needs to return Category__c's active values.
+    @wire(getObjectInfo, { objectApiName: DOCUMENT_OBJECT })
+    wiredObjectInfo({ data }) {
+        if (data) {
+            this._defaultRecordTypeId = data.defaultRecordTypeId;
+        }
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$_defaultRecordTypeId', fieldApiName: CATEGORY_FIELD })
+    wiredCategoryValues({ data }) {
+        if (data && Array.isArray(data.values) && data.values.length > 0) {
+            this._picklistCategories = data.values.map((v) => v.value);
+        }
+    }
+
+    // Live category list: picklist values once the wire resolves, the
+    // hardcoded fallback before that (and on wire error).
+    get categories() {
+        return this._picklistCategories || CATEGORIES;
+    }
+
     // ---- Computed: folder cards ----
 
     get folderCards() {
         const counts = (this._wiredCounts && this._wiredCounts.data) || {};
-        return CATEGORIES.map((name) => {
+        return this.categories.map((name) => {
             const fileCount = counts[name] || 0;
             const isSelected = name === this.selectedCategory;
             const baseColor = CATEGORY_COLORS[name] || CATEGORY_COLORS.Uncategorized;
@@ -126,7 +156,7 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
     }
 
     get folderOptions() {
-        return CATEGORIES.map((c) => ({ label: c, value: c }));
+        return this.categories.map((c) => ({ label: c, value: c }));
     }
 
     // ---- Computed: totals shown in the header line ----
@@ -137,7 +167,7 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
     }
 
     get totalFolders() {
-        return CATEGORIES.length;
+        return this.categories.length;
     }
 
     get headerSummary() {
@@ -152,7 +182,10 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
         const filtered = term
             ? rows.filter((r) => (r.Name || '').toLowerCase().includes(term))
             : rows;
-        return filtered.map((r) => {
+        // 'date' is the default and keeps the server order (CreatedDate DESC).
+        // Copy before sorting — the wire's array is read-only.
+        const sorted = this._sortRows([...filtered], this.sortField);
+        return sorted.map((r) => {
             const links = r.ContentDocumentLinks || {};
             const linkRows = Array.isArray(links) ? links : (links.records || []);
             const cdId = linkRows.length > 0 ? linkRows[0].ContentDocumentId : null;
@@ -360,6 +393,20 @@ export default class DocumentManager extends NavigationMixin(LightningElement) {
     }
 
     // ---- Helpers ----
+
+    // Sorts in place and returns the array. Name A-Z; Size largest first;
+    // Date newest first (which is also the server's ORDER BY, so the
+    // default 'date' leaves the wire order untouched).
+    _sortRows(rows, sortField) {
+        switch (sortField) {
+            case 'name':
+                return rows.sort((a, b) => (a.Name || '').localeCompare(b.Name || ''));
+            case 'size':
+                return rows.sort((a, b) => (Number(b.File_Size_KB__c) || 0) - (Number(a.File_Size_KB__c) || 0));
+            default:
+                return rows;
+        }
+    }
 
     _openDocument(recordId, contentDocumentId) {
         // If the document has a real linked file, open the Salesforce file preview;

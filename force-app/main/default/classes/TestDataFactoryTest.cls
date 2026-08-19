@@ -54,4 +54,44 @@ private class TestDataFactoryTest {
         System.assertEquals(null, o.Reseller_Email__c,
             'Null reseller email must pass through unchanged for direct-deal scenarios.');
     }
+
+    // A well-formed Opportunity Id that is never inserted — the Task builders
+    // only copy the value, so no DML is needed to pin their defaults.
+    private static Id fakeOpportunityId() {
+        return Opportunity.SObjectType.getDescribe().getKeyPrefix() + '000000000001AAA';
+    }
+
+    // buildTask passes Subject / WhatId / Status straight through — no hidden defaults.
+    @IsTest
+    static void buildTask_setsSubjectWhatIdStatus() {
+        Id oppId = fakeOpportunityId();
+        Task t = TestDataFactory.buildTask('Call partner', oppId, 'In Progress');
+        System.assertEquals('Call partner', t.Subject);
+        System.assertEquals(oppId,          t.WhatId,
+            'buildTask must attach the Task to the parent Id it was given.');
+        System.assertEquals('In Progress',  t.Status,
+            'buildTask must use the Status it was given, not a default.');
+    }
+
+    // buildCompletedTask pins Status='Completed' and the documented subject.
+    @IsTest
+    static void buildCompletedTask_setsCompletedStatus() {
+        Id oppId = fakeOpportunityId();
+        Task t = TestDataFactory.buildCompletedTask(oppId);
+        System.assertEquals('Completed',      t.Status,
+            'buildCompletedTask must default Status to Completed.');
+        System.assertEquals('Completed task', t.Subject);
+        System.assertEquals(oppId,            t.WhatId);
+    }
+
+    // buildOpenTask pins Status='Not Started' and the documented subject.
+    @IsTest
+    static void buildOpenTask_setsNotStartedStatus() {
+        Id oppId = fakeOpportunityId();
+        Task t = TestDataFactory.buildOpenTask(oppId);
+        System.assertEquals('Not Started', t.Status,
+            'buildOpenTask must default Status to Not Started.');
+        System.assertEquals('Open task',   t.Subject);
+        System.assertEquals(oppId,         t.WhatId);
+    }
 }

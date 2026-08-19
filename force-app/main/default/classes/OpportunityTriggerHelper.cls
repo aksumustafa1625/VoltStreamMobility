@@ -32,9 +32,7 @@ public with sharing class OpportunityTriggerHelper {
             // Comparing normalized values means a pure case change is treated
             // as a no-op — saves a SOQL on irrelevant edits.
             if (oldMap != null) {
-                String normalizedOldEmail = StringUtils.normalizeEmail(
-                    oldMap.get(opp.Id).Reseller_Email__c
-                );
+                String normalizedOldEmail = StringUtils.normalizeEmail(oldMap.get(opp.Id).Reseller_Email__c);
                 if (normalizedEmail == normalizedOldEmail) {
                     continue;
                 }

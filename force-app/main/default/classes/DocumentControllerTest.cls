@@ -68,7 +68,7 @@ private class DocumentControllerTest {
             SELECT ContentDocumentId FROM ContentDocumentLink WHERE LinkedEntityId = :docId
         ];
         System.assertEquals(1, links.size(),
-            'ContentDocumentLink should be auto-created via FirstPublishLocation.');
+            'uploadDocument must insert exactly one ContentDocumentLink pointing the new file at the Document__c.');
     }
 
     // getRecentActivity returns the latest documents.

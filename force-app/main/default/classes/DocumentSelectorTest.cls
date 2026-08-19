@@ -86,4 +86,22 @@ private class DocumentSelectorTest {
         System.assertEquals(0, counts.get('Uncategorized'),
             'Empty categories must default to 0 so the UI always has 4 cards.');
     }
+
+    // getContentDocumentIdForVersion resolves the ContentDocument Salesforce
+    // created behind a freshly inserted ContentVersion.
+    @IsTest
+    static void getContentDocumentIdForVersion_returnsParentDocument() {
+        ContentVersion cv = new ContentVersion(
+            Title = 'selector-test.pdf',
+            PathOnClient = 'selector-test.pdf',
+            VersionData = Blob.valueOf('selector test')
+        );
+        insert cv;
+
+        Id resolved = DocumentSelector.getContentDocumentIdForVersion(cv.Id);
+
+        Id expected = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :cv.Id].ContentDocumentId;
+        System.assertEquals(expected, resolved,
+            'Selector must return the ContentDocumentId of the given ContentVersion.');
+    }
 }

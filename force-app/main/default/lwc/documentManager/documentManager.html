@@ -70,7 +70,7 @@
                                     <svg class="dm-svg-icon dm-svg-icon_file" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
                                         <path fill="currentColor" d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
                                     </svg>
-                                    <a href="javascript:void(0);" class="dm-file-link" data-id={row.id} data-cdid={row.contentDocumentId} onclick={handleNameClick}>{row.name}</a>
+                                    <button type="button" class="slds-button slds-button_reset dm-file-link" data-id={row.id} data-cdid={row.contentDocumentId} onclick={handleNameClick}>{row.name}</button>
                                 </td>
                                 <td><span class="dm-type-badge">{row.type}</span></td>
                                 <td>{row.size}</td>
@@ -217,7 +217,7 @@
                             Setup &rarr; Object Manager &rarr; Document &rarr; Fields &amp; Relationships &rarr; Category &rarr; <em>New</em>
                         </p>
                         <p class="slds-text-body_regular slds-m-top_small">
-                            Once the picklist value is added and saved, it will automatically appear as a new folder card on this page.
+                            Once the picklist value is added and saved, reload this page and it appears as a new folder card (folder cards are read from the picklist; new values get the default gray icon).
                         </p>
                     </div>
                     <footer class="slds-modal__footer">
