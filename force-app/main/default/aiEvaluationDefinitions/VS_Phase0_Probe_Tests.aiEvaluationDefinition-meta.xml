@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AiEvaluationDefinition xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Platform probe. Two cases, one topic, no domain logic.</description>
+    <name>VS Phase0 Probe Tests</name>
+    <subjectName>VS_Phase0_Probe_Classic</subjectName>
+    <subjectType>AGENT</subjectType>
+    <testCase>
+        <expectation>
+            <expectedValue>p_16jgL000002KylF_Eichfrist_Monitoring</expectedValue>
+            <name>topic_assertion</name>
+        </expectation>
+        <expectation>
+            <expectedValue>[&apos;AdminCopilot__SetupGeneralKnowledgeGrounding&apos;]</expectedValue>
+            <name>actions_assertion</name>
+        </expectation>
+        <expectation>
+            <expectedValue>Eine Antwort zur Eichfrist des Ladepunkts.</expectedValue>
+            <name>output_validation</name>
+        </expectation>
+        <expectation>
+            <name>coherence</name>
+        </expectation>
+        <expectation>
+            <name>output_latency_milliseconds</name>
+        </expectation>
+        <inputs>
+            <utterance>Wann läuft die Eichfrist für Ladepunkt LP-00042 ab?</utterance>
+        </inputs>
+        <number>1</number>
+    </testCase>
+    <testCase>
+        <expectation>
+            <expectedValue>Off_Topic</expectedValue>
+            <name>topic_assertion</name>
+        </expectation>
+        <expectation>
+            <expectedValue>[]</expectedValue>
+            <name>actions_assertion</name>
+        </expectation>
+        <expectation>
+            <expectedValue>Eine höfliche Ablehnung ohne Rezept.</expectedValue>
+            <name>output_validation</name>
+        </expectation>
+        <expectation>
+            <name>coherence</name>
+        </expectation>
+        <inputs>
+            <utterance>Gib mir bitte ein Rezept für Pfannkuchen.</utterance>
+        </inputs>
+        <number>2</number>
+    </testCase>
+</AiEvaluationDefinition>

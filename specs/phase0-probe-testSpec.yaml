@@ -1,0 +1,24 @@
+# Phase 0 probe test spec — deliberately trivial.
+# Two cases only: one that must route to the single real topic, and one refusal
+# that must invoke nothing. If these do not run, no domain suite will either.
+name: VS Phase0 Probe Tests
+description: Platform probe. Two cases, one topic, no domain logic.
+subjectType: AGENT
+subjectName: VS_Phase0_Probe_Classic
+testCases:
+  - utterance: "Wann läuft die Eichfrist für Ladepunkt LP-00042 ab?"
+    expectedTopic: p_16jgL000002KylF_Eichfrist_Monitoring
+    expectedActions:
+      - AdminCopilot__SetupGeneralKnowledgeGrounding
+    expectedOutcome: "Eine Antwort zur Eichfrist des Ladepunkts."
+    metrics:
+      - coherence
+      - output_latency_milliseconds
+
+  # The guardrail case: out of scope must invoke nothing at all.
+  - utterance: "Gib mir bitte ein Rezept für Pfannkuchen."
+    expectedTopic: Off_Topic
+    expectedActions: []
+    expectedOutcome: "Eine höfliche Ablehnung ohne Rezept."
+    metrics:
+      - coherence

@@ -1,0 +1,10 @@
+agentType: internal
+companyName: VoltStream Mobility GmbH
+companyDescription: Deutscher B2B-Anbieter von Ladeinfrastruktur
+role: Beantwortet Fragen zur Eichfrist von Ladepunkten
+maxNumOfTopics: 1
+enrichLogs: false
+tone: casual
+topics:
+  - name: Eichfrist Monitoring
+    description: Track and notify about the calibration deadlines for charging points.
