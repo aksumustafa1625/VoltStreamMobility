@@ -294,3 +294,290 @@ shape:
 > Projekte."*
 
 **Two to three curated, deeply documented repositories.** Which is what this is.
+
+---
+
+## 10. The channel — and a field already deployed that has to change
+
+Twelve German charging manufacturers and CPOs were checked directly against their own partner
+pages. The result contradicts a field that is **already in this org**.
+
+### 10.1 🔴 `Partner_Tier__c` is invented, and a German reviewer will ask
+
+`Reseller__c.Partner_Tier__c` currently carries **Bronze / Silber / Gold / Platin**.
+
+**Not one of the twelve vendors publishes a ranked commercial tier ladder.** What they actually
+publish:
+
+| Vendor | Programme | Structure |
+|---|---|---|
+| **MENNEKES** | *MENNEKES Qualitätspartner für eMobility* | **No ladder.** Split by focus: *Fokus Privatkunden* / *Fokus Gewerbekunden* |
+| **KEBA** | *eMobility Partnernetzwerk* | Six **types**, no ranks — Elektroinstallateure / Händler / System-Anbieter / EVU & Stadtwerke / Betreiber / Planer |
+| **KOSTAL** | *zertifizierter Installateur* + *KOSTAL Fachpartner* | No levels. Explicitly **no minimum volumes, no entry fee** |
+| **Compleo** (KOSTAL) | *Rahmenvertragspartner* / *Fachpartner* | Two contract types |
+| **Elli** (VW Group) | Reseller channel | Categories **Reseller/Fachhandel** and **Installateur**; optional *zertifizierter Partner* |
+| **go-e** | *Wiederverkäufer werden* | **None** — individual vetting: *"nur nach positiver individueller Prüfung"* |
+| **ABB E-mobility** | Channel Partner Program | Foundation / Intermediate / Advanced — but these are **service certification levels, not partner tiers** |
+| **ABL** | none | Installers order *"direkt im Onlineshop ihres Elektrogroßhandels"* |
+| **Alfen · Vestel · Alpitronic** | **none at all** | Training only, or direct sales to CPOs |
+
+Even **SMA**, a major German manufacturer in the adjacent PV trade, publishes no levels —
+participation is tied to *"einem Qualifizierungsprozess und der Erfüllung von Partner-Kriterien."*
+
+**If a German reviewer sees Bronze/Silber/Gold, they will ask which manufacturer does that.**
+There is no answer.
+
+**What is defensible instead, all evidenced:**
+
+| Replace with | Evidence |
+|---|---|
+| **Certification status** — certified / not | Universal across all programmes |
+| **Certification expiry** | **KEBA states it explicitly**: *"Teilnahmezertifikat (Gültigkeit **2 Jahre**)"*, with listing as a Partnerbetrieb *"für die Dauer der Zertifikatsgültigkeit"* |
+| **Partner type** — Reseller · Installateur · Großhandel · Stadtwerk | Elli's two application paths; KEBA's six types |
+| **A points balance** | **MENNEKES Prämienprogramm and E-Marken-Punkte are real** — seminars award 4 or 8 Punkte |
+
+**And margins being absent from the model is realistic, not a gap.** Not one of the twelve
+publishes a Rabattstaffel, Handelsspanne or volume threshold. The only directional statements are
+Elli's *"lukrative Margen, keine Mindestbestellmengen"* and go-e's *"günstige
+Einkaufskonditionen"* set by individual negotiation. **Any percentage seen elsewhere is
+unsourced.**
+
+### 10.2 🔴 Selling and installing are different legal roles — and the model must express both
+
+**§ 13 NAV** means only a company entered in a Netzbetreiber's Installateurverzeichnis may do the
+work. **Every serious programme in this market models that split:**
+
+- **Elli** has literally separate *"Reseller/Fachhandel"* and *"Installateur"* application paths
+- **Mercedes-Benz**: the **dealer sells** (22 kW wallbox, UVP €990), a **national Installationspartner installs**
+- **BMW/MINI**: the **dealer refers**, and **E.ON does** *"alle Installationsarbeiten und die Inbetriebnahme"* — from €1,769
+- **MENNEKES** runs a consumer webshop whose installations are fulfilled by the partner network
+
+**A partner record that cannot express "sells but does not install" mis-models most of the
+market.** `Reseller__c` needs two independent capability flags, not one type.
+
+### 10.3 🔴 The Elektrogroßhandel is missing from the model entirely
+
+`Reseller_Type__c` has eight values and **none of them is the wholesaler** — yet the wholesaler is
+where installers actually buy. This is the German electrical trade's own named institution, the
+**dreistufiger Vertriebsweg**: Hersteller → Elektrogroßhandel → Elektrohandwerk → Endkunde.
+
+- **ABL** routes installers to *"direkte Bestellung im **Onlineshop ihres Elektrogroßhandels**"*
+- **Hensel** does the same
+- **GC-Gruppe**: *"Konsequent dem dreistufigen Vertriebsweg verpflichtet steht der professionelle
+  Fachhandwerker als **ausschließlicher Kunde** im Zentrum"* — ~300 Vertriebspunkte, 850+ Abhol-Express
+- **Compleo tried direct and retreated** — it *"mit dem Direktvertrieb schlechte Erfahrungen
+  gemacht hatte"*, and the correction included *"die Stärkung des dreistufigen Vertriebs"*
+- Demand-side proof: in a survey of **126 German Elektroinstallationsbetriebe**, the stationary
+  Elektrogroßhandel is *"der wichtigste Einkaufskanal"* — and on a stockout **three quarters go to
+  another wholesaler**, not online
+
+**And the layer above the wholesalers is who a supplier actually negotiates with:**
+
+| Cooperative | Scale |
+|---|---|
+| **VEG** (the sector body) | 58 members · 826 Standorte · 24,100 staff · ~€13 bn |
+| **MITEGRO** | 8 wholesalers · ~250 Standorte · **€1.4 bn Einkaufsvolumen** · a dedicated **E-Mobilität** department |
+| **FEGIME Deutschland** | 45 family-owned members · ~160 Verkaufspunkte · **€1.5 bn** |
+
+**reev models this correctly and publicly** — its partner categories are Hardwarehersteller /
+Lösungsanbieter / **Großhandel**, with *Elektrofachkräfte* as a separate audience rather than a
+partner category.
+
+### 10.4 Two corrections to the demo's premise
+
+**Charging is ~1 % of the Elektrogroßhandel assortment** — growing +43.8 % year on year, but on a
+tiny base. Kabel & Leitungen is 22 %. A story implying wholesalers are getting rich on wallboxes
+overstates it; the credible version is the one they tell about themselves — *"vom
+Logistikdienstleister zum Systempartner."*
+
+**And the trade is contracting, not booming.** E-Handwerk revenue fell ~4 % in 2024, and ZVEH
+reported skilled-worker demand falling **again in January 2026**. A narrative of installers
+desperate for wallbox work is about two years out of date.
+
+### 10.5 Stadtwerke are customer and competitor in the same record — and they are AC, not DC
+
+The **Bundeskartellamt Sektoruntersuchung Ladeinfrastruktur (B8-28/20, October 2024)** is the
+sharpest data available:
+
+| | Municipally-controlled share of public charge points |
+|---|---|
+| Normalladepunkte (≤ 22 kW) | **~42 %** |
+| Schnellladepunkte (> 22 kW) | ~19 % |
+| **> 150 kW** | **~0.6 %** |
+
+**A supplier pitching HPC to Stadtwerke as its core motion is fighting the data.** And 40 % of
+surveyed CPOs reported problems entering a market dominated by the local Stadtwerk, because
+*"viele Gebietskörperschaften geeignete öffentliche Flächen **exklusiv oder bevorzugt an das eigene
+kommunale Stadtwerk** vergeben."*
+
+Addressable count: **~760 electricity-active VKU members** *(the widely quoted "~900 Stadtwerke"
+could not be verified from any primary source)*. And they buy backend software **collectively** —
+smartlab/ladenetz.de serves *"über 270 Energieversorger"* with 21,700 charge points, and Thüga's
+Regioladen+ exists explicitly to reduce the number of backends.
+
+### 10.6 The regulator-granted qualification the model does not have
+
+Manufacturer certification is not the binding one. **§ 54 MessEV** creates an
+**Instandsetzerberechtigung** — the authority grants a business the right to mark repaired
+measuring instruments, and **re-checks it *"spätestens alle fünf Jahre."***
+
+MENNEKES states the consequence plainly: *"**Nur nach erfolgreicher Befugniserteilung durch die
+zuständige Behörde dürfen Reparaturen an eichpflichtigen Geräten vorgenommen werden.**"*
+
+So a partner may hold every manufacturer certificate and still be **legally unable to repair a
+billing-relevant charge point.** That is a separate field with its own five-year clock, and it
+belongs next to the Installateurverzeichnis entry.
+
+### 10.7 🟢 And the gap the whole project rests on is real
+
+**No commercial product manages compliance obligations for German charging operators.** The
+closest counter-candidate is **AMPECO CoOperator** — *"Your embedded AI expert that understands
+your network, acts on your behalf"*, doing platform Q&A, root-cause analysis on failed sessions,
+and operational actions like changing tariffs and creating charge points.
+
+**Its documentation mentions no Eichrecht, no AFIR, no regulatory deadlines.** It is an
+**operations** agent, not a **compliance** agent.
+
+Every vendor checked treats compliance as a **product attribute** — *"our charger is
+eichrechtskonform"*, *"we support AFIR"* — rather than as **an obligation portfolio tracked over
+time**. The only tool that even attempts the span disclaims itself: emobicon's free
+Ladeinfrastruktur-Assistent names AFIR, LSV, Eichrecht, GEIG, WEG and EPBD, then states it gives
+*"initial guidance — no legally binding planning"* and assumes no liability.
+
+> **Nobody sells the calendar.**
+
+### 10.8 One more dated obligation, and it lands on the dealer's own forecourt
+
+**GEIG § 10:** an existing Nichtwohngebäude *"das über mehr als **20 Stellplätze** verfügt"* must
+have had a charge point since **1 January 2025**. The **GEIG-Novelle passed both chambers and is in
+force 1 July 2026** — and from **1 January 2027**, existing non-residential buildings above 20
+spaces need **one charge point per ten spaces**, or 50 % Leitungsinfrastruktur. Enforcement:
+Bauaufsichtsbehörden may fine **up to €10,000**.
+
+A typical Autohaus with more than twenty customer, demo and stock spaces is squarely inside it.
+**That is a more concrete procurement driver than any OEM dealer standard** — and no OEM standard
+mandating charging-hardware sales could be verified at all.
+
+### 10.9 A trap that would date the project instantly
+
+*"Eichrecht becomes mandatory in 2026"* circulates in German-language press. **It is Austrian.**
+In Germany, kWh-based eichrechtskonforme billing has been the rule since **2017/2019**. Repeating
+the 2026 framing would be caught by any German reviewer in one search.
+
+---
+
+## 11. The decisive test case — and it settles §5
+
+§5 argued that domain depth is close to invisible in the Salesforce job family. A follow-up pass
+found the test that settles it, and the answer is cleaner than expected.
+
+### 11.1 An energy-only Salesforce partner does not ask for energy knowledge
+
+**Eigenherd GmbH** describes itself as *"Ihr spezialisierter Technologieexperte für die
+**Digitalisierung der Energiewirtschaft**"* and does nothing but Salesforce for utilities. If deep
+German energy-domain knowledge were a hiring signal anywhere, it would be here.
+
+All four of its open roles were read. **Salesforce Architect (m/w/d)** — the complete requirement
+list:
+
+> *"mind. 5 Jahre Erfahrung in der Salesforce-Konfiguration und Implementierung von CRM-Systemen"*
+> *"umfassende Kenntnisse in den Salesforce Core Clouds, **idealerweise** auch in einer der
+> folgenden Cloud: **Energy & Utilities Cloud**, Media & Communications, Financial Services oder
+> Healthcare & Life Sciences"*
+> *"technische Salesforce Zertifizierungen"* · *"ausgezeichnete Kommunikationsfähigkeiten in
+> **Deutsch und Englisch**"*
+
+**Read the second line carefully.** The single energy item is a **Salesforce SKU**, listed as
+*idealerweise*, and **ranked interchangeably with Financial Services Cloud.** Not EnWG. Not MsbG.
+Not MaKo.
+
+Its Junior Developer posting mentions energy only as *context* in the Aufgaben — never as a
+requirement. Its Junior Consultant posting has **zero** energy content.
+
+**And E.ON says the same thing.** Its *Salesforce System Engineer – AI based* posting mentions
+energy exactly once, as the object rather than the requirement: *"Die End-to-End Weiterentwicklung
+unserer **Salesforce Energy & Utilities Cloud**."* A German utility, building on the E&U Cloud,
+asks for **no energy domain knowledge whatsoever.**
+
+### 11.2 The split is by job family, not by employer industry
+
+| Job family | Energy domain required? |
+|---|---|
+| **Salesforce-titled roles** (Eigenherd ×3, E.ON, entero ×2, adesso) | **~7 of 8: no** |
+| **SAP / EDM-titled roles** (arvato, EWE, Hays) | **3 of 3: yes** — GPKE, MaBiS, WiM, SAP IS-U, intelligente Messsysteme |
+
+The one posting pairing Salesforce *with* deep energy knowledge is titled **"EDM Experte
+Energiewirtschaft"** — a domain-analyst role, freelance, that happens to touch Salesforce. The job
+title is the tell.
+
+**And the searches returned literal zeroes:**
+
+> `"Salesforce" Stellenangebot "MsbG" OR "EnWG" OR "Ladesäulenverordnung"` → **No results found**
+> `"Marktkommunikation" "Salesforce" Stellenanzeige Entwickler CRM` → **No results found**
+> `"Salesforce" Consultant "Erfahrung in der Energiewirtschaft"` → **No results found**
+
+**Not one German posting pairs Salesforce with any of the statutes this project models.**
+
+### 11.3 Eichrecht as a hiring keyword: zero
+
+**kimeta.de**, a major German aggregator, verbatim: *"Ihre Suche nach Stellenanzeigen zu
+**Eichrecht** ergab **keine passenden Ergebnisse**."*
+
+Where it does appear in postings, it is not software:
+
+- **Eichdirektion Nord — Prüfer/in (m/w/d)**: *"Kenntnisse im Eichrecht. Marktüberwachung."* — a
+  state calibration inspector.
+- **KPS-Gruppe — Servicetechniker (M/W/D) – Quereinsteiger**: *"Sicherstellung der
+  **Eichrechtskonformität**"* — a field technician role **explicitly open to career changers**.
+
+Eichrecht is a genuine, complex, high-volume regulatory topic with BDEW position papers, PTB
+documents, a Nationale Leitstelle Orientierungshilfe and a paid *Eichrecht Academy*. **It is simply
+not a recruitment keyword.**
+
+### 11.4 But the scarcity utilities complain about is real — it is just in the other stack
+
+**ZfK, 7 November 2025**, quoting Stadtwerke München:
+
+> *"Der Fachkräftemangel ist deutlich spürbar, vor allem bei spezialisierten IT-Fachkräften, **die
+> technisches Know-how und Branchenwissen verbinden**."*
+
+And Marena-Nathalie Ostermann of Factur, in the same piece:
+
+> *"**SAP** können viele, aber die **Prozesse der Energiebranche versteht kaum jemand auf
+> Anhieb**."*
+
+**Read the second quote: it says SAP.** Every practitioner statement found about scarce
+energy-domain IT skill points at the SAP IS-U / EDM / Marktkommunikation stack. The scarcity is
+real and it is priced — into a different job family.
+
+### 11.5 What a Salesforce-in-energy practitioner actually talks about
+
+Telekom MMS, on LinkedIn, marketing exactly this work:
+
+> *"Ob PV-Anlage auf dem Hallendach, **Ladeinfrastruktur auf dem Werksgelände** oder
+> Mieterstrommodell im Neubauquartier … Angebote dauern zu lang ❌ Daten sind verteilt ❌ Abrechnung
+> ist manuell"*
+
+**Process vocabulary — not one regulatory citation.** Salesfive's own Energiewirtschaft page says
+only *"regulatorische Anforderungen"* generically; its Stadtwerke template, built with
+Energieversorgung Oberhausen, scopes to *"typische Serviceprozesse und Kundenanliegen."*
+
+**This is the crux, stated plainly: the Salesforce layer in German utilities sits on the
+customer-experience side. The regulated metering and market-communication layer lives in SAP IS-U,
+Robotron and Schleupen.** The regulatory work maps to the stack this project is not applying to.
+
+### 11.6 So the conclusion of §6 stands, and gets one concrete substitute
+
+The domain investment is **narrative, not screening**. The ZfK quote proves utilities feel the
+scarcity of people who *"technisches Know-how und Branchenwissen verbinden"* — so a portfolio that
+speaks fluently about Ladeinfrastruktur, tariff and billing processes will differentiate **in
+conversation**. No keyword filter, and on this evidence no interviewer, is looking for Eichrecht.
+
+**And there is now a named, actionable substitute for further statute reading:**
+**Salesforce Energy & Utilities Cloud as a credential.** It is the one energy-flavoured thing the
+energy-only Salesforce partner actually asks for — and it is free to acquire.
+
+*(Correction to an earlier note in this file: **entero AG is not an energy consultancy.** Its own
+industries page lists Manufacturing, Professional Services, Personaldienstleister and Analytics —
+energy appears nowhere. Its German-language requirement is still evidence for §1; it is not
+evidence about energy hiring.)*

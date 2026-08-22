@@ -681,3 +681,142 @@ Three that get sharper, all file counts, all lower bounds:
 | `"de_DE" extension:agent` | **3** | **German Agent Script barely exists.** §9 item #6 is on empty ground |
 | `"sf agent adl"` | **39** | The mutation mechanism rests on a command almost nobody has scripted — the upside and the risk in one fact |
 | `ruleExpressions genAiPlannerBundle` | 37 | Rarer than expected for the only non-prose declarative guardrail — supporting evidence, not a headline |
+
+---
+
+## 18. Why the rare things are rare — the surface is twenty-three days old
+
+The final check ran `sf agent --help` against the installed binary rather than trusting the
+inherited note, and found the note wrong. The installed toolchain ships **none** of
+`agent adl`, `agent trace`, `agent mcp`, `agent test run-eval`, or a programmatic
+`agent preview start|send|end`.
+
+**They all arrived in `@salesforce/plugin-agent` 2.0.0 on 30 July 2026.**
+
+| | Installed | Latest | Published |
+|---|---|---|---|
+| `@salesforce/cli` | **2.125.2** *(2026-02-25)* | 2.148.3 | 2026-08-12 |
+| `@salesforce/plugin-agent` | **1.30.6** *(2026-02-24)* | **2.0.4** | **2026-08-19** |
+
+**This reframes the whole census, and in the project's favour.** `sf agent adl` = 39 public
+files. `agent test run-eval` = 21 files across 9 repos. `AiTestingDefinition` = 4 files across 3
+repos, two of them Salesforce's own tooling.
+
+**Those numbers are near-zero because the commands did not exist a month ago.** This is not a
+mature area with a crowded field. It is a surface that opened three weeks ago on which nobody has
+built. The window is real, and it is narrow.
+
+**Operationally:** §9 items #3 and #5 are unreachable on the current toolchain — not blocked, just
+gated on `sf plugins install @salesforce/plugin-agent@latest`. And one command afterwards resolves
+the largest remaining unknown: `sf agent adl list --target-org VoltStreamDev` answers whether Data
+Library provisioning works in a free Developer Edition org, which the corpus-mutation design
+depends on.
+
+**A trap worth writing down before the upgrade:** in 1.30.6, `sf agent preview` **simulates
+actions by default**. In 2.x with `--authoring-bundle`, neither mode is default and you must choose
+explicitly. A script written against v1 semantics silently changes meaning.
+
+**Two capabilities that already work, today, unupgraded** — both missed until now:
+
+- **`sf agent preview --apex-debug`** — Apex debug logging *during* an agent conversation. You can
+  watch an `@InvocableMethod` execute inside the reasoning loop.
+- **`sf agent preview --output-dir`** — conversation transcripts written to local files. The v1
+  precursor to `agent trace`, and enough for a rudimentary local assertion harness right now.
+
+---
+
+## 19. The capability map, closed — including one artifact this project claimed and cannot have
+
+The final sweep checked all sixteen candidate capabilities against the Metadata API type list, the
+current guide pages, and GitHub. Method caveat that matters: the REST code-search API **silently
+ignores `path:*.foo-meta.xml` globs** (every such query returns a false `0`) and **tokenises
+camelCase**, so a bare `McpServerDefinition` returns 9,744 hits — almost all of them **VS Code's
+identically named API.** Counts below use `extension:` plus distinctive tokens.
+
+### 19.1 🔴 The Trust Layer is not deployable metadata
+
+The design listed *"Einstein Trust Layer configured as metadata"* among its seven deployable
+compliance artifacts. **It cannot be.**
+
+`EinsteinGptSettings` (v61.0+) has **nine fields**, and all of them are provider or platform
+toggles: `enableEinsteinGptPlatform`, `enableAIModelBeta`, `enableEinsteinGptGlobalLangSupport`,
+`enableEinsteinGptAllowUnsafePTInputChanges`, and five `disableAIProv*` switches.
+
+**There is no `enableEinsteinGptTrustLayer*` field of any kind.** Audit trail, data masking and
+zero-retention are **configuration, not source.** Corroborated by search: `enableEinsteinGptTrustLayer`
+returns **0** public hits.
+
+So the honest claim shrinks to what the type actually offers — the provider switches, including the
+region-fallback one whose scope §C2 of the design doc already narrows. Saying "Trust Layer as code"
+would be checkable and wrong.
+
+### 19.2 Four capabilities that do not exist, and the count that proves it
+
+| Capability | Status | Public examples |
+|---|---|---|
+| **A2A (agent-to-agent)** | Not native. Salesforce contributed the Agent Card concept to Google's spec; the only GA path is **MuleSoft-mediated**. Zero mentions in the Summer '26 release post. | ~4 community Heroku wrappers |
+| **A/B testing agent versions** | A single *"A/B Testing API — pilot"* line in the TDX 2026 roundup. Absent from the Summer '26 release post and from the entire guide tree. | **0** |
+| **Test Data Libraries** | **Does not exist.** The closest real things are Agentforce Data Libraries (grounding, not test data) and test cases embedded in `AiEvaluationDefinition` — max **1,000** per component. | **0** |
+| **Hybrid Search** | **Unestablished.** ADL exposes `--index-mode basic\|enhanced`, but no first-party doc names a hybrid/semantic/keyword search type on retrievers. | **0** credible |
+
+**Zero examples because there is nothing to exemplify.** Worth knowing before designing around any
+of them.
+
+### 19.3 The sharpest opportunity in the whole map
+
+| # | Capability | Public XML examples | Free DE? | Read |
+|---|---|---|---|---|
+| **1** | **MCP agent action — `GenAiFunction.invocationTargetType = mcpTool`** | **0** | **Likely yes** — GA Summer '26, **no Data Cloud gate** | **Best target.** Zero prior art, generally available, and the registration path is the API Catalog Connect REST API — *runtime records, not metadata*. That indirection is the moat. |
+| **2** | **Agent Script `.agent`** | 3 using `ask_for` · 24 bundle XML | **YES — firmest evidence in the map** | `agent-script-recipes` ships a section titled *"Installing the app using a Developer Edition Org"*; scratch-org feature `Einstein1AIPlatform` is *"supported in Developer and Enterprise editions."* |
+| **3** | `AiTestingDefinition` (G2) | **4** | Yes | Beta, and **undocumented in the Metadata API guide** despite CLI support |
+| **4** | `AiAgentScorerDefinition` | 27 | Yes, with the Agentforce Scorer Beta permission set | Beta, Session scope only, undocumented type |
+| **6** | Agent versioning and rollback | 70 | Yes | **GA and genuinely real** — `--version` works on both open and `sf agent activate`; only one version active at a time |
+
+**And two that are gated harder than assumed:**
+
+- **`AiRetriever` is not a Metadata API type at all** — verified by contrast: the evaluation-definition
+  doc page renders a real type page, the retriever one falls back to the generic Metadata API intro.
+  Retrievers exist only through Data Libraries, which *"provision the full Data Cloud pipeline
+  (DLO → DMO → SearchIndex → Retriever)"* — and the docs recommend **a sandbox, not a scratch org**,
+  for anything needing them.
+- **Observability requires Data Cloud, unconditionally:** *"Agentforce Session Tracing data is stored
+  in Data 360. The API queries the data using Data 360 SQL."* The OTel API is Beta with **72-hour
+  retention**.
+
+### 19.4 Four traps worth carrying forward
+
+1. **"Command Center" is a dead product name.** It is *"Agentforce Observability, formerly called
+   Command Center."* Using the old name dates you precisely.
+2. **The Agent API refuses the default agent type** — *"The Agent API is not compatible with
+   'Agentforce (Default)' agent types."* A headless demo built on the wrong `Bot.type` simply will
+   not connect.
+3. **`sf agent generate test-spec` is interactive scaffolding, not LLM test synthesis.** It prompts
+   for utterance / expected topic / actions / outcome. *(By contrast `sf agent generate agent-spec`
+   **does** call the org's LLM — but to generate topics, not tests.)* And integration tests for
+   Agentforce and Data 360 are **Developer Preview, scratch orgs only.**
+4. **`forcedotcom/afv-library` and `forcedotcom/sf-skills` are the same repository**, renamed. Do not
+   count it twice.
+
+### 19.5 ⚠️ An unresolved conflict between two research passes — do not guess it
+
+The two passes disagree about `sf agent preview` defaults after the v2 upgrade:
+
+| Pass | Claim |
+|---|---|
+| A | In 2.x with `--authoring-bundle`, **neither mode is default** — you must pass `--use-live-actions` or `--simulate-actions` explicitly |
+| B | In plugin-agent **2.0.4**, **simulation is the default** and you opt out with `--use-live-actions` |
+
+Both agree that in the installed 1.30.6 simulation is the default. **The disagreement is only about
+2.x, and it is trivially testable after upgrading** — run `sf agent preview --help` and read it.
+Recorded rather than resolved, because guessing here would silently change what a CI script means.
+
+### 19.6 Two more counts worth keeping
+
+**`Bot.type` is a three-value enum**, and the naming is not intuitive: `Bot` (v43+),
+**`ExternalCopilot`** = *"an Agentforce **Service** agent"* (157 public), **`InternalCopilot`** =
+*"Agentforce **Employee** agent"* (99 public). A separate `agentType` field arrived in v64.0.
+
+**Prompt Template types are still exactly five**, all v60.0+ — `flex` (409 public),
+`fieldCompletion` (126), `salesEmail` (63), `recordSummary` (61), `caseEmailDraft` (12). **No new
+type was added in Spring or Summer '26**, which is worth knowing before assuming the scorer types
+belong to the same enum. They do not.

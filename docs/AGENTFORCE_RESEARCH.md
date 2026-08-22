@@ -60,9 +60,51 @@ MCP platform entities **do** exist in the org: `McpServerDefinition`,
 `McpServerToolDefinition`, `McpServerToolApiDefinition`, `McpServerPromptDefinition`,
 `McpServerResourceDefinition`, `McpServerAccess`.
 
-Tooling is ready: `sf` CLI 2.125.2 ships `agent create|activate|preview|validate`,
-`agent generate agent-spec|authoring-bundle|test-spec`, `agent test create|run|list|
-results|resume|run-eval`, `agent adl *`, `agent mcp *`, `agent trace *`.
+> ### ⚠️ Corrected 2026-08-22 — this paragraph described a CLI we do not have
+>
+> The claim was that `sf` CLI **2.125.2** ships `agent adl *`, `agent mcp *`, `agent trace *`,
+> `agent test run-eval` and a programmatic `agent preview`. **Checked against the installed
+> binary: it ships none of them.**
+>
+> `sf agent --help` on 2.125.2 / `plugin-agent` 1.30.6 lists exactly `generate`, `preview`,
+> `publish`, `test`, `validate`, plus `activate` / `create` / `deactivate`. `sf agent test` has
+> `create|list|results|resume|run` — **no `run-eval`**. `sf agent preview` is a **single
+> interactive command** — no `start|send|end|sessions`. And `agent adl`, `agent trace` and
+> `agent mcp` return *"is not a sf command."*
+>
+> **All of it arrived in `@salesforce/plugin-agent` 2.0.0 on 30 July 2026 — twenty-three days ago.**
+>
+> | | Installed | Latest | Published |
+> |---|---|---|---|
+> | `@salesforce/cli` | **2.125.2** *(2026-02-25)* | 2.148.3 | 2026-08-12 |
+> | `@salesforce/plugin-agent` | **1.30.6** *(2026-02-24)* | **2.0.4** | **2026-08-19** |
+>
+> **This explains the prior-art census, and it is good news.** `sf agent adl` returns 39 public
+> files; `agent test run-eval` 21 files across 9 repos; `AiTestingDefinition` 4 files across 3
+> repos, two of which are Salesforce's own tooling. Those numbers are near-zero **because the
+> commands did not exist a month ago.** This is not a mature field with a crowded scoreboard —
+> it is a surface that opened three weeks ago and nobody has built on it. The window is real and
+> it is narrow.
+>
+> **Prerequisite, to be stated rather than assumed:**
+> ```bash
+> sf plugins install @salesforce/plugin-agent@latest   # or: sf update
+> ```
+>
+> **A default-behaviour trap that will bite silently.** In the installed 1.30.6, `sf agent
+> preview` **simulates actions by default** and `--use-live-actions` is opt-in. In 2.x with
+> `--authoring-bundle`, **neither mode is default and you must choose explicitly.** A script
+> written against v1 semantics changes meaning after the upgrade without erroring.
+>
+> **And two things that already work, unupgraded, that had been missed:**
+> - **`sf agent preview --apex-debug`** — Apex debug logging *during* an agent conversation. You
+>   can watch an `@InvocableMethod` execute inside the reasoning loop.
+> - **`sf agent preview --output-dir`** — writes conversation transcripts to local files. The v1
+>   precursor to `agent trace`, and enough for a rudimentary local assertion harness today.
+>
+> **One command resolves the largest open unknown.** After upgrading:
+> `sf agent adl list --target-org VoltStreamDev` answers whether Data Library provisioning works
+> in a free Developer Edition org — which is what the corpus-mutation design depends on.
 
 ### Blocking prerequisites, in order
 
