@@ -13,6 +13,26 @@
  *
  * Dates are relative to today so the demo does not rot.
  *
+ * ---------------------------------------------------------------------------
+ * ASSERTION RULE — read before writing any test against this data.
+ *
+ * Agentforce evaluations run against live org data. There is no
+ * Test.setFixedTime() and no way to freeze "today" inside an agent test run,
+ * so any assertion that depends on the distance between now and a seeded date
+ * is a bomb with a known fuse. The partner below at T.addDays(58) is inside the
+ * §5.2 notification window today and simply expired 92 days from now, at which
+ * point a test expecting WARNUNG correctly returns BLOCKIERT and goes red for
+ * no reason anyone will find quickly.
+ *
+ * Assert only on things that do not move:
+ *   - values derived from a FIXED input (Eichfrist_Ende__c from a hard-coded
+ *     Inverkehrbringen date is stable forever)
+ *   - status enums (OK / WARNUNG / BLOCKIERT)
+ * Never assert a day count, and never assert a phrase like "in 58 Tagen".
+ *
+ * Re-run this script as the first step of any evaluation run.
+ * ---------------------------------------------------------------------------
+ *
  * Idempotent: deletes and rebuilds its own records.
  *
  * Run:  sf apex run --file scripts/apex/seedGermanPartners.apex -o VoltStreamDev

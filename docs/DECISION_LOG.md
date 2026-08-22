@@ -1,6 +1,6 @@
 # Karar Defteri — Agent Tasarımı
 
-Altı bağımsız hakemin her önerisi, statüsüyle. Amaç: aynı tartışmayı iki kez yapmamak ve
+Yedi bağımsız hakemin her önerisi, statüsüyle. Amaç: aynı tartışmayı iki kez yapmamak ve
 hakemlerin **ayrıştığı** yerleri kaybetmemek.
 
 **Kaynak:** [AGENT_DESIGN_FOR_REVIEW.md](AGENT_DESIGN_FOR_REVIEW.md)
@@ -757,6 +757,553 @@ Main CI yalnızca production-intent path'i koşar.
 Bu yedi sorunun cevabı repoda **görünür** olacak.
 
 
+---
+
+# 🏆 R7 — iki geçiş, iki öz-düzeltme, ve yedi hakemin en iyisi
+
+R7 tek hakem olarak iki tur yazdı, **ikinci turda birinci turdaki iki hatasını aritmetikle
+çürüttü**, ve hem tasarımda hem **bugün commit ettiğim kodda** hata buldu.
+
+---
+
+## 🔴 Z-01 · Test fixture'larının tamamı zaman-bağımlı — **canlı hata**
+
+> **R7:** *"Agent'ın işi tarih aritmetiği. Test fixture'ları tarihler. Agentforce eval'leri
+> **canlı org verisine** karşı koşuyor — `Test.setFixedTime()` yok, fixture injection yok,
+> **bir agent test koşusu içinde 'bugün'ü dondurmanın yolu yok.**"*
+
+Ve doğrudan benim kodumu gösteriyor:
+
+| Kaynak | Değer | Ne zaman patlar |
+|---|---|---|
+| `seedGermanPartners.apex` | `Installateurverzeichnis_Gueltig_Bis__c = T.addDays(58)` | **92 gün sonra** bu kayıt süresi dolmuş olur; *"Warnung"* bekleyen test artık doğru olarak *"Installationsverbot"* döndürür ve **kırmızıya döner** |
+| `seedGermanPartners.apex` | `Freistellungsbescheinigung_Bis__c = T.addDays(-19)` | aynı bomba, ters yön |
+| §10.2 eval vakası | `2027-12-31` assert'i | ✅ **güvenli** — sabit `Inverkehrbringen_Am__c`'den türüyor |
+
+> *"Suite'in sebepsiz kırmızıya döndüğü hafta bunu keşfedeceksin ve **aslında bir takvim
+> olan** bir platform bug'ını iki gün arayacaksın."*
+
+**Dört kural:**
+
+1. Seed tarihleri `Date.today()`'den offset olarak hesaplansın — ✅ zaten öyle yaptım
+2. Seed çapasını sakla — ⚠️ **R7 kendi tavsiyesini 2. geçişte düzeltti**, aşağıda
+3. **Sadece hareket etmeyen şeye assert et:** (a) sabit girdiden türeyen değerler, (b) status
+   enum'ları. **Asla gün sayısına, asla "X Tagen içinde" ifadesine.**
+4. `scripts/apex/reseed.apex` idempotent, **her CI koşusunun ilk adımı**
+
+> *"`2027-12-31` sonsuza kadar güvenli. `BLOCKIERT` sonsuza kadar güvenli.
+> **`in 58 Tagen` 58 günlük fitili olan bir bomba.**"*
+
+Ve bu bir **wow adayı**: *"Zaman-bağımlı agent eval'leri için dokümante edilmiş,
+yeniden üretilebilir bir desen public'te yok — ve ciddi her Agentforce eval'i bu duvara
+çarpacak."*
+
+---
+
+## 🔴 Z-02 · Faz 0, Faz 0'ı doğrulamıyor
+
+Altı hakem *"önce Faz 0'ı doğrula"* dedi. **Sadece R7, doğrulama yönteminin kendisinin bir
+şey doğrulayıp doğrulamadığına baktı.**
+
+> **R7:** *"`agent test list`, testi olmayan bir org'da **boş liste döndürür.** Bu sana
+> *komutun çözümlendiğini* söyler. Platformun bir `AiEvaluationDefinition` deploy'unu kabul
+> edip etmeyeceğini, runner'ın bir işi kabul edip etmeyeceğini, kredi tüketip tüketmeyeceğini,
+> ya da **gate'leyeceğin metrik alanlarını döndürüp döndürmeyeceğini söylemez.**
+> **'Hata yok'u 'yeşil ışık' olarak okuyup Faz 1'e geçeceksin.**"*
+
+**Gerçek Faz 0 — bir saat değil, bir gün:**
+
+```
+kasıtlı olarak değersiz bir agent kur (1 nesne, 1 alan, 1 hardcoded aksiyon)
+  → Agentforce'u Setup'tan aç
+  → agent'ı deploy et
+  → sf agent publish authoring-bundle
+  → TEK vakalı TEK aiEvaluationDefinition deploy et
+  → sf agent test run --result-format junit --wait 10
+  → sf agent test results        ← metrik DEĞERLERİ gerçekten geliyor mu?
+  → --test-runner agentforce-studio ile TEKRARLA   (G2, factuality burada)
+  → BEŞ KEZ koş, varyansı ve kredi tüketimini KAYDET
+```
+
+> *"O sayı, §10 ve §15.2'deki her aşağı akış kararını yönlendiriyor ve **şu an elinde yok.**"*
+
+Ve aynı geçişte doğrulanacak bir şey daha: `isConfirmationRequired` gerçekten
+`sf agent preview`'da bir onay adımı gösteriyor mu, yoksa sadece Lightning kanalında mı?
+**Sadece UI'daysa CI onu test edemez ve §9.1'in 3. artefaktı test edilmemiş bir iddia olur.**
+
+---
+
+## 🔴 Z-03 · E.ON menteşe gerçeği **söylenemez** — kimsenin görmediği açı
+
+> **R7:** *"Sorun E.ON'un dar olması değil. Sorun **menteşe gerçeğinin söylenemez olması.**
+> 'Sizin biriminiz Salesforce çalıştırıyor ve AI ajanlarını Power Platform'da kuruyor' cümlesi,
+> bir mülakatta yüksek sesle söylendiğinde şu demektir: **'İç politikanızı analiz ettim ve
+> meslektaşlarınızın yanlış seçim yaptığı sonucuna vardım.'**"*
+>
+> *"**O odadaki insanlar, o seçimi yapmış olan insanlar olabilir.**"*
+
+Bu, altı hakemin *"E.ON'a fazla odaklanma"* demesinden **kategorik olarak farklı** bir itiraz.
+Onlar kapsam diyordu; R7 **söylenebilirlik** diyor.
+
+Ve haklı. Tüm anlatının menteşesi olarak kurduğum şey, mülakat odasında **kullanılamaz.**
+
+**Karar:** araştırma kalıyor (domain modelini iyi yaptı), E.ON **her public yüzeyden** çıkıyor.
+Hedef: *"bir Alman CPO / EV altyapı tedarikçisi."* Uyum rejimleri ulusal; hiçbir şey E.ON'a
+bağlı değil.
+
+---
+
+## 🔴 Z-04 · Dört domain hatası
+
+R6 iki tasarım hatası bulmuştu. R7 **dört domain hatası** buluyor — hukukun kendisinde.
+
+### Z-04a · `Eichbehoerde__c` yanlış kaynaktan türüyor
+> *"Eichrecht uygulaması **cihazın konumunu** takip eder, şebeke operatörünün kayıtlı
+> merkezini değil. **Westnetz tek başına birden çok Land'a yayılıyor.**"*
+
+`Ladestandort__r.Netzbetreiber__r.Bundesland__c` → **`Ladestandort__r.Bundesland__c`**
+
+> *"Bunu bir E.ON metroloji uzmanı bulmadan düzelt, çünkü bulacaklar, ve bu **dokümanın geri
+> kalanının kazandığı güvenilirliği bozan** türde bir hata."*
+
+### Z-04b · `Ladestandort__c`'de adres yok
+`ErmittleNetzbetreiber` *"posta kodundan DSO çözer"* diyor — ama nesnede **posta kodu alanı
+yok.** Aksiyonu, dayandığı alan olmadan tasarlamışım. `PLZ__c`, `Ort__c`, `Strasse__c`,
+**`Bundesland__c`** eklenecek *(sonuncusu Z-04a için de gerekli)*.
+
+### Z-04c · `Anlagenzertifikat_erforderlich__c` muhtemelen yanlış — **ve düzeltmesi bedava bir demo anı**
+> *"NELEV ve VDE-AR-N 4110 altındaki Anlagenzertifikat zinciri **Erzeugungsanlagen ve
+> Speicher**'e bağlanıyor — üretim tesisi ve depolama — **saf tüketime değil.** Bir şarj sahası
+> *Verbrauchsanlage*'dir."*
+
+Ve şu çıkıyor:
+
+> *"HPC sahaları **şebeke güçlendirmesinden kaçınmak için** çok sık batarya tamponu içeriyor,
+> ve **o tamponu eklediğiniz anda saha saf yükten üretim-komşusu bölgeye geçiyor ve sertifika
+> zinciri devreye giriyor.** 'Şebeke yükseltmesinden kaçınmak için batarya eklemek farklı bir
+> regülasyon rejimini açıyor' — §6 Abs. 4 köprüsüyle aynı ailede, gerçekten iyi bir çapraz
+> rejim anı, **ve bir hatayı düzeltmekten bedava geliyor.**"*
+
+Ve bu, E.ON araştırmasındaki **Drive Booster** bulgusuna doğrudan bağlanıyor: batarya tamponlu
+şarj cihazı tam olarak şebeke bağlantısından kaçınmak için var — ve rejim değiştiriyor.
+
+`Speicher_kWh__c` eklenecek.
+
+### Z-04d · §48b sonucu **hukuken yanlış etiketlenmiş**
+> *"`Konsequenz_bei_Ablauf__c` picklist'in *'Rechnungssperre (15% Bauabzugsteuer)'* diyor.
+> Eksik bir Freistellungsbescheinigung **faturayı bloke etmez** — **inşaat hizmetinin
+> alıcısını** %15 kesinti yapıp Finanzamt'a havale etmeye **zorunlu kılar.**"*
+>
+> *"Ve bu **tam olarak Subagent 1'in var olma sebebi olan ayrım.**"*
+
+Doğru çıktı: *"Einbehalt von 15 % Bauabzugsteuer erforderlich"*. Picklist ve subagent talimatı
+düzeltilecek. Ben §6.3'te *"eine fehlende Freistellungsbescheinigung blockiert nur die
+Rechnung"* yazmıştım — operasyonel olarak yakın, **hukuken yanlış.**
+
+---
+
+## 🔴 Z-05 · Stichprobenverfahren — **kahraman anıyı geçersiz kılabilir**
+
+> **R7 [?]:** *"Alman metroloji hukuku bir **Stichprobenverfahren** sağlıyor — örnekleme
+> tabanlı doğrulama — büyük, homojen bir ölçü aleti popülasyonunun Eichfrist'i **her cihazı
+> değil istatistiksel bir örneği test ederek** uzatılabiliyor. Elektrik sayaçlarında şebeke
+> ölçeğinde standart pratik."*
+>
+> *"Senin tüm `Ladepunkt__c` modelin Eichfrist'i **cihaz başına saat** olarak ele alıyor.
+> Eğer bu cihaz sınıfına uygulanıyorsa, 5.000 şarj cihazı olan bir CPO bunu **filo özelliği /
+> popülasyon saati** olarak yönetiyor demektir — ve bir E.ON metroloji uzmanının demona
+> söyleyeceği ilk şey: **'bizde böyle yapılmıyor.'**"*
+
+> *"**Sandbox sorusundan daha yüksek sonuçlu**, çünkü onun yedekleri var, bunun **şemayı
+> değiştiriyor.**"*
+
+Üç sonuç, üçü de kullanılabilir:
+- **Uygulanmıyorsa** → README'de atıfla söyle. *"Makul bir mekanizmanın neden uygulanmadığını
+  bilmek, varlığını bilmemekten daha güçlü bir sinyal."*
+- **Uygulanıyorsa** → **fırsat**: `Eichfrist_Regime__c` → `Einzelgeraet | Stichprobe`,
+  `Geraetelos__c` (cihaz lotu), ve hangi rejimin geçerli olduğuna karar veren bir aksiyon.
+  *"Mevcut tasarımından daha sofistike."*
+- **Belirlenemiyorsa** → README'de tek cümlelik açık modelleme varsayımı
+
+**Yarım gün. Yapılacak ilk domain işi.**
+
+---
+
+## 🔬 Z-06 · R7'nin kendi kendini düzeltmesi — istatistik gate'i imkânsız
+
+Birinci geçişte R7 *"güvenlik-kritik vakaları N=5 koş, 5/5 iste"* dedi. İkinci geçişte
+**aritmetiği yaptı ve kendi tavsiyesini çürüttü:**
+
+| gerçek *p* (koşu başına) | tek vaka temiz (p⁵) | **sekiz vaka temiz** | kırmızı build oranı |
+|---|---|---|---|
+| 0,99 | 0,951 | **0,669** | **%33** |
+| 0,98 | 0,904 | **0,450** | **%55** |
+| 0,95 | 0,774 | **0,130** | **%87** |
+
+> *"Sekiz vakada kırmızı build'i %5'in altında tutmak için koşu başına **p ≈ 0,9987** lazım.
+> **Beta bir dilde hiçbir LLM planner bunu vermez.** Üçte bir oranında kırmızı olan bir gate,
+> gate değildir — **ikinci hafta onu görmezden gelmeye başlarsın, ve görmezden gelinen bir
+> gate, gate olmamasından beterdir çünkü dürüst değildir.**"*
+
+**Doğru hamle istatistiksel değil, mimari: güvenlik özelliğini LLM'den tamamen çıkar.**
+
+| İddia | Nerede test edilir | Gate |
+|---|---|---|
+| **Karar iddiası** — *"süresi dolmuş bir Eichfrist varsa BLOCKIERT ve §6 Abs. 4 atfı"* | **Apex unit test** — deterministik, anında, bedava, **40 sınır vakası** | **%100, sıfır tolerans** |
+| **Routing iddiası** — *"'Können wir die THG-Meldung einreichen?' planner'ı o aksiyona yönlendiriyor mu?"* | `action_sequence_match` — **tek olasılıksal sıçrama** | ≤2/40 |
+
+Ve routing gate'inin **güç hesabı**:
+
+| gerçek *p* | P(gate geçer) |
+|---|---|
+| 0,98 (sağlıklı) | **%95,4** — neredeyse hep yeşil |
+| 0,90 (regresyon) | **%22,3** — **beşte dördü yakalanıyor** |
+
+> *"**Agentforce ekosisteminde arkasında güç hesabı olan bir gate yayınlayan kimse yok.**
+> Bu, test vakası sayısından daha değerli."*
+
+Ve mülakat cümlesi:
+
+> *"Agent compliance kararını **yanlış veremez, çünkü compliance kararını agent vermiyor.**
+> Hangi deterministik kontrolün koşacağını seçiyor. O yüzden **seçimi olasılıksal, doğruluğu
+> deterministik test ediyorum** ve ikisini farklı gate'liyorum."*
+
+Ayrıca `evals/history.csv` — vaka başına, koşu başına, tarih başına bir satır. *"5/5'ten
+3/5'e altı haftada kayan bir vaka, **platform drift'i hakkında bir bulgudur** — ve altı
+haftalık bir üründe platform drift'i, incelemecinin izlediğini bilmek isteyeceği tam şeydir."*
+
+### Ve ikinci öz-düzeltme
+> *"Seed çapası için Custom Metadata **yanlıştı.** CMDT kayıtları sıradan DML ile insert
+> edilemez — `Metadata.Operations.enqueueDeployment`'tan geçersin, ki **asenkron**, yani seed
+> script'in çapayı aynı transaction'da yazıp geri okuyamaz. **List Custom Setting** kullan."*
+
+---
+
+## 🔴 Z-07 · Entity resolution katmanı yok — **demo burada kırılacak**
+
+R3 parametre halüsinasyonunu bulmuştu ve `ResolveRecordId` önermişti. **R7 çok daha ileri
+gidiyor:**
+
+> *"Kendi eval utterance'larına bak: *'Darf **Elektro Wagner** nächsten Monat noch
+> installieren?'* ve *'Wann läuft die Eichfrist von **LP-00042** ab?'* İkisi de aksiyon
+> envanterinde **hiç görünmeyen** bir adım gerektiriyor: **bir insanın yazdığı string'i
+> kayda çevirmek.** `PruefePartnerCompliance` bir `Id` alıyor. **Hiçbir şey o `Id`'yi
+> üretmiyor.**"*
+
+Ve çözümü inşa etmeye değer kılan üç özellik:
+
+**① Belirsizliği çözmek yerine döndürüyor.**
+> *"İki partner 'Wagner' adını taşıyorsa **ikisini de döndür**, ve subagent talimatı:
+> *'Wenn mehrere Treffer zurückkommen, **frage nach. Wähle niemals selbst aus.**'*
+> Bu, tüm tasarımında **konuşmalı bir turu gerçekten istediğin tek yer** — ve yanlış Wagner'ı
+> sessizce seçen bir lookup'tan çok daha iyi bir demo anı."*
+
+**② Apex'te deterministik test edilebilir** — bulanık eşleştirme üzerine 30 unit test, bedava,
+anında — ve **tek** olasılıksal agent testi: *"planner tahmin etmek yerine soruyor mu?"*
+
+**③ Gerçek Agentforce dağıtımlarındaki en yaygın hata, ve hiçbir public demoda yok** —
+çünkü her public demo tek bir kaydı hardcode ediyor.
+
+Eşleştirme stratejisi: exact external ID → `Name` exact → SOSL `FIND {Wagner*}` → `StringUtils`
+üzerinden normalize karşılaştırma (**`GmbH|GbR|e.K.|AG|& Co. KG` ekleri soyularak**).
+
+> *"Alman hukuki form ekleri, naif eşleştirmeyi bozan **tam olarak o gürültü** — bu da onu
+> Almanca'ya özgü bir mühendislik problemi yapıyor."*
+
+⚠️ **[?] R7'nin doğrulama isteği:** SOSL, SOQL'in `USER_MODE`'unu aynı şekilde uyguluyor mu?
+Sözdizimi farklı ve *"güvenlik özelliğinin taşındığını varsaymanı istemiyorum."*
+
+**Yeni eval kategorisi: belirsizlik yönetimi.** Agent'ın devam etmek yerine netleştirici soru
+sorduğunu assert et.
+
+---
+
+## 🆕 Z-08 · Almanca/İngilizce delta — *"bu incelemedeki en güçlü fikir"*
+
+> **R7:** *"Aynı 20 vakalık suite'i **aynı agent'a karşı iki kez** koş — bir kez Almanca
+> utterance'larla, bir kez İngilizce çevirileriyle — ve routing accuracy, factuality ve
+> latency'yi ikisi için de yayınla. **Salesforce non-English'in bozulduğunu söylüyor. Kimse
+> bir sayı yayınlamadı.**"*
+
+Ve **deneysel protokol olarak** tasarlanmasını istiyor, yoksa hiç yapılmasın:
+
+| Adım | Detay |
+|---|---|
+| **Ön kayıt** | `experiments/DE_EN_delta/PROTOCOL.md` — hipotez, örneklem, metrikler, analiz planı, **ve hangi sonuç Almanca'yı birincil dil olmaktan çıkarır** — koşmadan **önce**, git geçmişinde zaman damgalı |
+| Örneklem | 20 vaka × 5 koşu × 2 dil = **200 çağrı** |
+| Kontrol | **Serpiştirilmiş** DE/EN/DE/EN — hepsi-Almanca-sonra-hepsi-İngilizce **değil**, yoksa dili model drift'i ve günün saatiyle karıştırırsın |
+| Confound | Uzunluk ve cümlecik sayısı eşleştirilmiş — *"sonucu yiyecek olan confound bu"* |
+| **Analiz** | **Nokta tahmini değil, güven aralığı.** *"20 vaka × 5 koşuda, routing accuracy'de **~10 puanın altındaki fark gürültüden ayırt edilemez**, ve bunu söylemek yazının koyabileceğin **en güvenilir tek şey.**"* |
+| Geçerlilik tehditleri | Farklı model sürümleri farklı dilleri servis ediyor olabilir; İngilizce çevirilerin daha basit olabilir; topic classifier iki koşu arasında yeniden eğitilmiş olabilir |
+
+> *"Çoğu insan n=20'den **'Almanca %12 daha kötü'** diye rapor eder, dümdüz bir yüzle.
+> Aralığı raporlamak — **ve null sonuç aldıysan onu raporlamak** — bunu pazarlama olmaktan
+> çıkarıp araştırma yapan şey."*
+
+---
+
+## 🆕 Z-09 · Başarısızlıkları commit et ⭐
+
+> **R7:** *"`evals/known-failures/` dizini — agent'ın **düzenli olarak yanlış yaptığı**
+> vakalar, her biri **nedenini yazan bir analizle**: beta dilde topic classification bozulması,
+> tablo-görsel üzerinde retrieval kaçırması, iki komşu subagent arasında yanlış yönlendirme."*
+>
+> *"**Her public repo yeşil.** Kendi failure mode'larını dokümante eden bir repo, **şeyi
+> gerçekten çalıştırmış bir mühendis** gibi okunur — ve en büyük riskini (§15.3, Almanca Beta)
+> bir yükümlülükten **artefaktın en güvenilir bölümüne** çevirir."*
+
+Ve CI kapısı: known-failure setinin **daha da kötüleşmemesi** üzerine, geçmesi üzerine değil.
+
+---
+
+## 🆕 Z-10 · Ölçümler koddan ucuz — **incelemenin merkezî iddiası**
+
+> **R7:** *"A, B, C ve D'nin hepsi **ölçüm ve doküman, kod değil**, ve toplam maliyetleri
+> belki iki hafta. **Mevcut planın benzer bir güvenilirlik seviyesine ulaşmak için dört ay
+> kod harcıyor.** Bu asimetri, bu incelemeden almanı istediğim ana şey."*
+
+| # | Ölçüm | Maliyet | Novelty |
+|---|---|---|---|
+| A | DE/EN delta | 1 hafta | **Kimse sayı yayınlamadı** |
+| B | Known-failures | 2 gün | Her public repo yeşil |
+| C | Kredi/maliyet metresi | 2 gün | *"Alman satın alma ilk toplantıda sorar, public cevap yok"* |
+| D | Zaman-bağımlı eval deseni | 2 gün | Ekosistemde çözülmemiş problem |
+| E | Betriebsvereinbarung taslağı | 1 öğleden sonra | *"Public bir AI repo'sunda hiç görmedim"* |
+
+---
+
+## 🔧 Z-11 · Envelope 3× fazla pahalı — ve `filter_from_agent`'ın gerçek işlevi
+
+> **R7:** *"`AgentActionResult`'ın altı alanı var. Planner üç aksiyon zincirlerse, bu bağlama
+> giren **on sekiz serialize edilmiş alan** demek — Almanca, ~%50 token primiyle."*
+>
+> *"`datensaetze` bir `List<String>` olarak 18 karakterlik kayıt ID'leri = **saf token israfı**,
+> ve daha kötüsü modeli **Almanca iş metnine ham Salesforce ID'si yazdırmaya davet ediyor.**
+> Bir compliance cevabında `a0X8d000001abcXYZ` bir incelemeciye **bug gibi görünür.**"*
+
+```apex
+public String betroffen;        // "LP-00042, LP-00051 (+3 weitere)"  ← insan-okunur
+public String datensaetzeJson;  // testler okur, model asla ← filter_from_agent
+```
+
+Ve **yeniden çerçeveleme:**
+
+> *"**`filter_from_agent` bir güvenlik kontrolü olduğu kadar bir token ve kalite kontrolüdür.**
+> §9.1 onu 'hassas çıktılar' için 7. guardrail olarak listeliyor. Daha sık kullanımı,
+> yapılandırılmış payload'ları bağlamdan uzak tutmak — ki model **on sekiz alan gürültü yerine
+> dört kısa string** üzerinde akıl yürütsün. Böyle çerçevelemek, bir planner'ın bağlam
+> şişkinliği altında bozulduğunu **gerçekten izlediğini** gösterir."*
+
+---
+
+## 🔧 Z-12 · Groundedness scorer — üç aşamaya ayrıştırılmış
+
+> **R7:** *"Kötü kurulmuş, **üç şekilde**: (a) 'herhangi biri varsa 0' platformun ölçek olarak
+> ele aldığı şeyin içine saklanmış bir ikili — tüm çözünürlüğü kaybediyorsun. (b) 'Emin
+> değilsen 0' **hakemin belirsizliğini agent'ın hatasından ayırt edilemez** kılıyor.
+> (c) Tek hakemden tek geçişte her iddiayı kontrol etmesini istemek klasik **çoklu-iddia
+> seyrelmesi**: hakemler bir paragraftaki üçüncü hatayı düzenli olarak kaçırır."*
+
+| Aşama | LLM? | Ne yapar |
+|---|---|---|
+| **1 — Çıkarım** | ❌ | Regex: `§\s*\d+[a-z]?(\s+Abs\.\s*\d+)?...` + norm beyaz listesi (`MessEG`, `MessEV`, `NAV`, `EnWG`, `BImSchV`, `EStG`, `LSV`), tarihler, `kW\|kVA\|kWh\|€\|%\|Jahre\|Wochen\|Monate\|Tage` ile biten sayılar |
+| **2 — Doğrulama** | ❌ | Her çıkarılan token, aksiyon envelope'unda **veya** getirilen chunk'larda görünmeli. *"Bir kanun atfı ya kaynak materyalde vardır ya yoktur; **yargılanacak bir şey yok.**"* → **hard fail** |
+| **3 — Kalan prose** | ✅ | Sadece token içermeyen cümleler hakeme gider. Tek soru + 0/50/100 yazılı çapalar + **ayrı bir `UNSICHER` sonucu** |
+
+> *"Bu daha ucuz, daha savunulabilir, **ve LLM-hakem versiyonundan daha şaşırtıcı** — çünkü
+> moda deseni **tersine çeviriyor.** Mülakat cümlesi: **modelden asla kendini doğrulaması
+> istenmiyor.**"*
+
+---
+
+## 🔧 Z-13 · Retrieval unit testleri — ayrı suite
+
+> **R7:** *"Şu anda agent §38 hakkında kötü bir cevap verdiğinde, **planner'ın mı yanlış
+> yönlendirdiğini, retriever'ın mı kaçırdığını, yoksa modelin mi bağlamı yok saydığını
+> söyleyemezsin.**"*
+
+~20 kanun çapası: retrieval sorgusunu **doğrudan** at, doğru chunk'ın top-3'te olduğunu assert
+et. `evals/retrieval/anchors.yaml`. Artı **negatif çapalar** — korpusun gerçekten cevaplamadığı
+sorular.
+
+> *"Gerçek bir negatif olmadan, groundedness scorer'ın **var olma sebebi olan vakaya karşı hiç
+> test edilmemiş** demektir."*
+
+---
+
+## 🔧 Z-14 · §9.1'i ikiye böl — uygulama vs davranış şekillendirme
+
+Q8'in en iyi cevabı, yedi hakem içinde:
+
+> **R7:** *"Soru düşündüğünden **daha az önemli**, çünkü **ikisi de bir güvenlik kontrolü
+> değil.** `available_when` planner'ın subagent'ı *dikkate alıp almayacağını* kapılıyor.
+> `ruleExpressions` deklaratif kilit/açma yapıyor. **İkisi de, planner yine de oraya
+> yönlendirirse altındaki Apex'in çalışmasını engellemiyor** — ve planner routing'i
+> deterministik değil."*
+>
+> *"**Tek uygulama noktası selector'daki `WITH USER_MODE`** — ki bunu §3.4'te zaten söylüyorsun
+> ve sonra §9.1'de dört davranışsal mekanizmayı **aynı kategoriden gibi** yanına listeleyerek
+> **kendinle çelişiyorsun.**"*
+
+**§9.1 ikiye bölünecek:**
+- **Uygulama (enforcement):** artefakt 6 *(`WITH USER_MODE`)*, tartışmalı olarak 2
+- **Davranış şekillendirme (behavioural shaping):** 1, 3, 4, 5, 7
+
+> *"Bu ayrımı düz söylemek, yedi artefaktın kendisinden **daha etkileyici** — ve §9.2'nin vaat
+> ettiği dürüstlüğün ta kendisi."*
+
+---
+
+## ✅ Z-15 · Maliyet modelimi düzeltti
+
+> **R7:** *"İçgüdün doğru, **maliyet modelin yanlış — bölmek maliyeti ikiye katlamıyor.**
+> 'İki kez koş' ile 'tek koşunun assert'lerini bölümle'yi karıştırıyorsun. **Tek koşu hem
+> deterministik sonuçları hem LLM-yargılı skorları üretiyor**; onları farklı gate'liyorsun.
+> Ekstra kredi yok."*
+
+Ben ve R6 ikimiz de "ikiye katlar" varsaymıştık. Yanlış.
+
+---
+
+## ✅ Z-16 · X-10 kapandı — `Netzbetreiber__c` custom object, **blast-radius argümanıyla**
+
+> **R7:** *"Yapmadığın ve yapman gereken ek argüman: `Account` üzerinde 860+ DSO kaydı **her
+> Account raporunu, her list view'ı, her Account-kapsamlı Einstein özelliğini ve her duplicate
+> rule'ı kirletir** — hiç Opportunity'si olmayacak bir varlık için."*
+>
+> *"**Ve agent tarafında daha çok önemli:** Account tabanlı bir registry demek, *'Accounts'*
+> kapsamına alınmış bir agent aksiyonunun **registry'ye ulaşabilmesi** demek — ki bu
+> **Escalation Gap'ini hiçbir fayda olmadan genişletiyor.** Bu, bir şema kararı için bir
+> blast-radius argümanı — **tam olarak artefaktının göstermesi gereken akıl yürütme türü.**"*
+
+R3 `Account` demişti, R1/R2 custom, R6 "duruma bağlı". **R7 kimsenin yapmadığı argümanla
+kapatıyor. ADR'ye giriyor.**
+
+---
+
+## 🔪 Z-17 · `werktageAddieren` — en iyi kesme argümanı
+
+R3 `BusinessHours` standart nesnesini göstermişti. **R7 daha derine iniyor ve gereksinimin
+kendisini sorguluyor:**
+
+> *"BDEW **Musterwortlaut**'un kesin bir implementasyonunu inşa ediyor olacaksın — ki senin
+> **kendi §2.5'ine göre bir öneri, yürürlükte değil.** Yürürlükte olmayan bir taslağı
+> implement etmek için bir hafta tatil tablosuna harcayacaksın."*
+>
+> *"**Apex'te Paskalya hesaplama.**"*
+
+Ve Z-18'deki şema düzeltmesi bunu **doğru şekilde ertelemeyi** sağlıyor.
+
+## 🔧 Z-18 · `Antwortfrist_Tage__c` iki saati birbirine karıştırıyor
+
+> **R7:** *"NAV §19 Abs. 2 *'innerhalb von zwei Monaten'* — takvim ayı, yani cevap **gönderim
+> tarihine** bağlı, gün sayısına değil. BDEW Musterwortlaut önerisi **10 iş günü.** İkisini tek
+> integer alanda saklamak seni bir birim seçmeye ve ayrımı kaybetmeye zorluyor."*
+
+`Antwortfrist_Wert__c` + `Antwortfrist_Einheit__c` (`Monate | Werktage | Kalendertage`),
+`Frist_Ablauf__c` dallanıyor.
+
+> *"Bu ayrıca `werktageAddieren`'i şimdilik düşürmeni sağlarken şemayı hazır tutuyor — ki bir
+> şeyi **tasarımdan çıkarmak yerine ertelemenin doğru yolu bu.**"*
+
+Bu, R6'nın B-05'inin (çifte doğruluk kaynağı) **şema seviyesindeki kök nedeni.**
+
+---
+
+## 📋 Z-19 · Kalan domain bayrakları 🔬 DOĞRULA
+
+| # | Bayrak | Etki |
+|---|---|---|
+| 1 | **AFIR retrofit tarihi ~1 Ocak 2027** mevcut ≥50 kW public noktalar için | *"Zaten yerdeki varlıklara sert bir son tarih — tezinin **mevcut envantere** uygulanmışı, **bir formula alanı maliyetinde**"* |
+| 2 | **§14a formülünde zamansal koşul eksik** — rejim 1 Ocak 2024'ten itibaren yeni bağlanan tesislere bağlanıyor. Ayrıca: eşik cihaz başına mı, steuerbare Verbrauchseinrichtung başına mı? | formül düzeltmesi |
+| 3 | **THG'nin muhtemelen bir BNetzA/LSV kayıt önkoşulu var** | *"Öyleyse **§6 Abs. 4 ile aynı şekilde ikinci bir çapraz rejim köprüsü** — ve bedava ikinci bir demo anı. 30 dakika."* |
+| 4 | **DC ölçümü için Eichfrist** AC'den farklı olabilir (MessEV Anlage 7 alet tipine göre süre veriyor) | *"Farklıysa formülün `AC_DC__c` dallanması gerekir — **ve dallanan bir formül düz olandan zaten daha iyi bir artefakt.**"* |
+| 5 | **MessEV takvim-yılı-sonu kuralının Absatz'ı** | *"Bir Alman metroloji kitlesinin önünde yanlış Absatz, hiç atıf yapmamaktan **beterdir.**"* |
+| 6 | **BK6-22-300 `[U]` ve yük taşıyor** — bir formula, bir CPQ alert'i ve bir eval vakasını sürüyor | *"Doğrulanmamış bir sayının **görünür provenance olmadan bir formülde oturmasına izin verme** — bu, tüm artefaktının karşı çıktığı **tam hata.**"* |
+
+---
+
+## 🔪 Z-20 · Beş subagent → iki, en güçlü haliyle
+
+R7 bunu *"sessizce görmezden geleceğini düşündüğüm tavsiye"* diye işaretleyip en sona koyuyor:
+
+> *"Kendi kanıtın konu başına 3–4 talimattan sonra güvenilirliğin bozulduğunu söylüyor, ve
+> topic classification'ın non-English'te ölçülebilir şekilde bozulduğunu. **Bu iki gerçek
+> birbirini çarpıyor.** Almanca'da beş subagent, planner'ın **beta bir dilde ayırt etmesi
+> gereken beş sınıflandırma sınırı** demek — ve komşu sınırlar (**Eichrecht ile THG, ikisi de
+> aynı şarj noktasına ve aynı tarihe dokunuyor**) yanlış yönlendirmenin tam olduğu yer."*
+>
+> *"Yani beş subagent versiyonu sadece daha fazla iş değil. **Daha kötü yönlendirme yapma
+> olasılığı daha yüksek.** Ölçülebilir şekilde daha kötü bir agent için üç fazladan hafta
+> ödüyor olacaksın."*
+
+Ve kesmeyi bir **bulguya** çeviriyor:
+
+> *"İki subagent, doğru yönlendirilmiş, **dörde çıkardığında ne olduğunu gösteren dokümante
+> edilmiş bir deneyle**, %70'te yönlendiren beş subagent'tan daha iyi bir artefakt. Ve o deney
+> yayınlanabilir başka bir ölçüm: **subagent sayısının fonksiyonu olarak Almanca routing
+> accuracy'si. Kimsenin çizmediği bir grafik**, zaten yaptığın işten bedava geliyor."*
+
+**KABUL: 2 subagent.** *(R1 de 2 demişti; R2/R6 3; R4 5. R7 en güçlü gerekçeyi verdi ve
+kesmeyi ölçüme çeviriyor.)*
+
+---
+
+## 📄 Z-21 · Repo bir iletişim artefaktı
+
+**README sırası:** (a) §6 Abs. 4 bulgusu **dört cümlede, herhangi bir koddan önce**
+(b) 90 saniyelik gömülü video (c) *"nereden biliyorum uydurmadığını"* — üç gate + yanlış-alarm
+ve tespit sayıları (d) **bunun kasten yapmadıkları** ve platformun yapamadıkları (e) dürüst
+kurulum, script'lenemeyen üç adım sayılarak.
+
+**6–8 ADR, birer sayfa:**
+> *"Reddedilen alternatiflerin yazıldığı ADR'ler, kıdemli bir incelemeci için **kelime başına
+> en yüksek sinyalli artefakt**, ve **'bunu inşa etmemeye karar verdim'in bir yokluk yerine
+> görünür kanıt olduğu tek yer.**"*
+
+**Commit geçmişi kanıttır:**
+> *"Üç haftada küçük, atomik, iyi mesajlı commit'lerle kurulmuş bir repo **çalışan bir mühendis
+> gibi okunur.** Tek bir squash'lanmış döküm **üretilmiş gibi okunur.** Ve **asla geçmişi daha
+> düzgün görünsün diye yeniden yazma — doku'nun kendisi mesele.**"*
+
+*(Bu proje zaten öyle ilerliyor — her adım ayrı commit, gerekçeli mesaj.)*
+
+**Video Almanca, altyazılı, kusurlu olsa bile:**
+> *"Görünür şekilde çabalayan birinden **B2 seviyesinde bir Almanca teknik açıklama**, cilalı
+> İngilizce'den bir Alman paneline daha iyi oturur — **çünkü zaten soracakları bir soruyu
+> cevaplıyor.**"*
+
+---
+
+## ⚠️ Z-22 · Kişisel bayrak — **buna bak**
+
+> **R7:** *"§1.1 şöyle açılıyor: *'Senior-level Salesforce developer, **based in Germany**.'*
+> Eğer bu **mevcut değil de hedefse**, bunun bir public README'ye, bir CV'ye veya bir ön yazıya
+> **asla ulaşmadığından emin ol.** Bir ikamet iddiasının yanlış olduğunu keşfeden bir Alman
+> işveren, repodaki **her şeyi**, mükemmel olan kısımlar dahil, iskonto eder — **ve mükemmel
+> olan kısımlar gerçekten mükemmel.**"*
+
+Bu satırı tasarım dokümanına **ben yazdım** (§1.1). Senin durumunu bilmiyorum — ama doğru
+değilse public hiçbir yüzeye çıkmamalı.
+
+---
+
+## 📊 Z-23 · Tripwire tablosu — duygusal yatırım oluşmadan imzala
+
+`docs/DECISIONS.md`'ye bugünün tarihiyle:
+
+| Tripwire | Eşik | Önceden taahhüt edilmiş aksiyon |
+|---|---|---|
+| Faz 0 döngüsü DE'de koşmuyor | 1 gün deneme sonrası | Eval metadata'sını commit et, koşamadığını dokümante et, ödünç bir sandbox'ta bir kez koş. **Bir hafta savaşma.** |
+| 20 vakalık koşu başına kredi | > aylık kotanın %3'ü | Tam suite sadece tag'lerde; PR'da 6 vakalık smoke |
+| Almanca routing accuracy | iki talimat revizyonundan sonra < %70 | **Almanca-birincil kararı değişir.** İngilizce-birincil + Almanca çıktı, ve **delta'yı bulgu olarak yaz** — hâlâ yeni, hâlâ yayınlanabilir |
+| Data Cloud / ADL DE'de yok | 1 gün sonra | Retrieval katmanını tamamen kes. *"§8.1 mimarin bunu zaten atlatıyor — retriever ~18 aksiyondan biri."* |
+| Stichprobenverfahren uygulanıyor | keşfedildiğinde | İki-rejim modelini ekle. **Sessizce yok sayma.** |
+| **Toplam süre** | **4 hafta, kaydedilebilir demo yok** | **Kapsam eklemeyi bırak. Ne varsa kaydet.** |
+
+> *"Sonuncusu, kırmak isteyeceğin olan."*
+
+
 # ⚔️ Altı yönlü çelişki tablosu
 
 | Konu | R1 | R2 | R3 | R4 | **Karar** |
@@ -943,91 +1490,85 @@ R4'ün günlük planı, diğerlerinin tavsiyeleriyle birleştirilmiş:
 
 | Statü | Adet |
 |---|---|
-| ✅ KABUL | 95 |
-| ⚔️ ÇELİŞKİ (açık) | 2 |
-| 🔬 DOĞRULA | 8 |
-| ⏸️ ERTELE | 6 |
-| ❌ RED / TASARIM HATASI | 10 |
-| 👤 SENİN | 2 *(S-01/S-03 kimlik, G-02 kapandı)* |
+| ✅ KABUL | 130 |
+| ⚔️ ÇELİŞKİ (açık) | 0 |
+| 🔬 DOĞRULA | 15 |
+| ⏸️ ERTELE | 7 |
+| ❌ RED / TASARIM HATASI | 16 |
+| 👤 SENİN | 2 |
 
-**Altı hakem, on sekiz noktada çelişti. On altısını çözdüm.**
+**Yedi hakem, on sekiz çelişki. Hepsi çözüldü.**
 
-Ölçek: ilk tasarımın **yaklaşık dörtte biri**, ve artık iki gerçek tasarım hatası düzeltilmiş.
+R7, kalan iki açık çelişkiyi de kapattı: **X-10** (`Netzbetreiber__c` custom object —
+blast-radius argümanıyla, Z-16) ve **X-13** (subagent sayısı — iki, Z-20).
 
-## ⚠️ R4 ile R6 arasında yeni çelişki
-
-### X-12 · `AgentActionResult` prose mu taşısın, evidence mi?
-
-| R4 | R6 |
-|---|---|
-| **Apex cümleyi yazsın** — planner JSON dizilerini yorumlayamaz, *"yine de bir özet uydurur"* | **Apex prose üretmesin** — *"`ergebnis` ve `konsequenz` içinde Apex zaten doğal dil üretmeye başlıyor, bu 'numbers computed, language generated' iddianızla çelişiyor"* |
-
-**İkisi farklı problemden bahsediyor ve uzlaşabilirler:**
-
-R4'ün derdi **kayıt dizileri** — 5 son tarihi JSON array olarak döndürmek. R6'nın derdi
-**hukuki prose** — Apex'in *"Die THG-Meldung darf nicht abgegeben werden"* cümlesini kurması.
-
-**Sentez:**
-```apex
-public class AgentDecisionResult {
-    // makine için — assert edilebilir, LLM'e gösterilmez
-    public String       decision;        // PASS | WARNING | BLOCK | UNKNOWN | ERROR
-    public String       ruleCode;
-    public String       ruleVersion;
-    public String       evidenceCompleteness;
-    public List<String> legalBasis;
-    public List<Fact>   facts;
-    public List<String> affectedRecords;
-    public List<String> missingEvidence;
-
-    // LLM için — Apex'in yazdığı TEK özet cümle, dizi değil, hukuki yorum değil
-    public String       zusammenfassung;
-}
-```
-
-Apex **olguları** özetler (*"3 Ladepunkte, früheste Frist 01.10.2026"*), **hukuki sonucu**
-yazmaz — onu `decision` + `legalBasis` taşır ve LLM Almanca anlatır.
-
-**Çelişki kapandı.**
-
-### X-13 · Aksiyon granularitesi — açık
-
-R6 *"`EvaluateProjectPreflight` gibi kalın aksiyonlar"* diyor ve `≤6 actions` hedefini
-çöpe atmamı istiyor. R1/R2/R3 ince aksiyonlar varsayıyordu.
-
-R6'nın gerekçesi güçlü (*"tool design optimized for model discriminability"*) ama **bir
-riski var**: tek kalın aksiyon, hangi kuralın ateşlendiğini test etmeyi zorlaştırır.
-
-**⚔️ AÇIK** — yedinci hakeme.
-
-## Hakem kalitesi — dürüst değerlendirme
+## Hakem kalitesi
 
 | | Kabul | Red | Not |
 |---|---|---|---|
 | R1 | 34 | 1 | Kapsam kesme + `THG_Meldung__c` junction'ı |
-| R2 | yüksek | 0 | Çalışan `DateUtils` kodu, beş düşman utterance |
-| R3 | yüksek | 0 | **Parametre halisinasyonu + `BusinessHours` + hibernasyon** |
+| R2 | yüksek | 0 | Çalışan `DateUtils`, beş düşman utterance |
+| R3 | yüksek | 0 | Parametre halüsinasyonu + `BusinessHours` + hibernasyon |
 | R4 | yüksek | 2 | En derin implementasyon, iki hatalı tavsiye |
 | R5 | 2 | 4 | Dokümanı görmemiş — ama repo retriever fikri planı değiştirdi |
-| **R6** | **19** | **0** | ⭐ **İki gerçek tasarım hatası + bir kanıt düzeltmesi. Tek sıfır-hatalı hakem.** |
+| R6 | 19 | 0 | İki tasarım hatası + API v67 kanıt düzeltmesi |
+| **R7** | **35** | **0** | 🏆 **İki geçiş, iki öz-düzeltme, dört domain hatası, canlı kod hatası, ve tek güç hesabı** |
 
-R6 tek başına, diğer beşinin karşılamadığı bir şey yaptı: **tasarımın kendi içindeki mantık
-hatalarını buldu.** Diğerleri kapsamı, sıralamayı ve platform risklerini tartıştı.
+R7'yi ayıran üç şey:
 
-## Senin vereceklerin
+1. **Kendi tavsiyesini aritmetikle çürüttü.** *"N=5, 5/5 iste"* dedi, sonra hesabı yaptı ve
+   %33 kırmızı-build oranı çıktı. *"Görmezden gelinen bir gate, gate olmamasından beterdir
+   çünkü dürüst değildir."*
+2. **Doğrulama yönteminin kendisini sorguladı.** Altı hakem *"Faz 0'ı doğrula"* dedi;
+   sadece R7 **Faz 0'ın Faz 0'ı doğrulamadığını** fark etti.
+3. **Kodun içindeki canlı bombayı buldu.** `T.addDays(58)` — bugün commit ettim.
 
-1. **S-01 / S-03** — Proje **Agentforce projesi** mi, **policy engine + Agentforce arayüzü**
-   mü? R4 sıralama olarak, R6 **kimlik** olarak soruyor. R6'nın önerdiği ad:
-   **VoltStream Charging Project Preflight.**
-2. ~~G-02 CPQ~~ — **kapandı.** Altı hakem de kes dedi; R6 ayrıca Revenue Cloud'a geçmemeyi de
-   söyledi ve E.ON ilanının CPQ istemediğini gösterdi.
+## Kalan iki karar 👤
 
-## Yedinci hakeme sorulacak
+1. **S-01 / S-03** — Proje kimliği: **Agentforce projesi** mi, **policy engine + Agentforce
+   arayüzü** mü? *(R4 sıralama, R6 kimlik, R7 "her faz kaydedilebilir artefakt bırakmalı"
+   olarak sordu — üçü de aynı yöne işaret ediyor)*
+2. **Z-22** — *"based in Germany"* satırı doğru mu? Değilse hiçbir public yüzeye çıkmamalı.
 
-1. **X-13** — Kalın aksiyon (`EvaluateProjectPreflight`) mu, ince aksiyonlar mı?
-2. **X-10** — `Reseller__c` `Account` olmalı mıydı? *(R3 evet, R1/R2 hayır, R6 "duruma bağlı")*
-3. **I-02** — API v67 gerçekten user mode'u varsayılan yaptı mı? Bu doğruysa güvenlik
-   anlatısının tamamı yeniden yazılacak.
-4. **N-32** — Transitive blast radius (trigger'ların içinden geçen statik analiz) gerçekten
-   yapılabilir mi, yoksa yeni bir tar pit mi?
-5. Ve: **altı hakem de ne kaçırdı?**
+## Nihai v1 — yedi hakemin uzlaştığı
+
+**Nesneler (4):** `Ladestandort__c` *(+ PLZ, Ort, Strasse, **Bundesland**, Speicher_kWh)* ·
+`Ladepunkt__c` · `Netzanschluss_Antrag__c` · `THG_Meldung__c` + junction
+Mevcut: `Reseller__c`. **Silinen:** `Compliance_Frist__c` → DTO. **v2:** `Netzbetreiber__c`,
+`Foerderantrag__c`. **Kesilen:** tüm CPQ, MCP, holiday engine.
+
+**Agent:** **2 subagent** · hepsi bulk · hepsi Almanca · **`EntitaetsAufloesung` ilk aksiyon**
+
+**Eval — üç gate, tek koşu:**
+| Katman | Nerede | Gate |
+|---|---|---|
+| Karar doğruluğu | **Apex unit test** (40 sınır vakası) | **%100, bedava** |
+| Routing | `action_sequence_match` | **≤2/40** (sağlıklıda %95,4 yeşil, regresyonun %78'ini yakalıyor) |
+| LLM-yargılı | groundedness aşama 3 | medyan skor tabanı |
+
+**Ölçüm çıktıları (2 hafta, kod değil):** DE/EN delta · known-failures · kredi metresi ·
+zaman-bağımlı eval deseni · Betriebsvereinbarung taslagı
+
+**Wow sırası (yedi hakemin uzlaştığı):**
+1. **DE/EN delta** — *"kimse bir sayı yayınlamadı"* (R7: incelemedeki en güçlü fikir)
+2. **§6 Abs. 4 köprüsü** — ama wow **bulgu**, Apex değil
+3. **Blast radius** — Agent Script parse'ını göstererek + transitive (trigger'lardan geçen)
+4. **Güç hesaplı CI gate** — ekosistemde ilk
+5. **Entity resolution / belirsizlik** — hiçbir public demoda yok
+6. **Known-failures** — her public repo yeşil
+
+## İlk hafta — sırasıyla
+
+| Gün | İş |
+|---|---|
+| **1** | **Gerçek Faz 0** — değersiz throwaway agent, tam döngü, **5 koşu**, varyans + kredi kaydı → `docs/platform-probes/` |
+| **1** *(paralel)* | **Stichprobenverfahren'i araştır** — yarım gün, şemayı değiştirebilir |
+| **2** | Tripwire tablosunu imzala · `Seed_Config__c` çapası · `00_reset` / `10_seed` / `20_verify` |
+| **3–4** | 4 nesne + `DateUtils` + selector'lar + **40 sınır vakası** |
+| **5** | `EntitaetsAufloesung` + `THGService` + 2 invocable, `with sharing` |
+| **6–7** | 1 subagent, 12 Almanca vaka, üç-gate CI |
+
+> **R7:** *"3. haftanın sonunda iki dakikalık demoyu kaydedebilir ve **'nereden biliyorsun
+> uydurmadığını' sorusunu cevaplayabilirsin.** Tüm pitch bu, kapsamın %15'inde. Ve kritik
+> olarak: **istediğin noktada durup yine de tam bir artefakta sahip olabilirsin** — ki bu
+> önemli, çünkü mülakatın ne zaman geleceğini sen kontrol etmiyorsun.**"*
