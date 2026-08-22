@@ -5,6 +5,44 @@
 **Author:** Mustafa Aksu, with Claude Opus 4.7
 **Audience:** other frontier AI models, asked to tear this apart and improve it.
 
+> ## ⚠️ Read this before you trust any `[V]` in this document
+>
+> This is the document as **eight independent reviewers received it**. Nothing below has been
+> rewritten, because the review record is the point — a design doc edited after the fact to
+> look right proves nothing about the process that produced it.
+>
+> The reviewers found **thirteen of its `[V]` (verified) tags to be wrong, stale or
+> overstated**, plus several domain claims that later primary-source reading corrected. Each
+> is marked in place with **⚠️C1 … ⚠️C13** and listed here. Where a claim carries a marker,
+> **the table below supersedes it.**
+>
+> | | Claim in this document | What is actually true |
+> |---|---|---|
+> | **C1** | Topics were *"officially renamed"* subagents, April 2026 | Overstated. Salesforce's own May 2026 material uses **both** terms. |
+> | **C2** | `disableAIProviderRegionFallback` = *"EU data residency as code"* | Overstated. Its actual scope is **fallback of Azure OpenAI requests outside the model endpoint region** — narrower than residency. |
+> | **C3** | The CPQ API is Apex-only, no REST | **Wrong.** There is an Apex REST route: `/services/apexrest/SBQQ/ServiceRouter`. The decision to avoid CPQ still stands; this reason for it does not. |
+> | **C4** | Art. 50 transparency is *"in force"* for this agent | Overstated. Art. 50 binds **providers**, with an exemption where AI use is *"obvious from the circumstances."* An internal agent sits close to that exemption. |
+> | **C5** | Art. 26(6) six-month log retention applies | **Wrong.** Art. 26 is headed *"Obligations of deployers of **high-risk** AI systems."* This design classifies itself as minimal-risk. Citing it undercuts everything around it. |
+> | **C6** | Art. 26(7) works-council duty applies | **Wrong**, same reason. The **BetrVG § 87(1)(6)** co-determination point is the one that survives, and it is stronger. |
+> | **C7** | Agent testing may be sandbox-only — *"the single load-bearing unknown"* | **Refuted by measurement.** Tests run in this Developer Edition. See [PHASE0_VERIFICATION.md](PHASE0_VERIFICATION.md). |
+> | **C8** | Testing Center is single-turn only | **Stale.** Conversation-level testing (Beta) supports **20 turns**, 3 concurrent suites — without custom scorers. |
+> | **C9** | Custom-evaluation parameters cap at 100 characters | **Unverified.** Could not be reproduced; treat as unknown. |
+> | **C10** | Tests bind to `subjectVersion`, so CI needs a patch step | **Unnecessary.** `subjectVersion` is optional; left empty it resolves to the latest active version. |
+> | **C11** | `Paragraph_14a_Modul__c` belongs on the grid operator | **Wrong object and wrong Festlegung.** The modules come from **BK8-22-010-A**, not BK6-22-300, and are chosen **per Anschluss**. |
+> | **C12** | Anmeldung is NAV § 19 Abs. 1 | **Wrong citation.** Both the Mitteilung and the Zustimmung live in **§ 19 Abs. 2** — verified verbatim in [DOMAIN_VERIFICATION.md](DOMAIN_VERIFICATION.md) §8. |
+> | **C13** | Runtime telemetry sits in `ssot__TelemetryTraceSpan__dlm` et al. | **Unverified.** Object names not confirmed against a live Data Cloud instance. |
+>
+> One tag moved the other way: the `[S]` on **Trust Layer masking being disabled for
+> Agentforce** was confirmed — Salesforce Help says it in those words.
+>
+> **The domain sections have since been re-read against the statutes**, and several claims
+> here are superseded by [DOMAIN_VERIFICATION.md](DOMAIN_VERIFICATION.md) — most consequentially
+> that the Ladesäulenverordnung was **replaced on 1 January 2026**, that the Eichfrist start
+> date has **two branches** rather than one, and that NAV § 19's two-month period carries **no
+> deemed approval**. Where this document and that one disagree, that one is right.
+>
+> Full reviewer-by-reviewer disposition: [DECISION_LOG.md](DECISION_LOG.md).
+
 ---
 
 ## 0. Read this first — what I want from you
@@ -90,7 +128,7 @@ hypothesis.
 **[V] The platform reset is six weeks old.** Agent Script + the new Agentforce Builder
 became the **default on 13 July 2026**. Agents are now authored as human-readable `.agent`
 files under `aiAuthoringBundles/` (metadata type `AiAuthoringBundle`). `GenAiPlannerBundle`
-is demoted to generated runtime output. "Topics" were officially renamed **"subagents"** in
+is demoted to generated runtime output. "Topics" were officially renamed **"subagents"** ⚠️C1 in
 April 2026. `genAiPlanner` was deprecated at API v64.0.
 
 *Consequence:* essentially the entire public corpus of Agentforce demos is on the legacy
@@ -141,7 +179,7 @@ for anyone who can talk to the agent. **There is no Agentforce-level FLS switch.
   only human-in-the-loop field that exists.
 - Agent Script `filter_from_agent` — keeps a value out of the model's context entirely.
 - `GenAiPlugin.canEscalate` — settable only via metadata, **not exposed in the Builder UI**.
-- `EinsteinGptSettings.disableAIProviderRegionFallback` — prevents inference failing over
+- `EinsteinGptSettings.disableAIProviderRegionFallback` ⚠️C2 — prevents inference failing over
   outside the model endpoint region. **EU data residency expressed as code.**
 
 **[V] `GenAiFunction.invocationTargetType` includes `mcpTool`** — proving Agentforce can act
@@ -230,7 +268,7 @@ EU AI Act + Salesforce → zero. German employers assume it and probe it in inte
 
 **[V] Salesforce CPQ hit end of sale 27 March 2025.** Greenfield German demand is **Revenue
 Cloud Advanced**. Frame CPQ work as *"CPQ data model, with a migration path to RCA"* — never
-as greenfield CPQ. Also: **the CPQ API is Apex-only** (no REST, no SOAP), so no standard
+as greenfield CPQ. Also: **the CPQ API is Apex-only** ⚠️C3 (no REST, no SOAP), so no standard
 Agentforce action can ever reach CPQ — custom `@InvocableMethod` from day one.
 
 ### 2.4 The target company
@@ -384,7 +422,7 @@ tiers.
 |---|---|---|
 | Prohibited practices + **Art. 4 AI literacy** | 2 Feb 2025 | in force |
 | GPAI, governance, penalties | 2 Aug 2025 | in force |
-| **General applicability + Art. 50 transparency** | **2 Aug 2026** | **in force** |
+| **General applicability + Art. 50 transparency** | **2 Aug 2026** | **in force** ⚠️C4 |
 | Annex III high-risk | **2 Dec 2027** (was 2 Aug 2026) | pending |
 | Annex I product-embedded high-risk | **2 Aug 2028** (was 2 Aug 2027) | pending |
 
@@ -404,8 +442,8 @@ entity. **The nuance worth raising in interview:** a German *Einzelunternehmer* 
 partner **is** a natural person, so a scoring feature could drift into scope for that
 segment. Art. 6(3) derogation exists but **profiling is always high-risk regardless**.
 
-**[V] Art. 26(6):** deployers keep logs *"for at least six months."*
-**[V] Art. 26(7):** deployers who are employers must **inform workers' representatives**
+**[V] Art. 26(6):** ⚠️C5 deployers keep logs *"for at least six months."*
+**[V] Art. 26(7):** ⚠️C6 deployers who are employers must **inform workers' representatives**
 before putting a high-risk system into service at the workplace — which bridges to
 **BetrVG § 87(1)(6)**, German works-council co-determination for technical systems capable of
 monitoring employee behaviour. An AI agent in a CRM plainly qualifies.
@@ -419,16 +457,16 @@ Data Cloud** — do not overstate given the automotive angle.
 
 | Constraint | Detail |
 |---|---|
-| **[S] Agent testing may be sandbox-only** | *"Agent testing is available only in sandboxes"* appears twice in official docs. My org is a **Developer Edition**. **This is the single load-bearing unknown in the whole plan** — see §15.1. |
+| **[S] Agent testing may be sandbox-only** ⚠️C7 | *"Agent testing is available only in sandboxes"* appears twice in official docs. My org is a **Developer Edition**. **This is the single load-bearing unknown in the whole plan** — see §15.1. |
 | **[V]** Testing consumes Einstein Requests + Data Cloud credits, and **can modify data** | |
 | **[V]** Salesforce states results are **not reproducible run-to-run** | which is why CI must assert a pass *rate*, not all-green |
-| **[V]** Testing Center UI is **single-turn only**; the Metadata API does accept `conversationHistory` | |
+| **[V]** Testing Center UI is **single-turn only** ⚠️C8; the Metadata API does accept `conversationHistory` | |
 | **[V]** `--batch-size` for `run-eval` maxes at **5** | |
-| **[V]** Custom-evaluation `parameter` values are capped at **100 characters** | long JSONPath will not fit |
+| **[V]** Custom-evaluation `parameter` values are capped at **100 characters** ⚠️C9 | long JSONPath will not fit |
 | **[V]** `AiEvaluationDefinition` supports Metadata API + source tracking, but **not** unlocked packaging and **not** change sets | |
 | **[V]** Windows bug `forcedotcom/cli#3503` on `sf agent test create` | workaround: `--preview` then deploy manually. **I develop on Windows.** |
 | **[V]** Bug `forcedotcom/cli#3314` | `sf agent generate test-spec` emitted empty `expectedActions`, making tests pass vacuously |
-| **[V]** Agent versions increment on publish and tests bind to `subjectVersion` | CI needs a patch step |
+| **[V]** Agent versions increment on publish and tests bind to `subjectVersion` ⚠️C10 | CI needs a patch step |
 | **[V]** The CLI's JSON output emits control characters | scrub with `tr -d '\000-\037'` before `jq` |
 | **[V]** Data Libraries are **not source-tracked metadata** | CLI-only (`sf agent adl *`). A real CI/CD gap. |
 | **[V]** Search Index must reach `Ready` or the agent silently returns nothing | no error surfaced |
@@ -638,7 +676,7 @@ own TAB, its own Installateurverzeichnis, its own response behaviour.
 | `Durchschnittliche_Antwortzeit_Tage__c` | Roll-up/formula | **Measured**, not claimed — the difference between the two is the story |
 | `Installateurverzeichnis_URL__c` | URL | Where to verify a partner's registration |
 | `Portal_Typ__c` | Picklist | Papier / E-Mail / Portal / API — drives which action can be automated |
-| `Paragraph_14a_Modul__c` | Picklist | Modul 1 / 2 / 3 — the Netzentgelt reduction the customer gets |
+| `Paragraph_14a_Modul__c` ⚠️C11 | Picklist | Modul 1 / 2 / 3 — the Netzentgelt reduction the customer gets |
 
 **Design note for critique:** I am modelling `Netzbetreiber__c` as a custom object rather
 than as an `Account` with a record type. Rationale: it is a registry, not a customer, and it
@@ -673,7 +711,7 @@ The object that does not exist in any shipping Salesforce data model.
 |---|---|---|
 | `Ladestandort__c` | Master-Detail | |
 | `Netzbetreiber__c` | Lookup | |
-| `Antragsart__c` | Picklist | Anmeldung (§19 Abs. 1) / Zustimmung (§19 Abs. 2, >12 kVA) / Netzanschlussbegehren MS |
+| `Antragsart__c` | Picklist | Anmeldung (§19 Abs. 1) ⚠️C12 / Zustimmung (§19 Abs. 2, >12 kVA) / Netzanschlussbegehren MS |
 | `Eingereicht_Am__c` | Date | Starts the clock |
 | `Frist_Ablauf__c` | Formula(Date) | `Eingereicht_Am__c + Netzbetreiber__r.Antwortfrist_Tage__c` |
 | `Tage_Ueberfaellig__c` | Formula(Number) | The escalation trigger |
@@ -1297,7 +1335,7 @@ Cloud DMOs, which is why it is easy to miss:
 
 ```sql
 SELECT ssot__Id__c, ssot__OperationName__c, ssot__StatusCode__c, ssot__DurationNumber__c
-FROM   ssot__TelemetryTraceSpan__dlm
+FROM   ssot__TelemetryTraceSpan__dlm ⚠️C13
 WHERE  ssot__StatusCode__c = 'ERROR'
 ORDER BY ssot__StartDateTime__c DESC
 ```
