@@ -164,25 +164,48 @@ recent enough to be quotable:
 
 | | |
 |---|---|
-| Public charge points in Germany, **1 Feb 2026** | **~200,000**, of which **~50,000** fast-charging |
+| Public charge points in Germany, **1 July 2026** (BNetzA) | **209,605** — 155,264 AC, **54,341 DC**, 9.04 GW, **12,993 registered operators** |
 | Eichungen per year the authorities' working group assumed | ~6,000 (from the 8-year period) |
 | Eichungen per year **actually needed** | **more than 45,000** |
-| Why the gap | cable replacement, maintenance, and **cable theft — up to 100 cases per day** |
-| Time for one DC Eichung, at today's 2–3 test points | **at least two hours** |
-| Cost of one DC Eichung | **regularly over €500** |
-| Proposed increase in DC test points (AGME decision GM-P 6.8, 12.11.2025) | to **at least eight** |
+| Why the gap | cable replacement, maintenance **and** theft, together — see the correction below |
+| Time for one AC Eichung, 2 points | **~90 minutes, ~€330** (Eichamt Sachsen, 01/2026) |
+| Time for one DC Eichung | **at least two hours**, **regularly over €500** |
+| Statutory hourly rate (MessEGebV, Schlüsselzahl H 7.2, billed purely by time) | **€279.40 / €219.90 / €174.30** per hour by qualification |
+| DC test points required (AGME **GM-P 6.8, Stand 20.02.2026**) | **exactly eight** — a voltage × current matrix, not a minimum |
 | Cost of DC test equipment operators are being told to buy themselves | **six figures** |
 | German conformity-assessment procedures | *"teilweise bis zu **12 Monaten**"* |
+
+### ⚠️ Correction — the "100 per day" figure does not mean cable theft
+
+An earlier version of this file read that clause as *"cable theft — up to 100 cases per day."*
+**That is a misreading**, found independently by two later research passes. The German is:
 
 > *"Durch vorgeschriebene erneute Eichungen nach **Kabeltausch, Wartungen und Kabeldiebstahl**
 > — teils bis zu **100 Fälle täglich** — sind **mehr als 45.000 Eichungen jährlich**
 > notwendig."*
 
-Cable theft is the detail worth keeping. It is the kind of fact that cannot be inferred from
-reading the law, only from reading what operators say about living under it — and it turns
-the Eichfrist from an eight-year timer into a continuously firing event stream. A CRM that
-models only the eight-year clock would miss the ninety percent of re-calibrations that come
-from theft and maintenance.
+The parenthetical modifies **all three triggers together**, and the arithmetic proves it:
+(45,000 − 6,000) ÷ 365 ≈ **107 per day** for the combined list. Theft alone at 100 per day
+would be 36,500 a year and leave nothing for the other two.
+
+There is also **no national cable-theft statistic in Germany at all** — only operator-level
+reporting. What the evidence actually supports:
+
+| Figure | Source |
+|---|---|
+| **~15 cases per day** reaching Alpitronic, Europe's largest HPC vendor | electrive, 18 Sep 2025 |
+| EnBW: **>750 cables** stolen across ~120 sites since early 2025, damages in the single-digit millions | electrive, 18 Sep 2025 |
+| **€5,000–8,000 repair cost per incident** — against ~€40–50 of copper to the thief | electrive, 18 Sep 2025 |
+| Cologne: **4 cases in 2024 → 66 in 2025, +1,550 %**, hitting ~80 % of the city's fast chargers | electrive, 10 Feb 2026 |
+
+The **conclusion survives the correction, and is better sourced for it.** The Eichfrist is
+still an event stream rather than an eight-year timer — roughly 39,000 of the ~45,000 annual
+re-calibrations are event-driven rather than schedule-driven. Only the attribution changes:
+maintenance and cable replacement dominate, and theft is the fastest-growing contributor
+rather than the largest one.
+
+This correction is left in place rather than silently edited, because a project whose claim is
+*"the numbers are checked"* has to show what happened when a number failed the check.
 
 Also worth noting: operators are being told to provide DC test equipment themselves *"teilweise
 unter Androhung erheblicher Sanktionen bis hin zur **Stilllegung** der Ladeinfrastruktur und
@@ -379,43 +402,212 @@ the regulator, every month, by design.
 
 ---
 
-## 12. The AFIR retrofit duty is **narrower** than the design assumed
+## 12. AFIR Art. 5 — three of my corrections were themselves wrong
 
-The design's validation rule was *"öffentlich = Ja AND no payment terminal AND DC ≥ 50 kW."*
-For **new** points that is right. For **existing** ones it is too broad, and being too broad
-here means telling a customer to spend money they do not owe.
+The first round narrowed the retrofit duty and called that a correction. The narrowing was
+right; almost everything around it was not. Article 5(1), verbatim:
 
-| Case | Duty |
+> *"At publicly accessible recharging points **deployed from 13 April 2024**, recharging on an
+> ad hoc basis shall be possible using a payment instrument that is widely used in the Union.
+> … including **at least one of the following**: (a) payment card readers; (b) devices with a
+> contactless functionality that is at least able to read payment cards; (c) **for publicly
+> accessible recharging points with a power output below 50 kW**, devices using an internet
+> connection and allowing for secure payment transactions such as those generating a
+> **specific Quick Response code**."*
+
+Three errors in what this file previously said:
+
+| Claimed | Actually |
 |---|---|
-| Public point ≥ 50 kW, newly deployed or renovated (from 13 April 2024) | contactless card payment, with PIN pad |
-| Public point ≥ 50 kW deployed **before** that date | retrofit by **1 January 2027** — **only** if along the **TEN-T** network, or at a safe and secure truck parking area |
-| Public point **< 50 kW** | no physical reader required; a **dynamic QR code, generated per transaction**, to a payment portal is sufficient |
+| The duty applies to points **≥ 50 kW** | It applies to **all** publicly accessible points deployed from 13 April 2024. The 50 kW line only decides **which** payment means qualify. |
+| Trigger is *"newly deployed or renovated"* | Trigger is **"deployed from 13 April 2024"**. Renovation is not in the text. |
+| A card reader **with PIN pad** is required | **AFIR nowhere requires a PIN pad.** That requirement was carried in from a secondary source. |
 
-**Model consequence:** the rule cannot be computed from power and public-flag alone. It needs
-**`TEN_T_Netz__c`** and the **Inbetriebnahme date** as well. The `< 50 kW` row is the one worth
-implementing carefully, because the permitted alternative is *dynamic* — a static QR sticker,
-which is what most sites actually have, does not satisfy it.
+Also: *"specific"* Quick Response code, not *"dynamic"*. And an exemption this file missed
+entirely — *"The requirements laid down in this paragraph **shall not apply to publicly
+accessible recharging points that do not require payment**."*
+
+### The corrected matrix
+
+| Point | Deployed | Requirement | From |
+|---|---|---|---|
+| Public, **≥ 50 kW** | from 13.4.2024 | card reader **or** contactless — (a)/(b) only | 13.4.2024 |
+| Public, **< 50 kW** | from 13.4.2024 | (a), (b) **or** a specific QR code (c) | 13.4.2024 |
+| Public **≥ 50 kW** on **TEN-T** or a **safe and secure parking area** | **including before 13.4.2024** | must satisfy (a) **or** (b) | **1.1.2027** |
+| Public ≥ 50 kW **elsewhere**, deployed before 13.4.2024 | before 13.4.2024 | **no AFIR retrofit duty** | — |
+| Free-of-charge points | any | **exempt** | — |
+
+The retrofit narrowing survives. The rest is replaced.
+
+### Five further Article 5 duties that were never modelled
+
+| | Duty | Deadline |
+|---|---|---|
+| **5(2)** | Where automatic authentication is offered, the user must always be able to **decline it** | in force |
+| **5(4)** | At **≥ 50 kW** the ad-hoc price **must be per kWh** and **must be displayed at the station**; below 50 kW the components must appear in the order kWh → minute → session → other | in force |
+| **5(7)** | All publicly accessible points must be **digitally connected** | **14.10.2024** |
+| **5(8)** | Points built after 13.4.2024 or renovated after 14.10.2024 must be **smart-recharging capable** | in force |
+| **5(10)** | **All DC** publicly accessible points must have a **fixed cable** | **14.4.2025** |
+
+**5(11)** puts the duty on the *owner* where the owner is not the operator — a split this CRM
+has to be able to represent, because in a channel business it is the normal case.
+
+### TEN-T is a routing computation, not a radius
+
+**Art. 2(3) AFIR:**
+
+> *"'along the TEN-T road network' means … that they are located on the TEN-T road network or
+> **within 3 km driving distance from the nearest exit of a TEN-T road**"*
+
+**Driving distance from the nearest exit.** A 3 km buffer around a polyline answers a different
+question and gets it wrong in both directions — 3 km straight-line can be 8 km by road, and a
+site 4 km away as the crow flies can be 2 km from the exit. Since the 1 January 2027 duty turns
+on this, `TEN_T_Netz__c` cannot be a checkbox someone ticks by looking at a map.
+
+Model it as a **stored, dated, re-validated attribute** — `core` / `comprehensive` /
+`within_3km` / `off_network` / **`unknown`** — with `unknown` as a first-class state that
+demands human resolution rather than defaulting to "no duty."
+
+### AFIR has **no penalties article** — and what Germany does instead is worse
+
+Searched the full text: zero occurrences of *penalt*, *sanction*, *infringe*, *enforc*.
+Article 24 is *Reporting and review*. There is no fine anywhere in the Regulation.
+
+German enforcement is **§ 5 der neuen LSV**, and it is not a Bußgeld:
+
+> *"(2) Die Regulierungsbehörde kann verlangen, dass ein Ladepunkt **nachgerüstet** wird …
+> (3) Die Regulierungsbehörde kann den **Betrieb eines Ladepunkts untersagen**, wenn eine
+> technische Anforderung nach § 3 oder eine Anforderung nach Artikel 5 Absatz 1, 2, 7, 8 oder 10
+> … nicht eingehalten … oder der **Anzeigepflicht nach § 4 Absatz 1 nicht nachgekommen** worden
+> ist."*
+
+A fine is a number. **An operating ban is the end of the revenue** — and, because a banned point
+falls out of the register, it takes the THG claim with it. See §13.
+
+So the answer the agent gives to *"what happens if we miss AFIR"* is not *"a fine of X"*. It is
+*"the Bundesnetzagentur can order the retrofit, and can stop you operating — and if it does, you
+also lose the year's THG revenue for that point."*
 
 ---
 
-## 13. THG — § 6 der 38. BImSchV, as amended
+## 13. THG — a law passed in June 2026 that rewrote the section this file cited
 
-Three cumulative conditions, all verifiable from records the CRM already wants to hold:
+This is the largest gap the second research round found. The **Zweites Gesetz zur
+Weiterentwicklung der Treibhausgasminderungs-Quote** — BGBl. **2026 I Nr. 163**, issued
+1 June 2026, promulgated 5 June, **in force 7 June 2026** — rewrote **§§ 1, 3, 5, 6, 7 and 8**
+of the 38. BImSchV. Everything this file said about THG was read against the pre-June text.
 
-1. The point is an **öffentlich zugänglicher Ladepunkt nach § 2 Nummer 2 der
-   Ladesäulenverordnung** — the **new** numbering.
-2. It carries the **individueller Identifizierungscode nach Artikel 20 Absatz 1 Satz 2 der
-   Verordnung (EU) 2023/1804** — the AFIR EVSE ID.
-3. The operator's **Anzeige an die Bundesnetzagentur** is on file *(§ 6 Abs. 2 — for existing
-   points, the Anzeige made at the time of Aufbau)*, **and the BNetzA has published the point**.
+### My citation was wrong
 
-Reported per point: ID code, further identifying features, exact location, energy in **MWh**,
-and the period if it was not the full Verpflichtungsjahr.
+| Claimed | Actually |
+|---|---|
+| *"**§ 8 Abs. 5**: report by 28 February of the following year"* | The deadline is **§ 8 Abs. 1 Satz 1 Nr. 1**. **§ 8 Abs. 5 is a brand-new provision** and says something else entirely: *"Mitteilungen nach Absatz 1, die unvollständig sind, werden von der zuständigen Stelle **abgelehnt**."* |
+| § 6 requires the point to have been **published** by the BNetzA | § 6 Abs. 3 Nr. 1 is **disjunctive** — published **or** the Dritter has given the BNetzA **consent to publication**. Given that the publication lag is unbounded and unpublished, the consent route is the practical hedge. |
 
-**§ 8 Abs. 5:** the quantities go to the Umweltbundesamt **bis zum 28. Februar des
-Folgejahres**. A hard annual date, per point — which is what makes the missing-Anzeige case
-expensive rather than merely untidy: the revenue is lost for a whole compliance year and
+### Two deadlines, not one — and both are preclusive
+
+| Route | Deadline |
+|---|---|
+| **§ 6** — public charge points, metered MWh | **28 February of the following year** |
+| **§ 7** — non-public, flat per-vehicle Schätzwert, pure BEV only | **15 November of the obligation year itself** |
+
+The UBA is explicit that there is no late filing: *"Hierbei handelt es sich um **gesetzliche
+Fristen, die nicht zur Disposition stehen**."* No Wiedereinsetzung route is offered and no case
+law exists. Miss it and the year is gone.
+
+### Three new traps, all introduced in June 2026
+
+1. **One filing per point per year.** *"Mitteilungen nach Satz 1 Nummer 1 können für den
+   jeweiligen Ladepunkt für das jeweilige Verpflichtungsjahr **nur einmal** erfolgen."* Filing
+   in September forfeits the rest of the year.
+2. **The 500 MWh lock-out.** Where a *designated person* rather than the operator files, a
+   second filing in the same year is allowed only if the previous one covered **at least
+   500 MWh**. An aggregator that files 300 MWh in March is locked out until January — across
+   its whole client book.
+3. **Incomplete means rejected**, not queried (§ 8 Abs. 5). And **since 17 April 2026 the UBA
+   charges €94.60–€6,500 per Bescheid** — so an incomplete filing now costs money to be refused.
+
+### The EVSE-ID, and the trap inside it
+
+The Bekanntmachung § 6 Abs. 4 called for was found: **BAnz AT 30.06.2026 B9**, UBA, 10 June 2026.
+The IDRO is **Energie Codes und Services GmbH**, a BDEW subsidiary. And:
+
+> *"**Über die … vergebene Operator ID hinaus ist für die Mitteilung … für jeden Ladepunkt
+> zwingend die gesamte Electric Vehicle Supply Equipment ID (EVSEID) anzugeben**"*
+
+Format is DIN SPEC 91286: `DE * <3-char Operator ID> * E <Power Outlet ID>` — e.g.
+`DE*8AA*E456*78*321`. The operator prefix is issued by ECS; **the point-level part is
+self-assigned**, so no registry call per charge point. Since 15 January 2026 an operator may
+hold **several** Operator IDs, so the prefix is a multi-valued attribute, not a constant.
+
+**And here is the trap, which is the best single demo beat in the whole domain:**
+
+| | **BNetzA (LSV § 4)** | **UBA (38. BImSchV § 6)** |
+|---|---|---|
+| EVSE-ID | **optional** — *"falls vorhanden"* | **mandatory, full ID, per point** |
+| Format in the official example | `DE*ABC*123456789` — **no `E`** | `DE*ABC*E12345678` — **with `E`** |
+
+An operator who follows the BNetzA's own template is **fully LSV-compliant and silently
+disqualified from THG revenue.** Two federal authorities, one identifier, incompatible
+instructions — and the failure is invisible until the money does not arrive, by which time
+28 February has passed.
+
+### What the money actually is
+
+Every input is statutory, so this is computable rather than quoted:
+
+```
+Anrechnungsfaktor 3 · 3.6 GJ/MWh · (Basiswert 94 − Netzmix 119 × 0.4)  =  501 kg CO₂e per MWh
+```
+
+| Electricity source | t CO₂e per MWh | vs grid |
+|---|---|---|
+| Grid mix | **0.501** | — |
+| Photovoltaik | **0.947** | **+89 %** |
+| Wind an Land | 0.994 | +98 % |
+| Wind auf See | 1.004 | +100 % |
+
+**Qualifying under § 5 Abs. 5 — renewables taken directly from a plant behind the same grid
+connection point, now including electricity buffered in a battery — roughly doubles the revenue
+per MWh.** That is the largest single lever a charge point operator has, and it is a *site
+design* decision, which is exactly the kind of thing a channel partner should be advised on
+before the concrete is poured.
+
+There is **no official price index** — every €/MWh figure in circulation comes from a trader.
+Two competing traders quoted within six days of each other agree within ~3 %: **~150–175 €/MWh**
+for grid electricity in August 2026, implying **~310–345 €/t CO₂e**. A statutory ceiling exists:
+§ 37c Abs. 2 Nr. 1 BImSchG prices non-compliance at **€600/t**, so nobody rationally pays more.
+
+For scale: a 2,000 MWh operator missing 28 February loses on the order of **€330,000**, and it
 cannot be recovered late.
+
+### Two structural facts worth keeping
+
+**The quota path steepens hard.** 12 % in 2026 → **17,5 % in 2027** — the largest single step in
+the schedule, and the reason prices recovered in 2026. It runs to **65 % by 2040**.
+
+**The Anrechnungsfaktor of 3 was kept to 2034**, not tapered from 2030 as the draft proposed.
+This is a win for operators — and the **UBA's own FAQ still says the opposite.**
+
+### The stale-guidance problem is the agent's reason to exist
+
+The UBA FAQ that German practitioners actually read is dated 17 July 2025 and is **wrong on at
+least six points** after June 2026: it cites the repealed LSV's paragraph numbers for both the
+operator definition and the Anzeige, describes public accessibility under the old and narrower
+test, says intra-year partial filing is possible when it is now once per point per year, says
+*"Der Bescheid ergeht kostenfrei"* when it has cost money since April, and says the factor
+tapers from 2030 when it holds to 2034.
+
+That is the case for the whole project stated in one paragraph: **the authoritative summary is
+stale, the statute is not, and the gap between them is where the money is lost.**
+
+### And the 2027 collision
+
+The **AFIR retrofit deadline of 1 January 2027** sits **four weeks** before the **THG deadline of
+28 February 2027**. A point that fails AFIR can be ordered off by the BNetzA, which removes it
+from the register, which fails § 6 Abs. 3 Nr. 1, which kills the THG claim for the whole year.
+
+**These two tracks are coupled, and no tool models them together.** That is the demo.
 
 ---
 
@@ -454,13 +646,71 @@ every order, which is why it belongs on `Reseller__c` and not in a folder.
 
 ---
 
-## 16. Still open — and deliberately left open
+## 16. The two flags from §7, now closed
 
-- **AGME decision GM-P 6.8** (12.11.2025, raising DC test points to at least eight): whether
-  it has taken effect. It changes the *cost* of an Eichung, not the *logic*, so it does not
-  block the model.
-- **MID Annex Va** *Ladeinfrastruktur*: adopted at EU level, not yet transposed. Tracked
-  because it would move several rules above, but nothing should be built on it yet.
+### AGME GM-P 6.8 — in force, and the date circulating in the press is wrong
+
+The document is *"Prüfanweisung … im Anwendungsbereich Elektromobilität (GM-P 6.8
+Elektromobilität) **vom 20.02.2026**"*, 36 pages. The AGME approved the Neufassung on
+**25 November 2025** and editorial corrections to section 3.7 were added with **Stand
+20 February 2026**. **No document bearing the date 12.11.2025 exists** — that date appears
+only in the industry paper and in press copied from it, and this file repeated it.
+
+It is a *Verwaltungsvorschrift* binding the Eichbehörden. It contains no *Inkrafttreten*, no
+*Übergangsfrist* and no *gilt ab* — **effective on adoption, with no grandfathering.**
+
+And the substance is sharper than "at least eight." Tabelle 6 is a voltage × current matrix
+with **exactly eight** marked cells, and Tabelle 7 enumerates them as *"1. Prüfpunkt"* through
+*"8. Prüfpunkt"*. It prescribes eight, not a minimum of eight.
+
+**The exception nobody in the press mentions is the operationally useful half:**
+
+> *"**AUSNAHME:** Wird ein in der Baumusterprüfbescheinigung … aufgeführter Elektrizitätszähler
+> / Messwertaufnehmer verwendet, dessen Eichung oder Konformitätsbewertung / Vorprüfung nicht
+> länger als ein Jahr zurückliegt, und wird … eine messtechnische Leitungsverlustkompensation
+> … durchgeführt, kann davon ausgegangen werden, dass **die Prüfung an einem Lastpunkt
+> (Betriebspunktprüfung) ausreichend ist**."*
+
+Eight collapses to **one** where a recently-verified certified meter is used together with
+line-loss compensation. For an agent advising an operator, that is the answer worth giving —
+the cost of a DC Eichung is a function of the hardware chosen, not a fixed fate.
+
+### MID Annex Va — now a directive with dates, and a category error to avoid
+
+**Richtlinie (EU) 2026/706 of 11 March 2026** (OJ L, 2026/706, 20.3.2026; CELEX 32026L0706),
+amending Directive 2014/32/EU for *Messanlagen für Ladeeinrichtungen für Elektrofahrzeuge*.
+Ordinary legislative procedure under Art. 114 TFEU — not a delegated act. It creates a new
+instrument category, **MI-011**.
+
+| Milestone | Date |
+|---|---|
+| Entry into force | **9 April 2026** |
+| Transposition deadline | **10 April 2028** |
+| Application | **10 October 2028** |
+| Nationally-compliant instruments may still be placed on the market until | 10 April 2030 |
+| Existing certificates valid to expiry, capped at | 10 April 2038 |
+
+Annex Va covers conductive transfer *"in beide Richtungen"* — **V2G is in scope** — across road,
+rail, boats, ships and aircraft, measured *am Übergabepunkt*, and expressly **not** as utility
+metering. Three accuracy classes A/B/C (2 % / 1 % / 0.5 %). Conformity assessment: *"B + F oder
+B + D oder G oder H1."*
+
+The cable provision the industry wanted is in **Annex Va § 4**: a connector cable may be
+exchanged under seal only if it is declared exchangeable in the conformity assessment,
+uniquely marked, and *"getrennt so gesiegelt …, dass für den Austausch weder ein Zugang zu den
+messtechnisch gesiegelten Bauteilen … noch ein **Bruch des metrologischen Siegels** erforderlich
+ist."*
+
+**Germany has not transposed it and is not late** — the deadline is 2028.
+
+🔑 **The category error worth stating, because it is easy to make and would be visible:**
+Annex Va governs **placing on the market**. It does **not** govern **Eichung and Nacheichung in
+service**, which remain national. **Transposing the MID will not reduce GM-P 6.8's eight DC test
+points, on any timeline.** The two industry demands — sampling for Nacheichung, and MID
+transposition — are legally distinct and solve different problems.
+
+### Still open
+
 - **§ 3 LSV's reach**: the single sentence points at § 49 Abs. 1 EnWG, which points at the
   allgemein anerkannte Regeln der Technik. That chain was not followed to the end; it lands in
   VDE territory and is out of scope for a CRM.
