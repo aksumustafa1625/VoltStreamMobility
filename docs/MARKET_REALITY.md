@@ -581,3 +581,289 @@ energy-only Salesforce partner actually asks for — and it is free to acquire.
 industries page lists Manufacturing, Professional Services, Personaldienstleister and Analytics —
 energy appears nowhere. Its German-language requirement is still evidence for §1; it is not
 evidence about energy hiring.)*
+
+---
+
+## 12. The partner model, from twelve vendors' own pages
+
+A dedicated pass read the partner programmes directly. It confirms §10.1 and gives the replacement
+its exact shape.
+
+### 12.1 Only two vendors publish a named partner status at all
+
+| Vendor | Named status | Levels? |
+|---|---|---|
+| **MENNEKES** | *MENNEKES Qualitätspartner für eMobility* (**MQPeM**) | **No.** Two *specialisations*: private-installation focus vs commercial focus |
+| **Zaptec** | *Certified Zaptec Partner*, plus a loyalty layer *Club Zaptec* | **No.** A single partnership level |
+| go-e | *"Wiederverkäufer\*in"* / *"Fachhändler\*in"* | none |
+| Wallbox Chargers | segmented **by type**: Betreiber · Vertriebspartner · Installateure · Autohändler · Wiederverkäufer | none |
+| Elli | *Elli Vertriebspartner* — Reseller/Fachhandel vs Installateur | none |
+| ABL | *"Zusammenschluss aus zertifizierten eMobility Fachbetrieben"* | none |
+| Easee | *Easee Champions* — **points**, not tiers | none |
+| Amperfied · EnBW · Juice | no published programme | — |
+
+**The real German pattern is one partner status gated by mandatory product training, plus
+individually negotiated purchase conditions.** A Bronze/Silber/Gold ladder is not a simplification
+of that — it is a different thing that does not exist here.
+
+### 12.2 What vendors publish instead of a discount ladder — adjectives
+
+**No vendor in the sample publishes a Rabattstaffel, a Fachpartner-Preisliste, or any percentage.**
+
+> Elli: *"attraktive Einkaufskonditionen und steigern Sie Ihren Umsatz durch **lukrative Margen**"* · *"**Keine Mindestbestellmengen**"*
+> go-e: *"**günstige Einkaufskonditionen**"*
+> Zaptec: *"Get a **quantity discount** on all orders"*
+> MENNEKES: a points-based rewards programme, plus a calibration discount on measuring devices
+
+**The one real trade pricing document found proves the structure.** ABL's *"LISTENPREISE EMOBILITY
+… STAND MAI 2026"* has a column headed **"LISTENPREIS NETTO"** and states *"Sämtliche genannten
+Preise … verstehen sich ohne Mehrwertsteuer."* **Netto here means ex-VAT list, not a dealer buy
+price** — and a full-text search of the document finds **no occurrence of "Rabatt", "UVP" or
+"empfohlen"** anywhere.
+
+**So: list prices are published, discounts are not.** Model a **per-account negotiated discount**,
+never a tier-derived one.
+
+### 12.3 Certification is the real axis — and it has cost, points, and a refresh cycle
+
+This is what should replace the tier field, and every element is evidenced:
+
+| Element | Evidence |
+|---|---|
+| **Gated entry** | MENNEKES: *"Die Aufnahme … ist **ausschließlich Fachbetrieben des Elektrohandwerks** vorbehalten"*, subject to *"Schulungs- und Zertifizierungsanforderungen"* |
+| **Approval as a workflow, not a flag** | go-e: individual review, **1–2 working days**, activation e-mail, **no ordering before approval** |
+| **A refresh obligation** | ABL: partners must *"**regelmäßig** ABL Produktschulungen absolvieren"* · SENEC: *"**verpflichtende** Zertifizierungsschulung"* before a partner may sell or install |
+| **An expiry date** | KEBA: *"Teilnahmezertifikat (**Gültigkeit 2 Jahre**)"*, with partner listing *"für die Dauer der Zertifikatsgültigkeit"* |
+| **Priced training** | **ABL: €249 netto** webinar, **€479 netto** in person (~7 h), *"zertifiziert durch den **ZVEH**"*, worth **7 E-Akademie-Punkte** |
+| **Points with an awarding body** | MENNEKES courses carry **4 and 8 E-Marken-Partner-Punkte**; Easee Champions awards **1 point per installed and commissioned unit** |
+| **A public listing as the benefit** | MENNEKES, go-e, ABL (*Elektrikerfinder*), Zaptec (*"Secure a spot on our dealer map"*) all publish a partner locator |
+
+**A training-record object with cost, points and awarding body is defensible German-market
+modelling.** A tier picklist is not.
+
+### 12.4 Two-step distribution, named
+
+- **go-e**: direct webshop **or** *"Großhandelspartner"*
+- **ABL**: installers order *"direkt im Onlineshop ihres **Elektrogroßhandels**"*
+- **Elli**: stationary distribution runs through **Volkswagen Original Teile Logistik (OTLG)** into
+  VW, Seat, Cupra, Škoda and Audi dealers. *Connect* and *Pro* go through the dealer channel;
+  *Standard* stays online-only.
+
+**Partner records need a supplying-distributor relationship**, not only a direct link to the
+manufacturer.
+
+### 12.5 The money is in the installation, not the box
+
+ADAC, **29 June 2026** — the cleanest published breakdown:
+
+| | Range |
+|---|---|
+| Wallbox hardware | **€300 – 2,000** *(simple 300–600 · mid 600–1,000 · premium 1,000–2,000 · bidirectional 2,000–3,000)* |
+| Installation, single-family home | **€500 – 3,000+** *(low 500–800 · medium 800–1,500 · high 1,500–3,000+)* |
+| **All-in** | *"grob mit **1.200 bis 3.500 Euro** rechnen"* |
+
+EnBW puts average installation at *"**1.500 €** (500 € bis 2.500 €)"*. And in multi-party
+buildings, ADAC found costs varying *"um bis zu **82 Prozent** je vorbereitetem Stellplatz."*
+
+**At the midpoints the hardware is roughly a third of the installed ticket.** A channel CRM for this
+market should treat **the installation quote, not the box, as the revenue-bearing object** — which
+also happens to be the half that requires the Installateurverzeichnis entry.
+
+### 12.6 Real price anchors for demo data
+
+From the **ABL Listenpreise, Stand Mai 2026** — net list, Germany. These are real numbers from a
+real trade price list, which is worth more than plausible invention:
+
+| Product | Net list |
+|---|---|
+| ABL Pulsar 11 kW · 22 kW | €707 · €770 |
+| eMH1 mit Ladekabel 11 kW · 22 kW | €403 · €456 |
+| eM4 Single Controller 22 kW | €1,418 – €1,663 |
+| eM4 Twin Controller | €2,969 – €3,808 |
+| Ladesäule eMC2 · eMC3 | €6,566 – €6,832 · €7,877 – €10,028 |
+| ABL Payment Terminal | €3,236 |
+
+*(Caveat from the source: extracted from a multi-column PDF where two extraction modes disagreed on
+row alignment — treat individual name↔price pairings as indicative.)*
+
+Cross-checks from other vendors' own pages: **Elli** Connect 11 from €759, Connect 22 from €839,
+Pro 22 from €1,099, **Pro 22 eichrechtskonform from €1,499**. **MENNEKES** Amtron 4You 500 €1,096,
+**+€219 for Dienstwagenabrechnung**, **+€73 for 22 kW**.
+
+**That Eichrecht surcharge — €1,099 → €1,499, a 36 % premium — is the single most useful price fact
+for this project**, because it puts a number on the compliance decision the agent exists to advise.
+
+### 12.7 One structural correction
+
+**ABL is now a Wallbox Chargers company.** ABL filed for insolvency 27 June 2023, proceedings opened
+at Amtsgericht Nürnberg 29 August, and **Wallbox Chargers acquired it 18 October 2023**. The May
+2026 price list is filenamed `ABLxWallbox_…` and signed by **Enric Asunción Escorsa**, Wallbox NV's
+CEO. So "ABL" and "Wallbox Chargers" are not two independent German suppliers — treating them as
+such in a catalogue would be a visible error.
+
+### 12.8 The subsidy that sets the 2026 price ceiling
+
+The **€500 m Mehrparteienhaus programme**, applications from **15 April 2026**:
+
+> up to **€1,300 per Stellplatz** for preparation · max **€1,500** for installing a wallbox · up to
+> **€2,000** where the point supports **bidirectional charging**
+
+Eligible costs cover *"die Anschaffung von Wallboxen, … die technische Ausrüstung, den
+**Netzanschluss** sowie notwendige Baumaßnahmen."* Applicants: WEGs, KMU and private landlords.
+
+**Installers quote into that ceiling**, which is why the funding-window field is a sales artefact
+and not merely compliance decoration.
+
+---
+
+## 13. Who actually sells Salesforce into German utilities — thirty companies checked
+
+The §6 recommendation put Energy & Utilities Cloud third, as *"a targeted bet on five named
+employers."* A sweep of thirty German consultancies, system integrators and energy-IT specialists
+narrows that list and explains why.
+
+### 13.1 Two companies. Out of thirty.
+
+| | Claim |
+|---|---|
+| **Salesfive** | The only **productised** offer. A dedicated E&U cloud page, a German industry page, and a **Stadtwerke template co-developed with Energieversorgung Oberhausen** built *"auf Basis von **Salesforce Agentforce Energy & Utilities**"*, with a named practice lead and a live customer-portal reference. |
+| **Telekom MMS** | Genuine, less productised. Names *"Salesforce Energy & Utilities Cloud"* with substantive product copy on **both** its Salesforce partner page and its energy industry page — *"zugeschnitten auf Energieversorger, Netzbetreiber und -händler."* |
+
+**Three more name the technology without selling a practice:** comselect has excellent
+Vlocity/OmniStudio/E&U explainers from 2022–23, but they are SEO knowledge content with no industry
+page behind them. NTT Data and IBM claim *"Salesforce Industries"* and *"alle 19 Salesforce
+Industry Clouds"* generically, and **neither connects it to energy on their German pages.**
+
+### 13.2 🔴 The German energy-IT sector is a Salesforce-free zone
+
+All ten energy-IT specialists were checked sitewide — URL paths, homepages, partner pages:
+
+**Arvato Systems · Schleupen · SOPTIM · KISTERS · robotron · PSI · BTC AG · Wilken · SIV** —
+**zero Salesforce mentions. Every one.**
+
+The incumbent stack for a German Stadtwerk is **Schleupen CS, SAP IS-U / S/4HANA Utilities, CURSOR,
+SIV, Wilken, powercloud.**
+
+> **Any Energy & Utilities Cloud project in Germany is a *displacement* play against those systems,
+> not a greenfield build.**
+
+That single sentence reframes the product. It also explains §5: the regulatory logic lives in the
+system being displaced *from*, not the one being displaced *to*.
+
+### 13.3 And where the big integrators have German utilities practices, they are SAP-led
+
+| | Evidence |
+|---|---|
+| **Accenture DE** | The German utilities page names SAP, Oracle, Microsoft/Avanade, AWS — **and no Salesforce** |
+| **valantic** | Utilities page: **109 SAP mentions, 0 Salesforce.** Its Salesforce practice lists nine clouds — including Media Cloud, an Industries product — but **no E&U Cloud** |
+| **Capgemini DE** | Salesforce partner page: 38 Salesforce mentions, **0 Vlocity / OmniStudio / Industry Cloud.** The energy-retail-CX page mentions no Salesforce at all |
+| **cbs** | Deep SAP S/4HANA for Utilities practice; its Salesforce page has **zero** energy content. The two practices are unconnected |
+
+**At nearly every large system integrator, the Salesforce practice and the energy practice sit in
+different silos.**
+
+**The most interesting near-miss is adesso** — a deep German energy practice *(Amprion, E.ON, EnBW,
+BS Energy, enervie)*, a strong Salesforce practice, and a real energy-supplier reference in
+**eprimo**. But eprimo is delivered on **Service Cloud**, not E&U Cloud, and adesso's energy stack
+is Schleupen CS, CURSOR and SAP BTP.
+
+### 13.4 The mid-market is being absorbed
+
+**parsionate.com and cloudconsultinggroup.de now both 301-redirect to accenture.com.** Two of the
+German Salesforce mid-market names on the original target list no longer exist independently.
+
+### 13.5 What this does to the §6 ranking
+
+**It does not change the order. It shortens the list and sharpens the reason.**
+
+The E&U Cloud bet was *"a targeted bet on five named employers."* The evidence now says the list of
+companies that actually sell this product in Germany is **Salesfive, Telekom MMS, and Eigenherd**
+— the last of which asks for the cloud as *"idealerweise"* on its Architect role.
+
+**Three employers is not a market. But it is a precise, verified, addressable list** — and the
+credential to reach it costs $200 and a free trial org. That ratio is still worth taking.
+
+**What it removes is any temptation to build a second large project around it.** In a market where
+the incumbent is Schleupen and SAP, a portfolio E&U Cloud artefact demonstrates a credential, not a
+practice. One working data-model artefact, and stop.
+
+---
+
+## 14. Two utilities. In all of DACH.
+
+The final sweep looked for actual customers rather than vendor claims. It is the sharpest number in
+this document.
+
+### 14.1 The complete public list of DACH utilities on Energy & Utilities Cloud
+
+| Utility | Product, precisely | Partner | Date |
+|---|---|---|---|
+| **SachsenEnergie AG** — 4th-largest municipal energy provider in Germany | **E&U Cloud** — *"mittels Salesforce Energy & Utilities Cloud Branchentemplates"*, multi-org for regulatory client separation, 17 system integrations | **Telekom MMS** | ongoing |
+| **Energieversorgung Oberhausen (evo)** | **E&U Cloud + OmniStudio + Experience Cloud + Service Cloud**, MuleSoft → SAP IS-U real-time sync, built with scratch orgs. Portal live **Dec 2024**. Won Salesforce's 2025 *"most innovative energy project"* | **Salesfive** | Jan–Mar 2026 |
+
+**That is the entire list.**
+
+Everything else in DACH is generic Salesforce. **EKZ** (CH) — Sales + Service Cloud. **IWB** (CH) —
+Service → Marketing → Sales + CPQ. **SOLARWATT** — Sales, Service, Commerce. **Enpal** — Sales +
+Service. All four publish explicit product lists, and **none includes the industry cloud.**
+
+**And E.ON's May 2026 announcement is not E&U Cloud either** — it is **Data 360 + Agentforce for
+Sales, Service and Marketing**. Worth correcting wherever this repo implies otherwise.
+
+### 14.2 The most quotable single fact in this whole research round
+
+**ZfK — the Zeitung für kommunale Wirtschaft, the VKU's own outlet — has 35,557 indexed articles
+from May 2014 to August 2026. Exactly one mentions Salesforce.** And it is a vendor partnership
+announcement, not a utility implementation.
+
+The German utility CRM conversation is **SAP, CURSOR, Schleupen, BSI, Lime and Microsoft Dynamics.**
+
+### 14.3 Salesforce Germany cannot show a DACH utility reference
+
+Every customer logo on **salesforce.com/de/energy-utilities/** is non-DACH — ENGIE (FR), Centrica
+(UK), Sunnova (US), Veolia (FR), GE Renewable Energy, Reconomy (UK). Of 124 customer stories on the
+German site, three are energy-adjacent: **two Swiss and one solar manufacturer, none on the industry
+cloud.**
+
+That is a statement about market penetration, not about marketing effort.
+
+### 14.4 The incumbents evaluated Salesforce and chose otherwise
+
+| Utility | Chose |
+|---|---|
+| **EnBW** — the obvious flagship prospect | **CURSOR Software** (general contractor, 2021) and later **BSI Software** for AI-driven service |
+| **Wien Energie** | **Microsoft Dynamics 365** via Avanade |
+| **Stadtwerke Düsseldorf** · **Stadtwerke Bielefeld** | SAP Service Cloud / SAP Sales & Service Cloud |
+| **1KOMMA5°** | Zoho |
+
+**And Stadtwerke Ingolstadt's own published report says it out loud:** Salesforce *"ist von Haus aus
+**nicht auf die Prozesse der deutschen Energie- und Wasserwirtschaft zugeschnitten**"* — so they
+built a custom bidirectional **Schleupen.CS** interface instead.
+
+That sentence, from a utility that chose Salesforce anyway, is the clearest possible statement of
+§13.2's displacement problem.
+
+### 14.5 🟢 But one finding cuts the other way, and it is worth having
+
+> **"OmniStudio" appears exactly once in all public DACH utility material** — the evo case study.
+> **"Vlocity" appears zero times** across ZfK's entire twelve-year archive.
+
+**OmniStudio is a differentiator in this market precisely because almost nobody publicly claims
+it.** Two prerequisite-free $200 certifications and a free 180-day org stand between here and a
+credential that ~everyone in German utility Salesforce lacks.
+
+Combined with §13.1, the addressable list is small but exact: **Salesfive · Telekom MMS ·
+Eigenherd.** Three employers, all verified, all currently selling or hiring for this.
+
+### 14.6 And the timing is unusually good
+
+Both signals are months old. **E.ON's Agentforce announcement is 20 May 2026.** **Salesfive's
+Stadtwerke-Template launched January–March 2026**, pitched at E-world as *"vom Stadtwerk für
+Stadtwerke"* with go-live *"within a few weeks"* — an explicit land-grab for the ~760
+electricity-active municipal utilities that have so far bought SAP or CURSOR.
+
+**If a German Salesforce-in-energy hiring wave happens, it starts here, and it started this year.**
+
+Note also where Salesforce's DACH energy wins actually cluster: **new-energy companies rather than
+incumbents** — Enpal, SOLARWATT, 1KOMMA5°. The buying pattern looks like B2C tech scale-ups, not
+regulated utilities. Which is also where §1 found the English-sufficient jobs.
