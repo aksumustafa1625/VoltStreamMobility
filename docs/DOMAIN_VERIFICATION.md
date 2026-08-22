@@ -715,6 +715,228 @@ transposition — are legally distinct and solve different problems.
   allgemein anerkannte Regeln der Technik. That chain was not followed to the end; it lands in
   VDE territory and is out of scope for a CRM.
 
+
+---
+
+## 17. Netzanschluss — a broken cross-reference, and two fields that were one
+
+### 17.1 🔴 BK6-22-300 points at a paragraph that no longer exists
+
+This is the most interesting thing in the entire domain, and it is four months old and unaddressed.
+
+**BK6-22-300 Ziffer 2.4.1** defines a controllable charge point as:
+
+> *"ein Ladepunkt für Elektromobile, der **kein öffentlich zugänglicher Ladepunkt im Sinne des
+> § 2 Nr. 5 der Ladesäulenverordnung (LSV)** ist"*
+
+**§ 2 Nr. 5 LSV no longer exists.** The Ladesäulenverordnung was repealed on 1 January 2026 and
+the new one has four numbers in § 2. The definition now sits at **§ 2 Nr. 2** — and its substance
+changed.
+
+**Old § 2 Nr. 5** turned on the car park and gave the operator an opt-out:
+
+> *"…wenn der zum Ladepunkt gehörende **Parkplatz** … tatsächlich befahren werden kann, **es sei
+> denn, der Betreiber hat … durch eine deutlich sichtbare Kennzeichnung oder Beschilderung die
+> Nutzung auf einen individuell bestimmten Personenkreis beschränkt**"*
+
+**New § 2 Nr. 2** adopts the AFIR wording and **deletes the signage opt-out**:
+
+> *"…unabhängig davon, ob sich der Ladepunkt auf öffentlichem oder privatem Grund befindet,
+> **ob der Zugang zu dem Standort oder den Räumlichkeiten Beschränkungen oder Bedingungen
+> unterliegt** und ungeachtet der für die Nutzung des Ladepunkts geltenden Bedingungen"*
+
+**Restrictions on access no longer stop a point being public.** And because § 14a applies only to
+**non-public** points, a broader reading of "public" **narrows § 14a's scope** — potentially
+pulling depot and workplace charging out of the controllable-load regime and, separately, into
+the THG § 6 route (§13 above). Two regimes move in opposite directions off one changed definition.
+
+**No BNetzA correction, Mitteilung or guidance addressing this could be found.** It is a live,
+unresolved contradiction between a 2023 Festlegung and a 2026 ordinance.
+
+For a project whose thesis is *"the summary is stale and the statute is not,"* this is the
+strongest possible exhibit: **the regulator's own binding decision now cites a repealed
+provision, and the substitute is not equivalent.** The honest agent answer is not a
+classification — it is *"this turns on a definition that changed on 1 January 2026 and the
+decision has not been updated; here are both readings and what each costs."*
+
+### 17.2 We modelled one field where the law has two
+
+The design carried a single `Paragraph_14a_Modul__c`. R8 said it was on the wrong object and
+came from the wrong Festlegung. Both true — and there are actually **two independent elections**.
+
+| Election | Level | Made to | Source |
+|---|---|---|---|
+| **Modul 1 / 2 / 3** — the Netzentgelt reduction | **per Marktlokation** | **the electricity supplier**, not the DSO | BK8-22/010-A |
+| **Direktansteuerung vs EMS** — how the device is controlled | **per device** | the DSO | BK6-22-300 Ziff. 4.4 |
+
+BK8 Rn. 148 is explicit that the module has nothing to do with the grid operator:
+
+> *"Der Betreiber trifft **gegenüber dem Lieferanten** die Wahl für Modul 2 als Alternative zu
+> Modul 1 bzw. für Modul 3 als Ergänzung zu Modul 1. **Zwischen dem Netzbetreiber und dem
+> Betreiber besteht insoweit kein vertragliches Verhältnis.**"*
+
+And the module attaches to the metering point, not the connection or the device (Rn. 90):
+*"je Marktlokation … unabhängig davon, ob eine oder mehrere steuerbare Verbrauchseinrichtungen
+über eine Marktlokation abgerechnet werden."*
+
+**Defaults and rules worth encoding:** Modul 1 applies automatically where no election is made or
+the customer is in Grundversorgung. A module change is **never retroactive** — *"Ein rückwirkender
+Modulwechsel ist ausgeschlossen."* Modul 2 requires a **separate Marktlokation** and cannot be
+combined with Modul 1. Modul 3 is only ever **in addition to** Modul 1.
+
+### 17.3 The 4,2 kW does two jobs, and does not aggregate for charge points
+
+Confirmed from Anlage 1 and worth stating precisely, because it is easy to get backwards:
+
+- **As a threshold** (Ziff. 2.4.1) — above 4,2 kW Netzanschlussleistung, in Niederspannung, a
+  non-public charge point **is** a steuerbare Verbrauchseinrichtung.
+- **As a floor** (Ziff. 4.5.1) — *"beträgt die Mindestleistung 4,2 kW"*. Never a shutdown.
+
+**The 0,4 scaling factor is for heat pumps and cooling only.** A charge point's floor is a flat
+4,2 kW however large it is.
+
+**And aggregation does not apply to charge points at all.** Ziff. 2.4.2 limits summing to
+Fallgruppen b. and c. — heat pumps and cooling — because the rule exists to stop cascades being
+split artificially. **Each charge point above 4,2 kW is its own steuVE with its own floor.** The
+data model must treat charge points individually and heat pumps as summed groups; one rule for
+both would be wrong in one direction or the other.
+
+### 17.4 Curtailment is ultima ratio, and the trigger is 80 % — not overload
+
+BK6 Ziff. 4.2 requires the occasion to be established *"auf Basis der Netzzustandsermittlung"*,
+and the reasoning is unusually direct:
+
+> *"…dass der Netzbetreiber im Sinne des hier tragenden **Ultima-ratio-Ansatzes ausschließlich bei
+> Vorliegen einer akuten Handlungsnotwendigkeit aus aktuellem Anlass tätig wird und **nicht
+> präventiv**."*
+
+Two things follow that a model would otherwise miss:
+
+- The **15 % / 7 %** measurement-coverage figures in Ziff. 2.6 are **superseded** — the
+  *"anderweitige Empfehlung"* they were conditional on arrived as the VDE FNN Hinweis of
+  10.04.2025, replacing them with a topology-differentiated table.
+- Intervention may begin at **80 % of equipment loading** (or −8 % voltage), proven by direct
+  measurement — not at actual overload.
+
+**Preventive control does exist, but only transitionally**: until 31.12.2028, for at most 24
+months per network area, and **capped at two hours per day** (Ziff. 10.5).
+
+### 17.5 🔴 A deadline four months away
+
+> **Ziff. 10.6** — charge points that *"nachweislich technisch nicht gesteuert werden können"*,
+> whose controllability cannot be established *"mit vertretbarem technischem Aufwand"*, and which
+> are commissioned **bis zum Ablauf des 31.12.2026**, are exempt from Ziffern 3–5 entirely.
+
+The burden of proof is on the operator, and the absence of a digital interface does not by itself
+make out impossibility if the device can be switched by other means. **This window closes in
+roughly four months** and is exactly the kind of dated, consequential fact the agent exists to
+surface.
+
+The other date: **Bestandsanlagen convert on 01.01.2029** (Ziff. 10.2). Switching in early is
+voluntary, the DSO **cannot refuse** it, and it is **one-way** — *"Ein erneuter Wechsel zurück …
+ist nicht möglich."*
+
+### 17.6 Three things that do **not** exempt you
+
+Ziff. 3.2, verbatim, and all three are common assumptions:
+
+> *"¹Die etwaige **Zahlung eines Baukostenzuschusses** … **entbindet den Betreiber nicht** von der
+> Teilnahmeverpflichtung. ²Die Einbindung … in einen **Pool** … entbindet … nicht. ³Die
+> **Abwesenheit von Netzengpässen** entbindet ebenso nicht."*
+
+Paying the connection contribution, joining a pool, and there being no congestion — none of them
+buys you out of controllability.
+
+### 17.7 The notification duty has no lower bound
+
+The first round framed this as *"below 12 kVA, notification only."* That is backwards.
+**§ 19 Abs. 2 NAV requires notification of every charging device at any power.** The 12 kVA line
+only *adds* the Zustimmung.
+
+And there is a second, independent duty the design never had: **VDE-AR-N 4100 requires an
+Anmeldung at ≥ 3,6 kVA** — and it catches ordinary sockets:
+
+> *"Dazu zählen nicht nur Ladeeinrichtungen zum konduktiven Laden … sondern auch … **Stromkreise
+> mit Haushalts- oder Industriesteckvorrichtungen (Schutzkontakt- oder CEE-Steckdosen)**, die für
+> den Anschluss von ladeleitungsintegrierten Steuer- und Schutzeinrichtungen für die
+> **Ladebetriebsart 2** … vorgesehen sind."*
+
+Note also **VDE-AR-N 4100:2026-04**, released 5 March 2026, supersedes the 2019 edition. Most DSO
+TABs still cite the old one.
+
+### 17.8 Two process steps, not one — and both are installer-gated
+
+**§ 14 Abs. 2 NAV** adds a second act the design collapsed into the first:
+
+> *"Jede Inbetriebsetzung … ist bei ihm von **dem Unternehmen, das nach § 13 Abs. 2 die Arbeiten an
+> der Anlage ausgeführt hat, in Auftrag zu geben**."*
+
+The Inbetriebsetzungsauftrag can only be placed by **the same registered company that did the
+work**. So a partner losing its registration mid-project does not merely delay the next job — it
+strands the current one.
+
+### 17.9 § 11 NAV — 30 kW is an allowance, not a trigger
+
+> *"**(3)** Ein Baukostenzuschuss darf **nur für den Teil der Leistungsanforderung erhoben werden,
+> der eine Leistungsanforderung von 30 Kilowatt übersteigt**."*
+
+A 100 kW connection is charged on **70 kW**, not on 100. And § 11 NAV governs **Niederspannung
+only** — above that there is no statutory basis, and the BNetzA's BKZ position paper of 20.11.2024
+derives it from §§ 17, 21 EnWG using a Leistungspreismodell instead.
+
+**The commercial lever nobody models: § 17 Abs. 2b EnWG flexible connection agreements**, worth
+roughly **70 % off the BKZ** at one large DSO. The statute prescribes five mandatory contents —
+the limitation level, the period(s), the term, the technical requirements, and **the customer's
+liability on exceedance** — which is a five-field entity, not a checkbox. And § 14a stays
+untouched alongside it.
+
+### 17.10 The Installateurverzeichnis rule we had was wrong — and the real one is sharper
+
+The design carried *"registration lasts five years, with a three-month notification window for
+changes."* Read against the **BDEW/ZVEH Grundsätze, Ausgabe Januar 2024**, both halves are off.
+
+**The five years** is a *"soll"*, a **maximum**, and applies to the **Installateurausweis** rather
+than the registration — *"soll die Gültigkeitsdauer der Installateurausweise auf maximal fünf
+Jahre begrenzt sein"*, with automatic renewal expressly **not** recommended and the first term
+allowed to differ. Renewal now also requires **two documented Fortbildungsmaßnahmen** within the
+validity period.
+
+**The three months is not a notification window at all.** Changes are notifiable **unverzüglich**:
+*"Das Installationsunternehmen hat den Netzbetreiber über das **Ausscheiden einer Verantwortlichen
+Elektrofachkraft** … **unverzüglich** zu informieren."*
+
+The real three-month rule is far more consequential:
+
+> *"**Bei Ausscheiden der letzten Verantwortlichen Elektrofachkraft** … **ruht die Eintragung**.
+> Ist **spätestens innerhalb von drei Monaten** keine Verantwortliche Elektrofachkraft wieder
+> **fest** im Installationsunternehmen eingestellt, **kann die Löschung** aus dem
+> Installateurverzeichnis erfolgen."*
+
+**A vacant VEFK post suspends the registration immediately** — not after three months. The three
+months is the window to fill it before deletion. And without registration the partner may not
+lawfully work behind the Hausanschlusssicherung at all (§ 13 Abs. 2 NAV), nor place the
+Inbetriebsetzungsauftrag (§ 17.8).
+
+That makes `VEFK_Name__c` on `Reseller__c` not a contact field but a **status field with an
+immediate legal effect and a three-month fuse** — the sharpest partner-compliance rule in the
+domain, and the design had it as a nicety.
+
+### 17.11 Model consequences
+
+| Finding | Consequence |
+|---|---|
+| BK6 cites a repealed § | `Oeffentlich_zugaenglich__c` needs a **legal-basis date**, and the agent must be able to say *"this definition changed on 1.1.2026 and the decision was not updated."* |
+| Two separate elections | `Paragraph_14a_Modul__c` moves to a **Marktlokation** entity, elected via the supplier; a **new** per-device field carries Direktansteuerung vs EMS. |
+| No aggregation for charge points | Each `Ladepunkt__c > 4,2 kW` is its own steuVE. Do not sum. |
+| Notification has no lower bound | The § 19 duty is unconditional; 12 kVA only adds Zustimmung; a **second** duty starts at 3,6 kVA. |
+| § 14 NAV | A distinct `Inbetriebsetzung` step, bound to the **same** registered installer. |
+| § 11 Abs. 3 NAV | BKZ is charged on `max(0, kW − 30)`, and **only in Niederspannung**. |
+| § 17 Abs. 2b EnWG | A five-field `Flexible_Netzanschlussvereinbarung` entity, worth ~70 % of BKZ. |
+| Grundsätze § 2.2.5 | VEFK vacancy → registration **ruht** immediately; deletion possible after 3 months. Partner status must be **derived**, not typed. |
+| Ziff. 10.6 | A live **31.12.2026** hardship window; Ziff. 10.2 a **01.01.2029** conversion, one-way. |
+
+---
+
 Sources: [§ 35 MessEV](https://www.gesetze-im-internet.de/messev/__35.html) ·
 [§ 34 MessEV](https://www.gesetze-im-internet.de/messev/__34.html) ·
 [§ 37 MessEG](https://www.gesetze-im-internet.de/messeg/__37.html) ·
