@@ -247,9 +247,9 @@ Two further points the statute settles:
 
 - **There is no kW figure anywhere in § 14a.** The 4.2 kW comes entirely from BNetzA
   **BK6-22-300** (in force 1 January 2024). The design's `[V]` on this was correct.
-- The intervention is **not a shutdown**. BNetzA describes it as *Dimmen* — reduction **down
-  to** at least 4.2 kW, never below. A field named `Abschaltung__c` would be wrong; the
-  device keeps charging, slowly.
+- The intervention is described as *Dimmen* — reduction **down to** at least 4.2 kW. But
+  "never a shutdown" is only half true, and the missing half is the half that matters for
+  charge points. See §17.3.
 
 ---
 
@@ -790,10 +790,54 @@ Confirmed from Anlage 1 and worth stating precisely, because it is easy to get b
 
 - **As a threshold** (Ziff. 2.4.1) — above 4,2 kW Netzanschlussleistung, in Niederspannung, a
   non-public charge point **is** a steuerbare Verbrauchseinrichtung.
-- **As a floor** (Ziff. 4.5.1) — *"beträgt die Mindestleistung 4,2 kW"*. Never a shutdown.
+- **As a floor** (Ziff. 4.5.1) — *"beträgt die Mindestleistung 4,2 kW"*.
 
 **The 0,4 scaling factor is for heat pumps and cooling only.** A charge point's floor is a flat
 4,2 kW however large it is.
+
+#### ⚠️ But the floor binds the *instruction*, not the *response* — and a simple wallbox goes to zero
+
+An earlier version of this file said the reduction is *"never a shutdown."* That is half true,
+and the missing half is the half that matters. **Ziffer 4.6 Satz 2:**
+
+> *"Sofern es einer steuerbaren Verbrauchseinrichtung aus technischen Gründen nicht möglich ist,
+> den netzwirksamen Leistungsbezug auf den vom Netzbetreiber vorgegebenen Wert zu reduzieren,
+> muss eine Reduzierung auf den **nächstgeringeren Wert, der technisch möglich ist**, erfolgen."*
+
+And the Beschluss reasoning (p. 70) forecloses the obvious objection:
+
+> *"Vorsorglich sei auch darauf hingewiesen, dass eine Unmöglichkeit insbesondere **nicht** aus
+> der Tatsache herrühren kann, dass die betreffende teilnahmepflichtige Anlage **nur die
+> Möglichkeit zur vollständigen Ausschaltung** besitzt, nicht aber die Möglichkeit zur
+> stufenweisen … Ansteuerung."*
+
+**So a relay-switched, non-modulating wallbox is lawfully taken to zero**, with no claim to the
+4,2 kW — and it cannot use that inability to qualify for the Ziff. 10.6 hardship exemption
+either. Only modulating hardware actually delivers the guarantee.
+
+That turns the 4,2 kW from a reassurance into a **hardware purchasing decision**, which is
+precisely the kind of thing a channel partner should be told before the order is placed. Any
+sales copy promising *"you always keep 4.2 kW"* is wrong for on/off equipment.
+
+#### And BK6-22-300 mandates no hardware at all
+
+Term-counted against the binding Anlage 1: **`intelligente` 0 · `Smart-Meter` 0 · `Steuerbox` 0 ·
+`CLS` 0 · `MsbG` 0 · `Rundsteuer` 0.** The Festlegung is technology-neutral; its only equipment
+clause is Ziff. 4.6 Satz 1 (the device must be *"stets steuerbar"*). **The iMSys/Gateway mandate
+comes from § 14a Abs. 4 EnWG and § 29 MsbG, not from the decision.** Anyone writing
+*"BK6-22-300 requires a smart meter gateway"* is citing the wrong instrument.
+
+Two consequences the design did not have:
+
+- **The obligation attaches before any hardware exists** — *"Die technische Inbetriebnahme …
+  setzt **nicht** bereits das Vorhandensein der … notwendigen Steuertechnik … voraus."*
+- **Ordering the metering operator is full exculpation, and the discount still runs**:
+  *"Unabhängig davon, wann der Einbau der Steuerungstechnik stattfindet, **erhält er die
+  Netzentgeltreduzierung**."*
+
+That — not a Rundsteuerempfänger — is the answer to *"what if there is no smart meter yet."*
+Ripple control appears in BK6 exactly once, and it is used to **deny** hardship relief, not to
+authorise an interim arrangement.
 
 **And aggregation does not apply to charge points at all.** Ziff. 2.4.2 limits summing to
 Fallgruppen b. and c. — heat pumps and cooling — because the rule exists to stop cascades being
@@ -920,6 +964,83 @@ Inbetriebsetzungsauftrag (§ 17.8).
 That makes `VEFK_Name__c` on `Reseller__c` not a contact field but a **status field with an
 immediate legal effect and a three-month fuse** — the sharpest partner-compliance rule in the
 domain, and the design had it as a nicety.
+
+#### Two things about the VEFK that are widely repeated and wrong
+
+**It is not a statutory office, and DGUV Vorschrift 3 does not know it.** A full-text search of
+DGUV V3 for *"verantwortliche Elektrofachkraft"* returns **zero** hits — § 3 imposes duties on the
+*Unternehmer* and requires a plain *Elektrofachkraft*. The VEFK is defined by **DIN VDE 1000-10**
+and operates as a written delegation under **§ 13 Abs. 2 ArbSchG**, backed by **§ 130 OWiG**
+(fines to €1 million for failures of appointment, selection and supervision).
+
+**And it is not universally mandatory.** The DKE committee that publishes the standard says so:
+*"In Unternehmen oder Unternehmensbereichen **mit nur einer EFK ist keine zusätzliche VEFK
+erforderlich**"* and *"Das bloße **Benennen als 'VEFK' ist nicht ausreichend**."*
+
+**But for the Installateurverzeichnis it is a hard prerequisite, and a stricter one.** The
+Grundsätze require the Sachkundenachweis (or Meister plus Sicherheitsschein) **and permanent
+employment** — *"fest, d. h. nicht nur vorübergehend, angestellt."* **An external contractor
+cannot satisfy it**, even where they would be acceptable as a generic VEFK. So the partner-facing
+rule is narrower than the safety-law one, and that is the one this CRM models.
+
+*(Also: the "three-year VEFK refresher" that circulates has no primary source. What is verified is
+the five-year Ausweis cycle with at least two Fortbildungen. The three-year figure is a false
+friend — the FNN § 14a **documents** are reviewed at least every three years.)*
+
+### 17.10b The process is not the same at two grid operators
+
+The most consequential process finding, because it defeats a single hard-coded workflow:
+
+| DSO | Sequence for a wallbox |
+|---|---|
+| **Netze BW** | *"Eine vorherige Genehmigung durch uns als Netzbetreiber entfällt **unabhängig von der Leistung der Wallbox**"* — registration **after** installation |
+| **Netze Duisburg** | *"Bei Ladeeinrichtungen mit einer Leistung **über 12 kVA** ist **vor der Installation die Genehmigung … abzuwarten**"* |
+
+**Same statute, opposite order.** A CRM that hard-codes one sequence is wrong for half its
+partners. `Netzbetreiber__c` has to carry the *process*, not just the name — which is exactly the
+blast-radius argument for making it an object rather than a text field.
+
+And **no DSO publishes a processing time.** Across seven examined, not one states a
+`Bearbeitungszeit`; one actively disclaims control over it. Any SLA field must be **derived from
+our own observed history**, never quoted as the operator's promise.
+
+### 17.10c Four parties sign, not one
+
+The BDEW explanatory note gives the reason in the statute's own terms:
+
+> *"Die nach NAV vorzunehmende **Unterscheidung von Anschlussnehmer und Anschlussnutzer** macht es
+> erforderlich, **zwei 'Einblatt-Formulare'** zu verwenden."*
+
+So the party model needs **Anschlussnehmer · Anschlussnutzer · Grundstückseigentümer · Betreiber
+der Ladeeinrichtung** as distinct roles, plus the submitting **Elektrofachbetrieb** and an optional
+**Bevollmächtigter** carrying a Vollmacht document. In a channel business these are routinely four
+different companies, and the design collapsed them into an Account lookup.
+
+**Attachments are first-class, including photographs.** One DSO mandates a *"Foto des
+Hausanschlusskastens"* **and** a *"Foto vom **geöffneten** Hausanschlusskasten zum Abgleich der
+installierten Sicherungsgröße."* A document-management story is not decoration here.
+
+### 17.10d Three more thresholds, from real DSO documents
+
+| Threshold | Consequence | Source |
+|---|---|---|
+| **475 kW** | *"Ab 475 kW muss die Wirkleistung durch Westnetz begrenzt werden können (**Fernwirk-Gateway**)"* | Westnetz MS/HS |
+| **> 1.000 kW** consumption (or > 300 kW storage) | Removed from the ordinary portal into a **criteria-based allocation queue** — *"ist eine Antragstellung über das bisherige Netzanschlussportal **ab sofort nicht mehr möglich**"* | Bayernwerk |
+| **≥ 3,6 kVA** | VDE-AR-N 4100 Anmeldung, Formblatt **B.3** | FNN Hinweis |
+
+**The 1.000 kW line is the binding one for DC hubs** — a twenty-stall 300 kW site clears it
+several times over, and clearing it means the normal application route is closed. Escape is only
+via a documented *privilegierte Kundengruppe*.
+
+*(Form correction: the canonical EV datasheet at low voltage is **Anhang B.3** of VDE-AR-N 4100,
+not an E-number. VDE-AR-N 4110's **E.8** is a medium-voltage generation/storage datasheet. And
+**VDE-AR-N 4105:2026-03** was reissued alongside 4100:2026-04 — both core low-voltage rules
+changed in 2026.)*
+
+*(Control path: EEBUS via VDE-AR-E 2829-6-1 is the FNN **Mindeststandard**, but BK6 itself says
+*"Dies schließt die Verwendung alternativer Schnittstellen nicht aus."* "EEBUS is legally
+mandatory" is **not** established; "EEBUS is the safe default" is. The FNN Steuerbox controls at
+most **four** devices — a fifth needs a second box.)*
 
 ### 17.11 Model consequences
 
