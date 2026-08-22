@@ -245,14 +245,14 @@ custom description.
 | `sf agent generate authoring-bundle` | **1 s** (local) |
 | `sf agent validate authoring-bundle` | **~2 s**, `{"success": true}` |
 | `sf agent create` | **30 s** (one LLM call) |
-| `sf agent test run`, 2 cases | **2 m 22 s** end to end |
-| — of which agent execution | **~10 s** (cases finished 20:02:19–22) |
-| — of which LLM judging | **~2 m 10 s** |
+| `sf agent test run`, 2 cases — **first run** | **2 m 22 s** (cold start) |
+| `sf agent test run`, 2 cases — **runs 2–5** | **13.7 / 14.6 / 15.7 / 20.7 s** |
 | `output_latency_milliseconds`, case 1 | **4696 ms** |
 | Credit errors or quota failures | **none** |
 
-Agent turns are fast; the judged metrics are what costs wall-clock. That ratio argues for
-few judged metrics and many deterministic assertions, independently of cost.
+The first figure was a cold-start artifact and the earlier reading of it — "LLM judging takes
+two minutes" — was wrong. Steady state is **~15 s for two cases**. A twenty-case suite should
+therefore land around two to three minutes, which is CI-viable without special handling.
 
 ---
 
@@ -286,3 +286,149 @@ specs/phase0-probe-testSpec.yaml                                the two-case tes
 Org-side: agent `VS_Phase0_Probe_Classic` (`0XxgL000002V07R`), eval
 `VS_Phase0_Probe_Tests`, run `4KBgL0000002gzFWAQ`. All disposable — delete once the real
 build starts.
+
+---
+
+## 9. Run-to-run variance — five runs of the same two cases
+
+One run tells you nothing about a threshold. The identical suite was run five times
+(`docs/platform-probes/variance-runs.jsonl` holds the raw rows).
+
+### The deterministic assertions are genuinely deterministic
+
+| Assertion | Run 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| `topic_assertion` case 1 | FAIL(0) | FAIL(0) | FAIL(0) | FAIL(0) | FAIL(0) |
+| `topic_assertion` case 2 | PASS(1) | PASS(1) | PASS(1) | PASS(1) | PASS(1) |
+| `actions_assertion` case 1 | FAIL(0) | FAIL(0) | FAIL(0) | FAIL(0) | FAIL(0) |
+| `actions_assertion` case 2 | PASS(1) | PASS(1) | PASS(1) | PASS(1) | PASS(1) |
+
+Five for five, identical. Routing and action selection did not wobble once, and
+`generatedData.topic` returned the same mangled `"p"` every time — so §5.1 is a defect,
+not a flake.
+
+**This is the number the whole gate design rests on: `actions_assertion` can be gated
+all-green.** No pass-rate, no repeats, no power calculation needed for that tier.
+
+### The LLM-judged metrics do wobble
+
+| Metric | Run 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| `output_validation` case 1 | FAIL(1) | FAIL(1) | FAIL(1) | FAIL(**0**) | FAIL(1) |
+| `output_validation` case 2 | FAIL(0) | FAIL(1) | FAIL(1) | **PASS(5)** | FAIL(1) |
+| `coherence` case 1 | PASS(4) | PASS(4) | PASS(4) | PASS(4) | PASS(4) |
+| `coherence` case 2 | FAIL(0) | FAIL(0) | FAIL(0) | FAIL(**1**) | FAIL(0) |
+
+**One verdict flip in five on `output_validation` case 2** — same agent, same version, same
+utterance, same org, minutes apart. A 1-in-5 flip on a two-case suite is the empirical
+input any acceptance threshold has to be built from, and it is measured rather than assumed.
+
+Note that all the movement is in run 4. That is consistent with judge variance clustering
+per run rather than per case, which matters: repeating a single failed case may not
+reproduce the condition that produced it.
+
+### Latency
+
+`output_latency_milliseconds`, case 1, across runs: **4696 · 2778 · 2881 · 4352 · 2845 ms**.
+Median ≈ 2.9 s, spread ≈ 1.7×. Nobody publishes these.
+
+---
+
+## 10. The custom scorer — what it actually receives
+
+This was the outstanding "load-bearing unknown": a groundedness scorer is only a
+groundedness scorer if its prompt template can see the action outputs and retrieved
+material. The documentation does not say. The platform does, through its error messages.
+
+### `AiAgentScorerDefinition` is not in the CLI's registry
+
+```
+$ sf project deploy start --metadata "AiAgentScorerDefinition:VS_Scorer_Echo_Probe"
+Error (RegistryError): Missing metadata type definition in registry for id
+'AiAgentScorerDefinition'.
+```
+
+The server knows the type — `sf org list metadata -m AiAgentScorerDefinition` returns
+"no metadata found", not `INVALID_TYPE`. The **CLI** does not. Deploying it therefore
+requires the metadata-format path (`--metadata-dir` with a hand-written `package.xml`),
+which bypasses the source registry and reaches the server's own parser.
+
+### Walking the schema by reading rejections
+
+Each failure named the next constraint:
+
+| Attempt | Server response |
+|---|---|
+| `<masterLabel>` present | `Element masterLabel invalid at this location in type AiAgentScorerDefinition` |
+| `dataType Number` + `isFallback` | `The Number data type doesn't support fallback or system fallback values.` |
+| Flex-typed prompt template | **`Allowed types: agentforce_session_tracing__scorerMultilabel, agentforce_session_tracing__scorerOpenEnded, agentforce_session_tracing__scorerMeasurement. Found: 'einstein_gpt__flex'.`** |
+| `scorerMeasurement` with no inputs | **`Required Prompt Template Input definitions are missing: [[AllowedRange, Session]]`** |
+
+**Those last two answer the question.**
+
+1. A custom scorer cannot be backed by a Flex template. It must use one of three purpose-built
+   types, all namespaced **`agentforce_session_tracing__`**.
+2. A `scorerMeasurement` template has two **required** inputs: `AllowedRange` and **`Session`**.
+
+So the scorer is handed a **Session**, not a bare utterance-and-response pair — and the type
+namespace says that Session is the tracing session. That is consistent with the separately
+documented note that observability supports Session scope at run time, and it means a
+groundedness scorer is at least *architecturally* possible: the material is in scope.
+
+**What is still not established** is which fields of that Session the template can dereference —
+specifically whether action outputs and retrieved chunks are reachable. That needs the echo
+template to actually run, which is blocked by the next finding.
+
+### Scorer-typed prompt templates cannot be created via the Metadata API here
+
+Every candidate `<definition>` for the `Session` input was rejected, and the last rejection
+was not a validation message but an unhandled server-side null:
+
+```
+Failure to create template: Cannot invoke
+"einstein.gpt.shared.provider.definition.GenAiPromptTypeEnum.getPath()"
+because the return value of
+"einstein.gpt.shared.provider.definition.GenAiPromptDefType.getType()" is null
+```
+
+A plain Flex template deploys cleanly (`VS_Scorer_Echo`, still in source). A
+`agentforce_session_tracing__scorerMeasurement` template does not — the platform crashes
+rather than naming the valid input definitions.
+
+This is the same class of limitation the sibling project recorded for `GenAiFunction`:
+**creatable in the UI, not through source**. The consequence for a source-first repository is
+real and should be stated rather than glossed: the scorer would have to be built in Agentforce
+Studio and only *retrieved* into git, which weakens "authored as source" for that one artifact.
+
+### One more schema fact worth keeping
+
+A `GenAiPromptTemplate` deploys only if `versionIdentifier` and `activeVersionIdentifier`
+are **omitted** on first create — the platform mints them. Setting `1` or a UUID is rejected:
+
+```
+The prompt template version identifier is "1" invalid.
+The prompt template version identifier is "fd7b6a32-...-e6f966f111b1" invalid.
+```
+
+The minted form is a base64 digest plus an ordinal:
+
+```
+KzZqWgd5jMzXkpnhkT4MIUQfuFYllHgFALWfY/Vih28=_1
+```
+
+To activate a template you retrieve it, read that value, and redeploy with
+`<activeVersionIdentifier>` set to it. Two deploys, always.
+
+---
+
+## 11. What this changes in the plan
+
+| Was going to | Now |
+|---|---|
+| Build the whole evaluation layer around a scratch org, because tests were assumed sandbox-only | Run them here. The workaround is deleted. |
+| Author the agent in Agent Script and publish it | Author and validate in Agent Script; **publish through the classic path**, because the Agent Script commit endpoint 404s. |
+| Gate on `topic_sequence_match` | Use `actions_assertion`. `topic_assertion` is unusable for custom topics, and five runs prove that is a defect rather than noise. |
+| Gate a mixed suite at a 90% pass rate | Two tiers: **`actions_assertion` all-green** (5/5 deterministic, measured) and **LLM-judged reported as a score**, never gated. The 1-in-5 flip is the reason. |
+| Keep `coherence` / `completeness` / `conciseness` as quality signal | Drop them from any suite containing refusals. They score a correct refusal as incoherent. |
+| Ship a custom groundedness scorer as source | Possible in principle — the scorer does receive the Session — but not creatable through the Metadata API here. Either build it in the UI and retrieve, or make the headline verifier deterministic and credit-free instead. |
+| Out-compete standard actions with better descriptions | Remove them from the topic. The Knowledge action won selection on every one of five runs. |

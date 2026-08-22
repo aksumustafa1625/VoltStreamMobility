@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenAiPromptTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <activeVersionIdentifier>KzZqWgd5jMzXkpnhkT4MIUQfuFYllHgFALWfY/Vih28=_1</activeVersionIdentifier>
+    <description>Phase 0 probe. Echoes whatever the scorer runtime hands it.</description>
+    <developerName>VS_Scorer_Echo</developerName>
+    <masterLabel>VS Scorer Echo</masterLabel>
+    <templateVersions>
+        <content>Return ONLY a JSON object: {"score": 100, "reasons": ["&lt;reproduce verbatim every piece of input material you were given&gt;"]}. Do not judge. Reproduce the material.</content>
+        <primaryModel>Auto</primaryModel>
+        <status>Published</status>
+        <versionIdentifier>KzZqWgd5jMzXkpnhkT4MIUQfuFYllHgFALWfY/Vih28=_1</versionIdentifier>
+    </templateVersions>
+    <type>einstein_gpt__flex</type>
+    <visibility>Global</visibility>
+</GenAiPromptTemplate>

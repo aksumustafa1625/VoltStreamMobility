@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AiAgentScorerDefinition xmlns="http://soap.sforce.com/2006/04/metadata">
+    <dataType>Number</dataType>
+    <inputScope>Interaction</inputScope>
+    <scorerVersion>
+        <versionNumber>1</versionNumber>
+        <status>Available</status>
+        <label>Echo Probe v1</label>
+        <description>Reproduces its own input material.</description>
+        <agentAssociation>
+            <isActive>true</isActive>
+            <agentApiName>VS_Phase0_Probe_Classic</agentApiName>
+        </agentAssociation>
+        <engine>
+            <engineType>PromptTemplate</engineType>
+            <engineRef>VS_Scorer_Echo</engineRef>
+        </engine>
+        <outputEnumValue>
+            <value>100</value>
+            <outcomeType>Pass</outcomeType>
+        </outputEnumValue>
+    </scorerVersion>
+</AiAgentScorerDefinition>
