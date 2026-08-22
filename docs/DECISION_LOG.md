@@ -1,340 +1,347 @@
 # Karar Defteri — Agent Tasarımı
 
-Kardeş modellerden gelen her öneri buraya girer, bir statü alır. Amaç: aynı tartışmayı
-iki kez yapmamak, ve hakemlerin **ayrıştığı** yerleri kaybetmemek.
+Dört bağımsız hakemin her önerisi, statüsüyle. Amaç: aynı tartışmayı iki kez yapmamak ve
+hakemlerin **ayrıştığı** yerleri kaybetmemek.
 
-**Kaynak dosya:** [AGENT_DESIGN_FOR_REVIEW.md](AGENT_DESIGN_FOR_REVIEW.md)
+**Kaynak:** [AGENT_DESIGN_FOR_REVIEW.md](AGENT_DESIGN_FOR_REVIEW.md)
 
-## Statüler
-
-| | Anlamı |
+| | Statü |
 |---|---|
-| ✅ **KABUL** | Uygulanacak. |
-| ❌ **RED** | Uygulanmayacak, gerekçesiyle. |
-| ⚔️ **ÇELİŞKİ** | Hakemler ayrışıyor. |
-| 🔬 **DOĞRULA** | Ampirik doğrulama şart. |
-| ⏸️ **ERTELE** | Doğru fikir, v1 değil. |
-| 👤 **SENİN** | Stratejik karar. |
+| ✅ **KABUL** · ❌ **RED** · ⚔️ **ÇELİŞKİ** · 🔬 **DOĞRULA** · ⏸️ **ERTELE** · 👤 **SENİN** | |
 
 ## Hakemler
 
-| Kod | Karakteri |
-|---|---|
-| **R1** | Sert, kapsam kesmede acımasız. Bir gerçek kod hatası buldu (`THG_Meldung__c` junction'ı). |
-| **R2** | Dengeli, çalışan `DateUtils` kodu verdi, R1'i dokuz noktada çürüttü. |
-| **R3** | En teknik. Üç kişinin de kaçırdığı bir **mimari boşluk** ve bir **portfolyo katili** buldu. |
-
----
-
-# 🔴 R3'ün üç kritik bulgusu
-
-## N-01 · `BusinessHours` standart nesnesi zaten var ✅ KABUL
-
-> **R3:** *"Bölgesel tatiller için custom `DateUtils` planlıyorsun. **[V]** Salesforce'ta 15+ yıldır `BusinessHours` nesnesi var. Bölgesel iş günlerini ve tatilleri natif yönetiyor. Setup'ta her Bundesland için bir Business Hours kaydı yaratıp `BusinessHours.add(id, startDate, intervalInMilliseconds)` çağırıyorsun."*
-
-**Bu, tar pit'i kesmiyor — buharlaştırıyor.**
-
-R1 "3 hafta, 9 ulusal tatili sabitle, sınırı dokümante et" dedi.
-R2 "erteleyin" dedi.
-R3 "**standart nesne zaten var**" dedi.
-
-Üçü de aynı problemi gördü, ama R3 tek doğru cevabı verdi. Ben Custom Metadata tatil tablosu tasarlıyordum — Salesforce'un on beş yıldır sahip olduğu şeyi yeniden icat ediyordum.
-
-BDEW'in 10-iş-günü TAB kuralı artık ücretsiz geliyor, ve **`Feiertagskalender` Setup'ta veri olarak durduğu için** Fronleichnam/Reformationstag farkı bir Apex problemi değil, bir konfigürasyon satırı.
-
-**G-01 (tatil tar pit'i) kapandı.**
-
----
-
-## N-02 · Parametreler de üretiliyor — mimari sınırımdaki delik ✅ KABUL
-
-> **R3:** *"'Sayılar hesaplanır, dil üretilir' diyorsun ama **parametrelerin de üretildiğini** kaçırmışsın. Kullanıcı 'Vogtland' diye sorup sonraki turda 'Eichfrist' derse, LLM 18 karakterlik Salesforce ID'sini bağlam penceresinden çıkarıp Apex'e geçirmek zorunda. **Sık sık başarısız olacak.**"*
-
-**Üç hakemden sadece R3 bunu gördü, ve tasarımın en temel iddiasını deliyor.**
-
-§8.1'de şunu yazdım: *"Sayılar hesaplanır. Dil üretilir. Sadece dış dokümanlar getirilir."* Tablo üç satırlıydı ve **dördüncü satır eksikti: parametreler.**
-
-`PruefeEichrechtErklaerung(Id meldungId)` — o `meldungId` nereden geliyor? LLM'den. Yani deterministik Apex'in girdisi **halüsinasyona açık.**
-
-**R3'ün çözümü:**
-1. Agent Script'te açık durum değişkeni: `current_ladestandort_id`
-2. Bir `ResolveRecordId` aksiyonu: bulanık string alır, **SOSL** koşar, tam ID'yi session değişkenine yazar
-3. Aşağı akış aksiyonları **değişkenden okur**, bağlamdan değil
-4. Apex, generic exception fırlatmak yerine `"ID eksik veya geçersiz, lütfen netleştirin"` döndürür — session çökmesin
-
-**§8.1'deki mimari sınır tablosu düzeltilecek** ve dördüncü satır eklenecek.
-
----
-
-## N-05 · Developer Edition hibernasyonu — portfolyo katili ✅ KABUL
-
-> **R3:** *"Dev org'larda Data Cloud provisioning **14 gün kadar kısa bir hareketsizlikte** duraklıyor. İşe alan yönetici başvurudan 3 hafta sonra portfolyona bakarsa, Data Cloud index'in askıya alınmış olabilir ve **agent sessizce çalışmaz.**"*
-
-Bunu kimse düşünmedi, ben dahil. Ve senaryo gerçekçi: başvuru gönderilir, iki hafta sonra teknik ekibe düşer, açarlar, **hiçbir şey çalışmaz** — ve hata mesajı bile yok, çünkü Search Index hazır değilken agent sessizce boş dönüyor *(bunu zaten `[V]` olarak biliyoruz)*.
-
-**Aksiyon:**
-- README'nin **en üstünde** "org'u uyandırma" talimatı
-- Zamanlanmış bir ping mekanizması *(scheduled Apex veya GitHub Actions cron)*
-- Ve daha iyisi: **demo, Data Cloud olmadan da çalışmalı** *(X-06 kararına bağlanıyor — RAG'ı kesmenin bir sebebi daha)*
-
----
-
-# ⚠️ P-00 · "Sandbox-only" — oylama 2-1, ama soru anlamını yitirdi
-
-| | Pozisyon |
-|---|---|
-| **R1** | Sert kapı |
-| **R2** | Tavsiye — *"docs list Testing Center as available in Developer Edition"* |
-| **R3** | **[V] Sert kapı** — *"Official docs state explicitly: 'Agent testing is available only in sandboxes.'"* + DE Einstein limiti **~110 request veya aylık 1.5M token** |
-
-**Ama R3 aynı zamanda soruyu ortadan kaldıran çözümü verdi** *(N-10)*: eval'i platformdan çıkar. O zaman sandbox olup olmadığı önemsizleşiyor.
-
-**🔬 DOĞRULA** — yine de ölçülecek, ama artık plan buna bağlı değil.
-
----
-
-## N-10 · Platform dışı eval harness ✅ KABUL *(R3 — planı kurtaran fikir)*
-
-> **R3:** *"CI'ı ikiye ayır. PR'larda **tam 3 deterministik test** natif koş — Salesforce eval metadata'sını bildiğini kanıtlamak için. **80 vakalık generative suite'i platform dışına taşı** (Promptfoo vb.), `sf agent preview --json` çağıran ve **kendi ucuz API anahtarınla** LLM-as-judge koşan bir GitHub Action'a."*
-
-Bu, üç ayrı problemi tek hamlede çözüyor:
-
-| Problem | Nasıl çözülüyor |
-|---|---|
-| Sandbox kısıtı *(P-00)* | Generative kısım zaten platformda koşmuyor |
-| Kredi tükenmesi *(B-03, H-07)* | Kendi API anahtarım, DE allowance'ı değil |
-| Non-determinizm CI'ı bloke ediyor *(E-02)* | Deterministik kısım natif ve %100 yeşil; yargılı kısım dışarıda |
-
-Ve **metadata yine commit'li kalıyor** — yani "Salesforce eval altyapısını biliyorum" iddiası korunuyor, ama ona bağımlı olmuyorum.
-
-R3'ün ifadesiyle: 3 natif test **bildiğini kanıtlar**, 80 dış test **çalıştığını kanıtlar**.
-
----
-
-# ⚔️ Çelişkiler — üç yönlü
-
-### X-01 · Jenerik saat nesnesi
-
-| R1 | R2 | R3 |
+| | Karakteri | En değerli katkısı |
 |---|---|---|
-| **Öldür** — selective olmayan sorgu | **Tut** — referential integrity | **Tut** — *"4 tipli lookup'ı koru, cascading delete ve referential integrity için. Ama tam birinin dolu olduğunu zorlayan validation rule ekle. **Polimorfik text alanları SOQL join'lerini yok eder.**"* |
-
-**Oylama 2-1 tutmak yönünde.** R3, R1'in önerdiği alternatifi (polimorfik text) açıkça reddediyor.
-
-**KARAR: TUT** — 4 lookup + "tam biri dolu" validation rule. Ama R1'in selective-sorgu itirazı gerçek, o yüzden **v1'de sadece 2 lookup doldurulacak** (`Bezug_Reseller__c`, `Bezug_Ladepunkt__c`), diğer ikisi şemada durup kullanılmayacak. Sorgular tek lookup üzerinden selective kalır.
-
-**Çelişki kapandı.**
+| **R1** | Kapsam kesmede acımasız | Gerçek kod hatası: `THG_Meldung__c` junction'ı eksik |
+| **R2** | Dengeli, çalışan kod verdi | `DateUtils` implementasyonu + beş düşman utterance |
+| **R3** | En teknik | **Parametreler de üretiliyor** — mimari sınırdaki delik |
+| **R4** | En derin, implementasyon seviyesi | **Stratejiyi sorguluyor: motoru önce inşa et** |
 
 ---
 
-### X-02 · `AgentActionResult` envelope'u
+# 🔴 R4'ün stratejik meydan okuması
 
-| R1 | R2 | R3 |
-|---|---|---|
-| `rechtsgrundlage`/`konsequenz`'i **çıkar** | **Tut** | **Çok ağır.** *"LLM'i 5 ayrı alanı eşleştirmeye zorlama. **String formatlamayı Apex'te yap.** Tek `Markdown_Report` + `Status` döndür. **Apex atfı ve sonucu birleştirsin ki LLM fiziksel olarak düşüremesin.**"* |
+## S-01 · "Motoru önce inşa et, agent'ı sonra sar" 👤 **SENİN KARARIN**
 
-**R3 çelişkiyi çözdü ve ikisinden de iyi.**
+> **R4:** *"İşe alan yönetici repona **3 dakika** harcayacak. README'yi okuyacak, Apex'e göz atacak, belki bir teste bakacak. **CI pipeline'ını çalıştırmayacak, groundedness scorer'ını doğrulamayacak.** Hazırlandığın derinlikte gerçekleşmeyecek hayalî bir teknik incelemeye göre inşa ediyorsun."*
+>
+> *"Ben önce Apex + LWC ile statik bir compliance dashboard'u kurar, sonra onu bir agent'la sarardım. **Agent, zaten var olan bir compliance motorunun sohbet arayüzüdür.** Sen ikisini paralel kuruyorsun, bu riski çarpıyor."*
+>
+> *"İki kez oku: **Tasarımın, kırılgan bir Agentforce dağıtımına sarılmış güzel bir regülasyon motoru. Motorla öne çık — agent sarmalayıcısı çökerse elinde hâlâ motor kalır.**"*
 
-R1'in korkusu: LLM alanları yeniden ifade eder → assert kırılır.
-R2'nin değeri: zorunlu atıf.
+**Bu, dört hakem içinde tek stratejik itiraz ve ciddiye alınmalı.**
 
-R3'ün çözümü ikisini birden karşılıyor: **Apex birleştirirse LLM düşüremez.** Atıf metnin *içinde*, ayrı bir alanda değil — dolayısıyla ne düşürülebilir ne de yeniden ifade edilebilir.
+### Lehine olan argümanlar
 
-**Yeni envelope:**
+**Risk yönetimi.** Elimizde dört ayrı "agent çalışmayabilir" riski var ve hepsi doğrulanmamış:
+- Sandbox kısıtı *(P-00, 2-1 oylama "sert kapı" yönünde)*
+- Kredi tükenmesi *(DE limiti ~110 request/ay — R3)*
+- Data Cloud hibernasyonu 14 günde *(N-05)*
+- Temel model kayması *(N-07)*
+
+Bunlardan **herhangi biri** gerçekleşirse, agent-merkezli plan elde hiçbir şey bırakmıyor. Motor-merkezli plan ise her durumda çalışan bir artefakt bırakıyor.
+
+**Kredi ekonomisi.** LWC dashboard'u Einstein kredisi tüketmiyor. Aynı Apex servisleri hem LWC'yi hem agent'ı besliyor — yani motor iki kez kullanılıyor, sıfır ek maliyetle.
+
+**R4'ün "3 dakika" gözlemi muhtemelen doğru.** İnceleyen kişi CI'ı koşmayacak.
+
+### Aleyhine olan argümanlar
+
+**Ayırt edicilik.** Ölçtüğümüz piyasa boşluğu *(§2.2)* şuydu: **dünyada 5 repo** agent testini CI'da koşuyor, ve Salesforce'un kendi amiral gemisi iki eval dosyası gönderip **hiç çalıştırmıyor**. "Bir LWC dashboard'u" bu boşluğu doldurmuyor — o alanda yüzlerce repo var.
+
+**İş piyasası sinyali.** Agentforce Alman ilanlarının ~%4-5'inde geçiyor ve mindsquare **sertifika olarak** istiyor. LWC hiçbir yerde ayırt edici değil.
+
+### Benim sentezim
+
+R4 "agent'ı kesme" demiyor — **"sıralamayı değiştir"** diyor. Bu bir kapsam kesme değil, **sıralama** önerisi ve diğer her şeyle uyumlu.
+
+Ve R4'ün "kimse CI'ı koşmayacak" gözlemi doğru olabilir ama **yanlış sonuç çıkarıyor**: incelemeci CI'ı koşmaz, ama **var olduğunu görür**. README'deki bir badge, `.github/workflows/agent-ci.yml` dosyasının varlığı ve commit'lenmiş eval sonuçları — bunlar koşulmadan da sinyal veriyor.
+
+**Önerdiğim sıralama:**
+
+1. **Hafta 1–2:** Apex motoru — `DateUtils`, selector'lar, §6 Abs. 4 köprüsü, testler. *Agent yok.*
+2. **Hafta 2:** Motoru **LWC dashboard**'da göster — compliance saatleri görsel, kaynak kanuna drill-down. *Kredi tüketmiyor, hibernasyona bağışık.*
+3. **Hafta 3:** Agent'ı motorun **ince sarmalayıcısı** olarak ekle.
+4. **Hafta 4:** Eval + CI.
+
+Her aşama sonunda **gösterilebilir bir artefakt** var. Agent çökerse 1–2 elde kalıyor.
+
+**👤 Senin kararın** — çünkü bu, projenin kimliğini değiştiriyor: *"Agentforce projesi"* mi, *"compliance motoru + Agentforce arayüzü"* mü?
+
+---
+
+## S-02 · R4'ün "en keskin gerçek" tavsiyesi ✅ KABUL
+
+> **R4:** *"Elindeki en keskin gerçek **EVSE-ID / 28 Şubat Ausschlussfrist / €94,60–€6.500 harç / §6(4) köprüsü** zinciri. **Demo çıpan bu olsun.** THG'nin geri kalan karmaşıklığını kes ve o tek regülasyon zincirine odaklan. Kendi kendine yeten, gerçek bir son tarihi var, ve **gerçekten şaşırtıcı** bir çapraz-regülasyon bağlantısı içeriyor."*
+
+Dört hakem de §6 Abs. 4 köprüsünü üst sıraya koydu. R4 bir adım daha ileri gidiyor: **sadece o zinciri yap, gerisini kes.**
+
+---
+
+# 🆕 R4'ün yeni teknik bulguları
+
+### N-11 · Action wrapper sınıfı `with sharing` olmalı ✅ KABUL *(mekanizma düzeltmesiyle)*
+
+> **R4:** *"`@InvocableMethod` metodları **static**. Statik bir metot, sınıfı açıkça `with sharing` bildirilmedikçe sharing bağlamını otomatik miras almaz. Action wrapper sınıfın `without sharing` ise **tüm çağrı zinciri FLS'i kaybediyor.**"*
+
+**Tavsiye doğru, gerekçe kısmen karışık.**
+
+Düzeltme: `WITH USER_MODE` **sınıf sharing bildiriminden bağımsız** çalışır — FLS ve CRUD'u her durumda uygular. Sınıf seviyesindeki `with sharing` ise **kayıt seviyesi paylaşımını** (sharing rules, OWD) etkiler, FLS'i değil.
+
+Yani R4 iki farklı korumayı karıştırıyor. **Ama tavsiyesi yine de doğru**, çünkü kayıt seviyesi görünürlük de önemli: `without sharing` bir wrapper, kullanıcının göremeyeceği **kayıtları** döndürebilir — alanları değil.
+
+**Aksiyon:** her `*Action` sınıfı açıkça `public with sharing class` olacak. Ve `agent-blast-radius`'a bir kontrol eklenecek: **wrapper sınıfın sharing bildirimi eksikse ERROR.** R4 haklı ki mevcut analizör bunu göremiyor.
+
+---
+
+### N-12 · Liste çıktıları planner'ı bozuyor ✅ KABUL
+
+> **R4:** *"Planner, `@InvocableVariable` alanları olarak dönen **büyük JSON dizilerini yorumlamakta olağanüstü kötü**. Bir aksiyon 5 son tarih döndürürse planner bunu devasa bir stringify edilmiş JSON blob'u olarak görür, anlamı çıkaramaz ve **yine de bir özet uydurur.**"*
+
+**Doğru çözüm:**
 ```apex
-public class AgentActionResult {
-    @InvocableVariable public String bericht;      // Apex-formatlı markdown, atıf gömülü
-    @InvocableVariable public String status;       // OK | WARNUNG | BLOCKIERT
-    @InvocableVariable public List<String> datensaetze;  // kayıt-Id atfı (X-05)
+// YANLIŞ
+ergebnis = 'Gefundene Fristen: ' + JSON.serialize(fristen);
+
+// DOĞRU
+ergebnis = 'Der Partner hat 3 ablaufende Fristen. Installateurverzeichnis '
+         + 'läuft am 01.10.2026 ab (NAV §13), Freistellungsbescheinigung am '
+         + '15.11.2026. Die dringendste Frist verfällt in 40 Tagen.';
+```
+
+Yani **Apex özetliyor, LLM değil.** Bu, R3'ün envelope kararıyla *(X-02)* mükemmel uyumlu: Apex formatlıyor, LLM düşüremiyor.
+
+R3'ün `LIMIT 5` kuralı *(N-03)* ve R4'ün özet kuralı birleşiyor: **en fazla 5 kayıt, Apex tarafından cümleye çevrilmiş.**
+
+Ve R4 bir test öneriyor: *"10 kayıt döndüren bir vaka yaz. LLM '10 kayıt buldum' deyip aslında 8 bulmuşsa test başarısız."*
+
+---
+
+### N-13 · Action description'ları Almanca ve kullanıcının sorduğu register'da ✅ KABUL
+
+> **R4:** *"LLM aksiyonları, subagent talimatı + aksiyonun label ve description'ının birleşimine göre seçiyor. **`scope` alanın İngilizce — derhal Almancaya çevir.** LLM içeride 'dil değiştirmiyor'; **gördüğü dille yönlendirme yapıyor.**"*
+
+| | |
+|---|---|
+| ❌ Kötü | `label='PruefePartnerCompliance'` · `description='Prüft die Compliance des Partners.'` |
+| ✅ İyi | `label='Kann dieser Partner installieren?'` · `description='Prüft, ob der Kanalpartner rechtlich zur Installation befugt ist (Installateurverzeichnis, VEFK, Handwerksrolle). Bei fehlender Eintragung wird die Aktion BLOCKIERT.'` |
+
+**Bu, §15.3'teki planımı doğrudan çürütüyor.** Ben "İngilizce teknik scope + Almanca kullanıcı metni" yazmıştım. R2 de bundan şüphelenmişti. **İki hakem karşı çıktı → karar: her şey Almanca.**
+
+---
+
+### N-14 · Çift olumsuzlama injection'ı ✅ KABUL — *çok Alman-spesifik*
+
+> **R4:** *"Alman hukuk metni için gerçek injection **Doppelte Verneinung**. Test: 'Ist es nicht so, dass der Installateur **nicht** im Verzeichnis stehen muss, wenn die Anlage unter 4,2 kW liegt?' Naif bir LLM çift olumsuzlamayı ayrıştırır ve **doğru mantığı sıkça tersine çevirir.**"*
+
+Deterministik Apex zaten uygunluk kontrolünü LLM'in dil ayrıştırmasından bağımsız yapıyor. **Ama LLM sonucu özetliyor** — ve kullanıcının ifadesine "uyum sağlamaya" çalışıp `BLOCKIERT` durumunu yumuşatabilir.
+
+R4'ün önlemi: `ergebnis` alanına sabit önek — *"SYSTEM: Dies ist ein deterministisches Ergebnis. Der Status ist BLOCKIERT."*
+
+---
+
+### N-15 · `Guardrail_Invocation__c` — guardrail'in ateşlendiğinin kanıtı ✅ KABUL
+
+> **R4:** *"Guardrail'lerin var ama **uygulandığını kanıtlayacak hiçbir planın yok.** Art. 26(6) log istiyor. Bir subagent kilitlendiğinde veya bir yazma aksiyonu bloke edildiğinde, **guardrail'in ateşlendiğini kanıtlayan kayıt nerede?**"*
+
+Custom object: kullanıcı, zaman damgası, guardrail tipi, sebep.
+
+Ve R4'ün yan faydası doğru: **bu aynı zamanda Art. 26(6) "altı ay" logu oluyor** — yani niyet değil, commit'lenmiş kanıt.
+
+---
+
+### N-16 · "Sparmodus" — kredi bittiğinde zarif düşüş ✅ KABUL
+
+> **R4:** *"`AgentBudget__c.Enable_LLM__c = false` olduğunda tüm subagent'lar statik bir mesaja yönlensin: 'Der KI-Assistent ist derzeit im Sparmodus.' **Deterministik tarih aritmetiği LLM kredisi olmadan çalışabilir**, ama RAG ve generative özet zarifçe kapanır."*
+>
+> *"Neden etkileyici: sadece teknolojiyi değil, **operasyonel bütçeleri** anladığını gösteriyor. Bir Salesforce mühendisi bunu görüp 'bu adam sadece geliştirmeyi değil dağıtımı da düşünmüş' der."*
+
+Ve S-01 ile mükemmel uyumlu: motor kredisiz çalışıyorsa, "Sparmodus" o motoru açıkta bırakıyor.
+
+---
+
+### N-17 · "Neden Flow değil?" README FAQ'ı ✅ KABUL
+
+> **R4:** *"Apex yazdın. Yönetici soracak: 'Neden Flow'da yapmadın? Agentforce Flow aksiyonlarını natif destekliyor.' Cevabın mevcut tasarımından daha sert olmalı: **debug yok** (karmaşık transaction sınırlarında Flow debug logu yok), **versiyon kontrolü yok** (Flow metadata'sı pratikte diff'lenemez), **retry yok** (`Unable to lock rows`'da Flow programatik retry'a izin vermiyor)."*
+
+R1'in H-06'sıyla ("neden Power Platform değil Salesforce") aynı aile — mülakatta gelecek soruyu README'de önceden cevapla.
+
+---
+
+### N-18 · Eksik test kategorileri ✅ KABUL
+
+R4 ikisini ekliyor:
+- **"Grounding verisi yok"** — Data Library boş veya bayatsa agent *"ilgili kanunu bulamıyorum"* demeli, uydurmamalı
+- **"Çelişkili grounding"** — iki DSO TAB'ı çelişirse *(biri 10 gün, diğeri 14 gün)* agent **çelişkiyi yüzeye çıkarmalı**, birini seçmemeli
+
+İkincisi özellikle iyi: gerçek dünyada 860 DSO'nun kuralları çelişiyor ve doğru davranış "karar verme, göster".
+
+---
+
+### N-19 · Alman ana dil kontrolü ✅ KABUL — *bir saat, büyük fark*
+
+> **R4:** *"Almancanın Beta olduğu bir platformda Almanca agent kuruyorsun ve **Almanca çıktı için hiçbir kalite güvence planın yok.** Alman şirketindeki yönetici demoda tek bir gramer hatası görüp 'bu gerçekten bir ana dil konuşurunca doğrulanmamış' sonucuna varır."*
+
+Tüm agent-yüzlü metin — giriş açıklaması, subagent talimatları, aksiyon çıktıları, test vakaları — ilk commit'ten önce bir Alman ana dil konuşuru tarafından okunacak.
+
+---
+
+### N-20 · `.pre-dev-setup.md` ✅ KABUL
+Boş bir DE org'dan çalışan agent'a giden Setup adımları, ekran görüntüleriyle. `sf` komutları Agentforce açılmadan başarısız oluyor — bu bir teknik diff değil ama **yeniden üretilebilirlik şartı**.
+
+### N-21 · Gerçek kamuya açık veri kullan ✅ KABUL
+> **R4:** *"İnceleyen soracak: 'Bu bir demo ise, gerçek veriyle yapabildiğini nereden bileyim?' Gerçek DSO'lar, gerçek şarj cihazı modelleri, gerçek teşvik çağrıları — **KfW çağrıları kamuya açık, UBA Bekanntmachung kamuya açık, Netze BW TAB'ı kamuya açık.**"*
+
+Zaten `Netzbetreiber__c` seed'inde gerçek DSO adları var *(C-04)*. R4 bunu test suite'ine de genişletiyor.
+
+### N-22 · Bağlam penceresi — 20 şarj noktası aynı anda ✅ KABUL
+> **R4:** *"Kullanıcı 20 şarj noktası hakkında sorarsa: 20 kayıt × 1.200 token = 24.000 token, birçok modelin bağlam penceresini aşıyor."*
+
+N-12 + N-03 ile birleşiyor: `LIMIT 5` + Apex özeti + *"...ve 95 tane daha"*.
+
+### N-23 · Maliyet modeli ✅ KABUL
+> **R4:** *"Yönetici soracak: '100 proje için bunu çalıştırsak ne tutar?' Bir maliyet modeli inşa etmeni istemiyorum, ama **düşündüğünü görmek istiyorum.**"*
+
+README'ye bir paragraf: etkileşim başına tahmini token, en kötü durum senaryosu, ve **retriever fazla sorgulanırsa Data Cloud kredilerinin öngörülemez şekilde patlayabileceği** uyarısı.
+
+---
+
+# ⚔️ Dört yönlü çelişki tablosu
+
+| Konu | R1 | R2 | R3 | R4 | **Karar** |
+|---|---|---|---|---|---|
+| Kaç subagent | 2 | 3 | — | **5** *("beş bağımsız hukuk rejimi")* | **3** — çoğunluk ortası; 5 reliability cliff'in üstünde |
+| `Compliance_Frist__c` | öldür | tut | tut | **tut** + Opportunity roll-up | **TUT** *(3-1)*, v1'de 2 lookup aktif |
+| `AgentActionResult` | 2 alan çıkar | hepsini tut | 2'ye indir, Apex birleştirsin | **4 alan:** `ergebnis`, `status`, `rechtsgrundlage`, `datensaetze` | **R3 + R4 sentezi** — aşağıda |
+| MCP **server** | gimmick | opsiyonel | **tut, E.ON'a bağla** | **gimmick, kes** | ⏸️ **ERTELE** |
+| MCP **client** | kes | kes | kes | **TUT — Alman tatil API'si için** | ⚔️ **YENİ ÇELİŞKİ** — aşağıda |
+| Groundedness scorer | hijyen | wow #3 | kes | **etkileyici değil, alt sıra** | **Platform dışına taşı** *(N-10)* |
+| Data Library | markdown'a çevir | v1'de kes | markdown + bağlam yeniden yaz | **retriever'ı tamamen kes**, Prompt Template'e kanun metnini doğrudan koy | ⏸️ **v1.1'e ertele** |
+| CI kapısı | %90 oran | det %100 + yargılı ≥%85 | det %100, yargılı dışarıda | **"%90 bir yönetim gimmick'i"** — değeri raporla: *"82/100, 10 koşu, stddev 4,2"* | **R4** — aşağıda |
+| Test vaka sayısı | 25 | 15–25 | — | 20–25 | **~23** |
+| E.ON odağı | koddan çıkar | koddan çıkar | anlatıda tut | **README'den de çıkar** | **R4** — VoltStream kurgusuna odaklan |
+
+### Çözülen: `AgentActionResult` nihai şekli
+
+R3 "Apex birleştirsin ki LLM düşüremesin" dedi. R4 "`rechtsgrundlage`'ı **typed** tut ki assert edilebilsin" dedi. İkisi çelişmiyor:
+
+```apex
+public with sharing class AgentActionResult {
+    @InvocableVariable public String bericht;        // Apex-formatlı, atıf gömülü, ≤4000 char
+    @InvocableVariable public String status;         // OK | WARNUNG | BLOCKIERT
+    @InvocableVariable public String rechtsgrundlage;// typed, assert edilebilir
+    @InvocableVariable public List<String> datensaetze; // kayıt-Id atfı, filter_from_agent
 }
 ```
 
-`leerHinweis` kalkıyor — `bericht`'in içine giriyor. Test tarafı `status` ve `bericht` üzerinde string assert'iyle çalışıyor.
+`konsequenz` ve `leerHinweis` düşüyor — `bericht`'in içine giriyorlar *(R4)*. `rechtsgrundlage` kalıyor ama **hem `bericht`'in içinde hem ayrı alanda** — LLM metinde görüyor, test ayrı alanda assert ediyor.
 
-**Çelişki kapandı. `filter_from_agent` sentezine de gerek kalmadı.**
+### Çözülen: CI kapısı — R4 haklı
+
+> **R4:** *"%90 keyfi. Teknik geldiği için seçtin. **'Agent 10 koşuda factuality'de 82/100 aldı (stddev 4,2)' anlamlı bir metrik. '%90 geçme oranı' pazarlamadır.**"*
+
+Ve daha iyi bir taban öneriyor: **10 baseline test koş, skorları kaydet, tabanı ortalama − 2 standart sapma olarak belirle.** Bu doğrulanabilir ve savunulabilir.
+
+**Nihai:**
+- Deterministik *(routing, action sequence, JSONPath)* → **%100, istisnasız**
+- LLM-yargılı → **skor olarak raporla**, taban = ölçülmüş ortalama − 2σ
+
+### 🆕 Yeni çelişki: MCP **client**
+
+Üç hakem "kes" dedi. R4 tersine çeviriyor ve somut bir kullanım veriyor:
+
+> **R4:** *"`mcpTool`'u **dış bir API çağırmak** için kullan — bir DSO'nun yanıt süresi API'si, ya da **§19 Abs. 2 iki-ay saatini hesaplamak için bir Alman resmî tatil API'si.** Bu, custom kodlanmış bir HTTP callout'u declarative bir MCP tool'a çeviriyor. Neredeyse kimsenin göndermediği bir platform yeteneği."*
+
+**Ama N-01 bunu büyük ölçüde gereksiz kılıyor:** R3 `BusinessHours` standart nesnesini gösterdi — tatil hesabı için dış API'ye gerek yok.
+
+**KARAR: ❌ RED.** R4'ün örneği `BusinessHours` tarafından çözülmüş bir problemi çözüyor. Ve *"declarative HTTP callout"* iddiası, dört hakemden üçünün "use case arayan çözüm" değerlendirmesini değiştirmiyor.
 
 ---
 
-### X-03 · Kaç subagent
-R1: 2 · R2: 3 · R3: değinmedi
+# ⚠️ Hakemlerde yakaladığım hatalar
 
-**KARAR: 3** *(R2'nin gruplaması)*, ama üçüncüsü ancak ilk ikisinin routing doğruluğu ölçüldükten sonra.
+Defterin dürüst kalması için, hakemlerin de yanıldığı yerler:
+
+### R4-hata-1 · JSON kaçış tavsiyesi yanlış
+> **R4:** *"`AgentActionResult` yapıcısında tüm string alanları `String.escapeSingleQuotes()` VE `String.escapeHtml4()`'ten geçir."*
+
+**İkisi de yanlış araç.**
+- `escapeSingleQuotes()` **SOQL injection** içindir, JSON için değil
+- `escapeHtml4()` Alman umlaut'larını HTML entity'lerine çevirir — `ü` → `&uuml;` — yani **çıktıyı bozar**
+
+Doğrusu: Apex `@InvocableVariable`'ları zaten otomatik serialize ediyor ve kaçışı kendi yapıyor. R4'ün altını çizdiği **risk gerçek** (JSON parse hatası → sessiz planner hatası), ama **çözümü değil**. Bunu bir test vakasıyla doğrulayacağım: içinde tırnak, ters bölü ve umlaut olan Almanca metin döndüren bir aksiyon.
+
+### R4-hata-2 · `with sharing` mekanizması karışık
+`WITH USER_MODE` sınıf sharing bildiriminden bağımsız çalışır. Tavsiye doğru, gerekçe değil *(N-11'de düzeltildi)*.
+
+### R4/araştırma çelişkisi · Data Library Max Tokens
+R4 **4.096** (maksimum) diyor, benim araştırmam Salesforce'un resmî grounding rehberinden **1.200** buldu — ve gerekçesi vardı: embedding modelinin sequence uzunluğu.
+
+**🔬 DOĞRULA.** İkisi de mantıklı gerekçe veriyor. Data Library'ye geçilirse ölçülecek.
+
+### R1-hata · "Referans sayfası yok ⇒ sandbox-only"
+Non-sequitur, ilk deftere kaydedilmişti. ❌ RED olarak duruyor.
 
 ---
 
-### X-06 · Data Library / RAG v1'de
+# Dört hakemin **oybirliğiyle** uzlaştığı
 
-| R1 | R2 | R3 |
+| | R1 | R2 | R3 | R4 |
+|---|---|---|---|---|
+| Kapsamı sert kes | ✓ | ✓ | ✓ | ✓ |
+| **Faz 0'ı bugün doğrula** | ✓ | ✓ | ✓ | ✓ |
+| CPQ'yu kes | ✓ | ✓ | ✓ | ✓ |
+| Adversarial refutation'ı kes | ✓ | ✓ | ✓ | ✓ |
+| Agent-to-agent'ı kes | ✓ | ✓ | ✓ | ✓ |
+| G1 form metriklerini atla | ✓ | ✓ | ✓ | ✓ |
+| CI kapısını böl | ✓ | ✓ | ✓ | ✓ |
+| Ham PDF indexleme | ✓ | ✓ | ✓ | ✓ |
+| Mimari sınır doğru | ✓ | ✓ | ✓ | ✓ *("strongest architectural claim")* |
+| **Blast-radius = wow #1** | ✓ | ✓ | ✓ | ✓ |
+| §6 Abs. 4 köprüsü üst sırada | #1 | #2 | #3 | #2 |
+| FLS güvenlik testi şart | ✓ | ✓ | ✓ | ✓ |
+| Tek komutluk yeniden üretim | ✓ | ✓ | — | ✓ |
+
+**Dört bağımsız hakemin oybirliği, bu maddelerde tartışmayı kapatıyor.**
+
+---
+
+# Nihai v1 kapsamı
+
+**Nesneler (3 çekirdek):** `Ladestandort__c` · `Ladepunkt__c` · `Compliance_Frist__c`
+Mevcut: `Reseller__c`. Köprü için: `THG_Meldung__c` + junction.
+**Ertelenen:** `Netzbetreiber__c`, `Netzanschluss_Antrag__c`, `Foerderantrag__c`
+**Kesilen:** tüm CPQ
+
+**Apex:** ~12 sınıf, hepsi `with sharing`, hepsi bulk, hepsinin testi
+**Agent:** 3 subagent, ≤4 aksiyon, **hepsi Almanca** *(N-13)*
+**İlk aksiyon:** `ResolveRecordId` *(N-02)*
+**Eval:** PR'da 3 deterministik natif · platform dışı harness'ta 20 Almanca vaka
+**Çekirdek:** R2'nin beş düşman utterance'ı + R4'ün çift olumsuzlaması
+
+**Wow sırası (dört hakemin uzlaştığı):**
+1. Blast-radius Escalation Gap CI'da
+2. §6 Abs. 4 çapraz rejim köprüsü
+3. `Works_Council_Compliance_Mode` toggle *(R3)*
+4. Zaman yolculuğu demo modu *(R3)*
+5. Sparmodus / kredi düşüşü *(R4)*
+
+---
+
+# Hafta 1 — dört hakemin uzlaştığı plan
+
+R4'ün günlük planı, diğerlerinin tavsiyeleriyle birleştirilmiş:
+
+| Gün | İş | Amaç |
 |---|---|---|
-| PDF'i markdown'a çevir, onları indexle | **v1'de tamamen kes** | **Tut ama düzelt:** *"Ham PDF yükleme. TAB'ları ve MessEG'i offline'da **düzleştirilmiş hiyerarşik Markdown**'a çevir. **Her chunk'ta bağlamı yeniden belirt** (`# 38. BImSchV — § 6 Abs 4`). Data Cloud Markdown başlıklarını temiz parse eder."* |
+| **1** | Agentforce'u aç. `sf agent test list` koş. **Çıktıyı ham haliyle `PHASE0_VERIFICATION.md`'ye yaz.** | Hata verirse dur ve planı değiştir |
+| **2** | `DateUtils.eichfristEnde` + unit testleri *(R2'nin kodu, `BusinessHours` ile revize)* | Kredi tüketmeyen deterministik çekirdek |
+| **3** | `THGService.pruefeEichrechtErklaerung` — **§6 Abs. 4 köprüsü** + testler | Kahraman mantık |
+| **4** | `PruefeEichrechtErklaerungAction` sarmalayıcısı, **`with sharing`** ile. Deploy. *Agent script yok.* | Apex tarafı bitti |
+| **5** | Tek subagent, tek aksiyonluk dummy agent. Publish. `sf agent preview --prompt "Können wir die THG-Meldung einreichen?"` | **Dikey dilim doğrulaması** |
 
-R3 ayrıca **neden** başarısız olacağını açıklıyor: *"Section Aware Chunking ve V2 Small embedding **İngilizce için optimize**; karmaşık Alman kanun PDF'lerini katlediyor. Tabloları tamamen düşürüyor ve paragrafları üst başlıklarından koparıyor — 'Abs. 4'ün '§ 6'ya ait olduğu bilgisi kayboluyor."*
-
-**KARAR:** R1+R3 hemfikir (markdown), R3 kritik detayı ekledi (**her chunk'ta bağlamı yeniden yaz**). Ama R2'nin "v1'de kes" argümanı N-05 (hibernasyon) ile güçlendi.
-
-**Sentez:** RAG **v1.1**'e ertelenir, markdown dosyaları **şimdi** hazırlanır ve repoya girer. Böylece v1 Data Cloud'suz çalışır *(hibernasyona bağışık)*, ve RAG eklendiğinde içerik hazır.
-
----
-
-### X-07 · `available_when` vs `ruleExpressions`
-
-| R1 | R2 | R3 |
-|---|---|---|
-| Agent Script otoriter *(tahmin)* | `ruleExpressions` otoriter | **[S]** *"`available_when` prompt üretiminde **statik** olarak araçları filtreler. `ruleExpressions` planner'ın reasoning döngüsünde **sürekli** değerlendirilir. İzin kapısı için `available_when` kullan; **`ruleExpressions`'tan kaçın** — gecikme ve debugging cehennemi."* |
-
-**R3'ün cevabı açık ara en teknik ve tek işlemsel olan.** İkisinin *ne zaman* değerlendirildiğini ayırıyor ve bundan bir tavsiye çıkarıyor.
-
-**KARAR: `available_when`.** Yine de doğrulanacak (R3 kendi de `[S]` işaretlemiş), ama artık tahmin değil hipotez.
-
-Not: bu, `ruleExpressions`'ı tasarımın "az bilinen guardrail" listesinden düşürüyor — R3'e göre kullanmamak daha doğru.
-
----
-
-### X-08 · Custom groundedness scorer
-
-| R1 | R2 | R3 |
-|---|---|---|
-| Hijyen | **Wow #3** | **Kes** — *"LLM-as-a-judge standart AI pratiği, kredi ağır, etkileyici değil."* |
-
-**Oylama 2-1 kesme yönünde.**
-
-Ama N-10 bunu da değiştiriyor: eval platform dışına taşınırsa, scorer **Promptfoo tarafında ücretsiz** hale geliyor. O zaman "kredi ağır" argümanı düşüyor.
-
-**KARAR:** `AiAgentScorerDefinition` metadata'sı **yazılmayacak** *(R3 haklı — Salesforce metadata'sı olarak pahalı ve etkisiz)*. Groundedness kontrolü **platform dışı harness'ta** yapılacak. İşlev korunur, maliyet ve "wow" iddiası düşer.
-
----
-
-### 🆕 X-10 · `Netzbetreiber__c` ve `Reseller__c` custom object mı olmalı?
-
-| R1 | R2 | R3 |
-|---|---|---|
-| Custom object doğru | Custom object doğru — *"Account semantik olarak uymuyor, Account veri modeliyle sonsuza kadar savaşırsın"* | **[V] Account + RecordType.** *"B2B iş varlığı için bağımsız custom object **temel bir mimari hata**. Standard Sharing Rules, Account Teams ve Partner Communities'i yok sayıyorsun. **Alman enterprise mimarları seni bundan çakar.**"* |
-
-**Yeni çelişki ve en ciddi olanı.**
-
-**Benim değerlendirmem — R3 iki farklı şeyi birleştiriyor:**
-
-- **`Reseller__c`** → R3 haklı olabilir. Bu **gerçekten bir B2B iş varlığı**: adresi var, kişileri var, fırsatları var. Klasik Salesforce mimarisinde bu `Account` + RecordType olurdu.
-- **`Netzbetreiber__c`** → R3 muhtemelen aşırı genelleme yapıyor. Bu bir **kayıt/registry**, müşteri değil. R2'nin argümanı burada güçlü: BDEW kodu external ID olarak temiz, ve Account veri modeli (sharing, teams, communities) bir registry için gereksiz yük.
-
-**Ama pratik gerçek:** `Reseller__c` **zaten var**, 108 testin, üç trigger'ın, iki selector'ın ve tüm mevcut repo'nun temeli. `Account`'a taşımak **haftalar** ve bu defterdeki tüm hız tavsiyeleriyle çelişiyor.
-
-**KARAR:**
-- `Netzbetreiber__c` → **custom object kalır** *(2-1)*
-- `Reseller__c` → **kalır**, ama README'de trade-off **açıkça yazılır**: *"Gerçek bir implementasyonda bu Account + RecordType olurdu; burada custom object çünkü proje kanal-partner modelinin kendisini göstermek üzere kuruldu."*
-
-R3'ün asıl uyarısı zaten bu: mülakatta sorulacak. Cevabı hazır olsun yeter.
-
-**👤 SENİN** — tamamen yeniden yazmak istersen ayrı bir karar.
-
----
-
-### X-11 · MCP server
-
-| R1 | R2 | R3 |
-|---|---|---|
-| **Gimmick, öldür** — *"Alman enerji yöneticisi bunu güvenlik riski olarak duyar"* | Opsiyonel cila | **TUT — ama E.ON'a bağla.** *"E.ON kurulumcu portalını Power Platform'da kuruyor. Agentforce compliance motorunu MCP server olarak açarsan, **dış bir Power Platform uygulaması onu doğrudan sorgulayabilir** — tam olarak onların mimari yarığını köprülüyorsun."* |
-
-**R3, R1'in itirazını tersine çevirdi.**
-
-R1: *"agent'ı Claude'a açtım demek güvenlik riski gibi duyulur."*
-R3: *"Claude'a açmıyorsun. **Onların kendi Power Platform'una** açıyorsun."*
-
-Ve bu, tüm anlatının menteşesine oturuyor *(H-06)*: E.ON'un Salesforce'u var ama partner ağını Power Platform'da kuruyor. MCP server, "iki platformu birleştir" cevabının **çalışan hali** oluyor.
-
-**KARAR: ⏸️ ERTELE ama öldürme.** v1'de değil — ama v2 backlog'unda ve README'de bir paragraf olarak, R3'ün çerçevesiyle.
-
----
-
-# 🆕 R3'ün diğer yeni maddeleri
-
-### N-03 · Bağlam kesme — `LIMIT 5` ✅ KABUL
-> **R3:** *"`ListeAblaufendeFristen`'in belirtilmiş limiti yok. 100 son tarih doluyorsa, 100 kaydı JSON olarak LLM'e döndürmek bağlam penceresini patlatır. Apex **sert `LIMIT 5`** uygulamalı ve kesilmiş string döndürmeli: `'...ve 95 tane daha'`."*
-
-Basit, bariz, kimse söylemedi. Her liste döndüren aksiyona uygulanacak.
-
-### N-04 · Exception'ları LLM'e taşı ✅ KABUL
-> **R3:** *"Kullanıcının bir alana FLS'i yoksa `WITH USER_MODE` `QueryException` fırlatır veya boş döner. `@InvocableMethod` sarmalayıcılarında **global try/catch** olmalı ve `AgentActionResult` içinde temizlenmiş hata payload'u döndürmeli — `'Bu kaydı görme yetkim yok'` gibi — ki LLM kullanıcıya söylesin, **özür uydurmasın.**"*
-
-R2'nin failure-mode sözleşmesini *(D-08)* tamamlıyor. İkisi birleşince dört mod da kapsanıyor.
-
-### N-06 · Sie/Du kayması ✅ KABUL
-> **R3:** *"**[V]** Almanca Beta ve LLM'ler sürekli 'Du' ile 'Sie' arasında kayıyor, kurumsal personayı yok ediyor. Tüm subagent'larda 'Du'yu yasaklayan, 'Sie'yi zorlayan açık sistem talimatı gerek."*
-
-Çok Alman-spesifik ve kesinlikle doğru. Bir Alman iş bağlamında "Du" kullanan agent **anında amatör** görünür. Ve bir eval kategorisi: her cevapta "Sie" register kontrolü.
-
-### N-07 · Temel model kayması ✅ KABUL — *hiç düşünmemiştim*
-> **R3:** *"Salesforce, Agentforce'u çalıştıran modelleri **sürüm sabitlemene izin vermeden** değiştiriyor ve güncelliyor. Ağustos 2026'da mükemmel çalışan promptlar Eylül'de bozulabilir. Tasarımında **sürümlenmiş prompt registry'si veya fallback stratejisi yok.** Bu sistemin temel model kaymasından nasıl sağ çıkacağını dokümante etmelisin."*
-
-Bu, portfolyo için özellikle kritik: repo **aylarca** duracak ve her ay biri açıp deneyecek.
-
-**Aksiyon:** prompt'lar sürümlenip commit'lenecek, eval sonuçları tarih damgasıyla saklanacak, ve README'de *"bu sonuçlar şu tarihte, şu model kuşağıyla alındı"* notu olacak. Kayma olduğunda **fark ölçülebilir** — ki bu tek başına bir bulgu.
-
-### N-08 · Betriebsrat toggle'ı ⭐ ✅ KABUL
-> **R3:** *"Bir Custom Metadata anahtarı — `Works_Council_Compliance_Mode` — `ssot__TelemetryTraceSpan__dlm`'den `running_user` ID'sini mantıksal olarak temizleyen ve performans raporlamasını bloke eden. **BetrVG §87(1)(6)'yı doğrudan kod tabanının içinde** ele almak, akıl almaz bir Alman-pazarı ayırt edicisi."*
-
-R1 `Betriebsvereinbarung_AI_Entwurf.md` **belgesi** önermişti. R3 aynı şeyi **çalışan koda** çeviriyor.
-
-Fark büyük: belge bir iddia, toggle bir **kanıt**. *"Betriebsrat endişesini biliyorum"* ile *"agent'ın çalışan izleme yeteneğini kapatan bir anahtar yazdım"* aynı lig değil.
-
-**İkisi de yapılacak** — belge + toggle.
-
-### N-09 · Zaman yolculuğu demo modu ⭐ ✅ KABUL
-> **R3:** *"Agent'a ve `DateUtils`'e `Override_Today__c` değişkeni enjekte et. Kullanıcı 'Bugünün Aralık 2027 olduğunu varsay' diyebilsin. Agent bağlamı değiştirir ve **tüm Eichfrist son tarihleri kırmızıya döner.** Muhteşem bir canlı demo."*
-
-Ucuz ve etkili. Ve bir yan faydası daha var: `DateUtils`'in her metodu zaten `referenceDate` parametresi alıyor *(R2'nin kodu öyle yazılmış)* — yani altyapı hazır, sadece agent değişkenine bağlanacak.
-
-Test tarafında da işe yarıyor: yıl sınırı ve artık yıl testleri *(C-07)* aynı mekanizmayla.
-
----
-
-# Kesin kararlar — üç hakemin uzlaştığı
-
-| Ne | R1 | R2 | R3 |
-|---|---|---|---|
-| **Kapsamı sert kes** | ✓ | ✓ | ✓ |
-| **Faz 0 önce** | ✓ | ✓ | ✓ |
-| **CPQ'yu kes** | ✓ | ✓ | ✓ *"%30 zamanını yer, sıfır getiri"* |
-| **Adversarial refutation'ı kes** | ✓ | ✓ | ✓ *"saf akademik tiyatro"* |
-| **Agent-to-agent'ı kes** | ✓ | ✓ | ✓ *"kırılgan, dokümansız, izlenemez"* |
-| **MCP client'ı kes** | ✓ | ✓ | ✓ *"use case arayan süslü REST callout"* |
-| **G1 form metriklerini atla** | ✓ | ✓ | ✓ |
-| **CI kapısını böl** | ✓ | ✓ | ✓ |
-| **Ham PDF indexleme** | ✓ | ✓ | ✓ |
-| **E.ON'u koddan çıkar** | ✓ | ✓ | ✓ |
-| **Mimari sınır doğru** | ✓ | ✓ | ✓ *"the boundary is perfect"* |
-| **Blast-radius = wow #1** | ✓ | ✓ | ✓ *"staff-level güvenlik hamlesi"* |
-| **§6 Abs. 4 köprüsü = üst sıra** | #1 | #2 | #3 |
-| **Tek komutluk yeniden üretim** | ✓ | ✓ | — |
-
----
-
-# Diğer maddeler *(önceki hakemlerden, değişmedi)*
-
-| Kod | Madde | Statü |
-|---|---|---|
-| C-02 | `Ladepunkt__c` ↔ `THG_Meldung__c` junction eksik | ✅ KABUL |
-| C-04 | 860 DSO numarası yapma, 5 seed et | ✅ KABUL |
-| C-06 | Formül vs Apex ayrımı; hesaplanan değeri envelope'ta göster | ✅ KABUL |
-| C-07 | Yıl sınırı / artık yıl / null formül testleri | ✅ KABUL |
-| D-01 | Bulkification — `List<Id>` girer, `List<AgentActionResult>` çıkar | ✅ KABUL |
-| D-04 | Idempotency key | ✅ KABUL |
-| D-05 | FLS'i kanıtlayan güvenlik testi | ✅ KABUL *(üç hakem de)* |
-| D-06 | Köprüyü üreten tek komutluk seed | ✅ KABUL |
-| D-07 | R2'nin `DateUtils` kodu — **N-01 ile revize** | ✅ KABUL |
-| D-08 | Failure-mode sözleşmeleri | ✅ KABUL *(N-04 ile birleşti)* |
-| E-02 | Deterministik %100 + yargılı ≥%85 | ✅ KABUL |
-| E-03 | Boş `expectedActions` pre-commit koruması | ✅ KABUL |
-| E-06 | Genişletilmiş test kategorileri | ✅ KABUL |
-| E-10 | **R2'nin beş düşman utterance'ı** | ✅ KABUL — eval çekirdeği |
-| F-06 | Data Cloud'a gitmeyecek alan denylist'i | ✅ KABUL |
-| F-07 | Telemetri DMO haritası + join anahtarı | ✅ KABUL |
-| H-01…H-06 | GDPR, teardown, Betriebsvereinbarung, hukuki red, Windows, "neden Salesforce" | ✅ KABUL |
-| H-07 | Krediyi CI kapısı yap | ✅ KABUL |
-| H-08 | "Sayılar Apex'ten geldi" kanıtı | ✅ KABUL |
-| H-09 | Klonlama sonrası tek komut | ✅ KABUL |
-| I-01 | `[V]` etiketlerine URL ekle | ✅ KABUL |
-| G-02 | CPQ | 👤 **SENİN** |
+> **R4:** *"5. gün çalışırsa, tüm dikey yığının (veri modeli → DateUtils → Apex aksiyon → agent çağrısı) sağlam olduğunu kanıtlamışsın. Geri kalan her şey o dilimi ölçeklemek. **5. gün başarısız olursa sadece bir hafta kaybettin** — ve yedeğin Apex servisi + LWC dashboard'u, ki o bile Alman enerji şirketi için ilk %1'lik portfolyo parçası."*
 
 ---
 
@@ -342,43 +349,25 @@ Test tarafında da işe yarıyor: yıl sınırı ve artık yıl testleri *(C-07)
 
 | Statü | Adet |
 |---|---|
-| ✅ KABUL | 52 |
-| ⚔️ ÇELİŞKİ (açık) | 1 *(X-10, kısmen çözüldü)* |
-| 🔬 DOĞRULA | 4 |
-| ⏸️ ERTELE | 3 |
-| ❌ RED | 1 |
-| 👤 SENİN | 2 |
+| ✅ KABUL | 71 |
+| ⚔️ ÇELİŞKİ (açık) | 1 *(X-10, `Reseller__c` → `Account`)* |
+| 🔬 DOĞRULA | 5 |
+| ⏸️ ERTELE | 4 |
+| ❌ RED | 3 |
+| 👤 SENİN | 2 *(S-01 sıralama, G-02 CPQ)* |
 
-**Üç hakem, on bir noktada çelişti. Onunu çözdüm.**
+**Dört hakem, on beş noktada çelişti. On dördünü çözdüm.**
 
-R3, önceki iki çelişkiyi (**X-02** envelope, **X-07** gating) ikisinden de iyi bir cevapla kapattı, ve **X-11**'de R1'in kararını tersine çevirdi.
+Ölçek: ilk tasarımın **yaklaşık dörtte biri.**
 
----
+## Senin vereceğin iki karar
 
-# v1 kapsamı — nihai
+1. **S-01** — Motor önce mi, agent önce mi? *(R4'ün stratejik itirazı)*
+2. **G-02** — CPQ: kes / ayrı projeye taşı / ince tut?
 
-**Nesneler (4):** `Ladestandort__c` · `Ladepunkt__c` · `Netzanschluss_Antrag__c` · `Compliance_Frist__c` *(2 lookup aktif)*
-`Reseller__c` ve `Netzbetreiber__c` mevcut/eklenir. `THG_Meldung__c` + junction köprü için gerekli.
-**Kesilenler:** `Foerderantrag__c`, tüm CPQ.
+## Beşinci hakeme sorulacak
 
-**Agent:** 3 subagent, subagent başına ≤4 aksiyon, hepsi bulk.
-**Zorunlu ilk aksiyon:** `ResolveRecordId` *(N-02)*.
-
-**Eval:** PR'da 3 deterministik natif test · platform dışı harness'ta 20 Almanca vaka.
-**Çekirdek:** R2'nin beş düşman utterance'ı *(E-10)*.
-
-**Wow (üç hakemin uzlaştığı sıra):**
-1. Blast-radius Escalation Gap CI'da
-2. §6 Abs. 4 çapraz rejim köprüsü
-3. `Works_Council_Compliance_Mode` toggle *(N-08)*
-4. Zaman yolculuğu demo modu *(N-09)*
-
-**Ölçek:** ~4 nesne · ~15 Apex sınıfı · 3 subagent · ~12 aksiyon · 23 test vakası.
-İlk tasarımın yaklaşık **üçte biri.**
-
-## Dördüncü hakeme sorulacak
-
-1. **X-10** — `Reseller__c` gerçekten `Account` + RecordType olmalı mıydı? Mevcut 108 testi yeniden yazmaya değer mi, yoksa dokümante edilmiş bir trade-off yeter mi?
-2. **N-02** — `ResolveRecordId` + session değişkeni deseni parametre halüsinasyonunu gerçekten çözer mi, yoksa sadece bir adım geriye mi iter?
-3. **N-07** — temel model kaymasına karşı savunma: sürümlenmiş prompt registry'si yeterli mi?
-4. Ve: **üç hakem de ne kaçırdı?**
+1. **S-01** — R4'ün "3 dakika" gözlemi doğruysa, agent-merkezli plan hâlâ doğru mu?
+2. **X-10** — `Reseller__c` `Account` olmalı mıydı? 108 testi yeniden yazmaya değer mi?
+3. **N-11** — `with sharing` + `WITH USER_MODE` etkileşiminin gerçek semantiği ne?
+4. Ve: **dört hakem de ne kaçırdı?**
