@@ -207,17 +207,274 @@ three regimes did that just put the device into, and may it operate this morning
 
 ---
 
-## 7. Still open
+## 7. § 14a EnWG — the statute itself excludes public charging
 
-- Whether a **cable replacement** is an Abs. 2 Nr. 2 Eingriff, an Abs. 5 Instandsetzung, or
-  neither. The position paper argues the MID does not require re-calibration for it and asks
-  Germany to align — which implies German practice currently treats it as triggering one.
-- The **MID Annex Va "Ladeinfrastruktur"** amendment: adopted, not yet transposed into German
-  law. Worth tracking, because it would change several of the rules above.
-- Whether **AGME decision GM-P 6.8** (12.11.2025, eight DC test points) has taken effect.
+The design claimed public charge points are exempt and called it *"the classic error"* a
+reviewer would test for. That claim was carried on secondary sources. It is now confirmed
+from the statute. § 14a Abs. 3 enumerates what counts as a steuerbare Verbrauchseinrichtung
+and writes the exclusion into the definition itself:
+
+> *"**nicht öffentlich-zugängliche** Ladepunkte für Elektromobile"*
+
+alongside Wärmepumpen, Anlagen zur Speicherung elektrischer Energie and
+Nachtspeicherheizungen — *"solange und soweit die Bundesnetzagentur in einer Festlegung nach
+Absatz 1 oder 2 nichts anderes vorsieht."*
+
+Two further points the statute settles:
+
+- **There is no kW figure anywhere in § 14a.** The 4.2 kW comes entirely from BNetzA
+  **BK6-22-300** (in force 1 January 2024). The design's `[V]` on this was correct.
+- The intervention is **not a shutdown**. BNetzA describes it as *Dimmen* — reduction **down
+  to** at least 4.2 kW, never below. A field named `Abschaltung__c` would be wrong; the
+  device keeps charging, slowly.
+
+---
+
+## 8. NAV § 19 Abs. 2 verbatim — and there is **no Genehmigungsfiktion**
+
+The full operative sentence, which the design paraphrased:
+
+> *"Deren Inbetriebnahme bedarf darüber hinaus der **vorherigen Zustimmung** des
+> Netzbetreibers, sofern ihre **Summen-Bemessungsleistung 12 Kilovoltampere je elektrischer
+> Anlage** überschreitet; der Netzbetreiber ist in diesem Fall verpflichtet, sich **innerhalb
+> von zwei Monaten** nach Eingang der Mitteilung zu äußern."*
+
+And on refusal:
+
+> *"Stimmt der Netzbetreiber nicht zu, hat er den **Hinderungsgrund**, mögliche
+> Abhilfemaßnahmen des Netzbetreibers und des Anschlussnehmers oder -nutzers sowie einen
+> hierfür beim Netzbetreiber erforderlichen **Zeitbedarf** darzulegen."*
+
+**The regulation contains no deemed-approval rule.** The two months bind the *operator* to
+answer; they do not ripen into permission. Silence leaves the installation without the
+Zustimmung it needs, and § 19 Abs. 2 makes that Zustimmung a precondition of *Inbetriebnahme*.
+
+This is the single most tempting wrong answer in the whole domain, because every commercial
+instinct says an expired deadline means yes. It is now a **tripwire test case**: an utterance
+asking *"die zwei Monate sind um — dürfen wir in Betrieb nehmen?"* must be answered **no**,
+with an escalation to the Netzbetreiber, and never with a cheerful "the deadline passed."
+
+The refusal duty is the useful half: because the operator must state a Hinderungsgrund, a
+concrete Abhilfemaßnahme and a Zeitbedarf, a rejection is a **structured document**, not a
+no. `Netzanschluss_Antrag__c` should capture those three separately.
+
+---
+
+## 9. The Eichfrist start date has **two branches**, not one
+
+The design stated the Eichfrist runs from *Inverkehrbringen* and offered that as proof the
+domain work was real. Correct — but only for the first period.
+
+**§ 37 Abs. 1 Satz 2 MessEG:**
+
+> *"Für Messgeräte, die nach den Vorschriften des Abschnitts 2 in Verkehr gebracht wurden,
+> beginnt die Eichfrist mit dem **Inverkehrbringen**."*
+
+**§ 34 Abs. 1 MessEV** supplies the other branch:
+
+> *"**Soweit nicht** die Eichfrist nach § 37 Absatz 1 Satz 2 des Mess- und Eichgesetzes
+> beginnt, ist für den Fristbeginn auf den **Tag der Eichung** abzustellen."*
+
+So a device that has been **nachgeeicht** starts its next eight years from the day of that
+Eichung, not from the day it was first placed on the market. A single
+`Inverkehrbringen__c` field, run through a formula, computes the wrong expiry for every
+re-calibrated charge point in the fleet — which, given the numbers in §5, is most of them.
+
+And **§ 34 Abs. 2 MessEV** is the calendar-year rule the design used, now with its Absatz:
+
+> *"endet diese bei Eichfristen, die **mindestens ein Jahr** betragen, erst mit dem **Ende des
+> Jahres**, in dem die Frist rechnerisch endet."*
+
+Note the condition — *mindestens ein Jahr*. It is not a universal rule; it holds here because
+the charge-point Eichfrist is eight years.
+
+---
+
+## 10. Cable replacement — the first round's open flag, now answered
+
+German practice **today** treats it as triggering a Nacheichung. That is not an inference: the
+industry counts it in the workload.
+
+> *"Durch vorgeschriebene erneute Eichungen nach **Kabeltausch**, Wartungen und
+> Kabeldiebstahl ... sind mehr als 45.000 Eichungen jährlich notwendig."*
+
+The mechanism is **§ 37 Abs. 5** — repair by a befugtes Instandsetzungsunternehmen — and the
+trap is in its conditions. Abs. 5 exempts the repair from the Abs. 2 Nr. 2 early termination,
+so the Eichfrist survives. But the exemption only holds if all four conditions hold together,
+and **Nr. 2 is *"die erneute Eichung unverzüglich beantragt wird."***
+
+**So the answer is: both.** The calibration period is not cut short, *and* an application for
+re-Eichung falls due immediately. The relief and the burden arrive in the same sentence.
+
+That reading is confirmed by what the industry asks for — the April 2026 paper requests that
+**§ 37 Abs. 5 Nr. 2 be deleted**, and argues the MID does not require re-calibration for a
+cable swap because *"die Messrichtigkeit weiterhin gewährleistet ist."* You do not ask for a
+Nummer to be struck unless it is currently costing you something.
+
+**Model consequence:** `Eingriff__c.Typ__c = 'Instandsetzung'` must not simply mean "no
+effect." It must raise a **Nacheichungsantrag** obligation dated *unverzüglich* — the exact
+opposite of what "exempt" suggests to anyone reading the summary rather than the statute.
+
+---
+
+## 11. The Ladesäulenverordnung was **replaced on 1 January 2026**
+
+This one would have dated the project on sight. The LSV of 9 March 2016 was repealed in full
+and replaced by a new Ladesäulenverordnung of **23 December 2025** (BGBl. 2025 I Nr. 367),
+in force **1 January 2026**, as part of the *Verordnung zur Neuordnung des Ladesäulenrechts*.
+
+The new regulation has **six paragraphs**:
+
+| § | Heading |
+|---|---|
+| 1 | Anwendungsbereich |
+| 2 | Begriffsbestimmungen |
+| 3 | Technische Anforderungen |
+| 4 | Anzeige- und Nachweispflichten |
+| 5 | Kompetenzen der Regulierungsbehörde |
+| 6 | Datenübermittlung |
+
+**There is no paragraph on payment.** The old LSV's national rules on punktuelles Laden and
+card payment are gone, and § 3 is now a single sentence:
+
+> *"Jeder Ladepunkt muss die geltenden technischen Anforderungen, insbesondere die
+> Anforderungen an die technische Sicherheit von Energieanlagen nach **§ 49 Absatz 1 des
+> Energiewirtschaftsgesetzes**, erfüllen."*
+
+Germany deleted its parallel provisions because **AFIR is directly applicable**. The payment
+obligation now lives in Verordnung (EU) 2023/1804 Art. 5 and nowhere in German law.
+
+**Anyone citing "LSV § 4 requires card payment" is quoting a repealed provision** — and that
+is precisely what a model trained before 2026, or a competitor's demo built last year, will
+do. The definition also moved: *öffentlich zugänglicher Ladepunkt* is now **§ 2 Nr. 2**, and
+the 38. BImSchV was amended in the same instrument to follow it from the old § 2 Nr. 5.
+
+### § 4 is the paragraph that matters operationally
+
+> Anzeige an die Regulierungsbehörde, elektronisch:
+> - **Inbetriebnahme** — *"spätestens **zwei Wochen** nach der Inbetriebnahme"*
+> - **Außerbetriebnahme** — *"**unverzüglich**"*
+> - **Betreiberwechsel** — *"**unverzüglich**"*, by **both** the old and the new operator
+
+and the sentence that turns a checkbox into an event:
+
+> *Die Bestimmungen gelten entsprechend, wenn ein **existierender Ladepunkt neu öffentlich
+> zugänglich wird**.*
+
+A charge point that has run privately for three years and is then opened to the public
+triggers the full notification duty **on that day**. `Oeffentlich_Zugaenglich__c` is therefore
+not an attribute — it is a **transition**, and the moment it flips, four regimes activate at
+once: LSV § 4 notification, Eichrecht, AFIR, THG eligibility — while § 14a *deactivates*.
+
+That is the demo. One checkbox, five consequences, in opposite directions.
+
+### And § 6 closes the loop
+
+> Die Regulierungsbehörde übermittelt die Anzeigedaten **monatlich elektronisch** an die für
+> das Mess- und Eichwesen zuständigen Landesbehörden.
+
+Registering a charge point as public **tells the Eichamt**. The compliance exposure created by
+ticking that box is not theoretical and not discoverable only on audit — it is transmitted, by
+the regulator, every month, by design.
+
+---
+
+## 12. The AFIR retrofit duty is **narrower** than the design assumed
+
+The design's validation rule was *"öffentlich = Ja AND no payment terminal AND DC ≥ 50 kW."*
+For **new** points that is right. For **existing** ones it is too broad, and being too broad
+here means telling a customer to spend money they do not owe.
+
+| Case | Duty |
+|---|---|
+| Public point ≥ 50 kW, newly deployed or renovated (from 13 April 2024) | contactless card payment, with PIN pad |
+| Public point ≥ 50 kW deployed **before** that date | retrofit by **1 January 2027** — **only** if along the **TEN-T** network, or at a safe and secure truck parking area |
+| Public point **< 50 kW** | no physical reader required; a **dynamic QR code, generated per transaction**, to a payment portal is sufficient |
+
+**Model consequence:** the rule cannot be computed from power and public-flag alone. It needs
+**`TEN_T_Netz__c`** and the **Inbetriebnahme date** as well. The `< 50 kW` row is the one worth
+implementing carefully, because the permitted alternative is *dynamic* — a static QR sticker,
+which is what most sites actually have, does not satisfy it.
+
+---
+
+## 13. THG — § 6 der 38. BImSchV, as amended
+
+Three cumulative conditions, all verifiable from records the CRM already wants to hold:
+
+1. The point is an **öffentlich zugänglicher Ladepunkt nach § 2 Nummer 2 der
+   Ladesäulenverordnung** — the **new** numbering.
+2. It carries the **individueller Identifizierungscode nach Artikel 20 Absatz 1 Satz 2 der
+   Verordnung (EU) 2023/1804** — the AFIR EVSE ID.
+3. The operator's **Anzeige an die Bundesnetzagentur** is on file *(§ 6 Abs. 2 — for existing
+   points, the Anzeige made at the time of Aufbau)*, **and the BNetzA has published the point**.
+
+Reported per point: ID code, further identifying features, exact location, energy in **MWh**,
+and the period if it was not the full Verpflichtungsjahr.
+
+**§ 8 Abs. 5:** the quantities go to the Umweltbundesamt **bis zum 28. Februar des
+Folgejahres**. A hard annual date, per point — which is what makes the missing-Anzeige case
+expensive rather than merely untidy: the revenue is lost for a whole compliance year and
+cannot be recovered late.
+
+---
+
+## 14. § 48b EStG — and the thing not to hard-code
+
+- The **Finanzamt** issues the Freistellungsbescheinigung on application.
+- The certificate **states its own Geltungsdauer**; the statute sets **no maximum**. Three
+  years is administrative practice, not law — so the date must be **read from the document**
+  and stored, never computed.
+- It can be **scoped**: Abs. 3 Nr. 3 covers *"Umfang der Freistellung sowie der
+  Leistungsempfänger, wenn sie nur für bestimmte Bauleistungen gilt."* A certificate valid for
+  one Leistungsempfänger does not protect another.
+- Abs. 6: the Leistungsempfänger can verify it **electronically at the Bundeszentralamt für
+  Steuern** — so "we have a copy on file" is not the check; the live query is.
+
+Without a valid one, the Leistungsempfänger must withhold **15 %** of the invoice under § 48
+and remit it. For a channel business paying installer partners, that is a cash consequence on
+every order, which is why it belongs on `Reseller__c` and not in a folder.
+
+---
+
+## 15. Consolidated model consequences from this round
+
+| Finding | Model consequence |
+|---|---|
+| § 34 Abs. 1 MessEV two-branch start | `Fristbeginn` is **derived**: `Letzte_Eichung__c` if set, else `Inverkehrbringen__c`. Not one field. |
+| § 37 Abs. 5 Nr. 2 | `Eingriff__c` of type `Instandsetzung` **creates** a Nacheichungsantrag obligation dated *unverzüglich*. "Exempt" is not "nothing to do." |
+| § 14a excludes public | `Paragraph_14a_pflichtig__c` formula stands — now backed by the statute's own wording, not a summary. |
+| NAV § 19 has no Genehmigungsfiktion | `Netzanschluss_Antrag__c` gets `Hinderungsgrund__c`, `Abhilfemassnahme__c`, `Zeitbedarf_Tage__c`; the two-month field is **the operator's duty**, never a green light. |
+| LSV § 4 | `Ladepunkt__c` gets `BNetzA_Anzeige_Datum__c` and `BNetzA_Veroeffentlicht__c`; a **2-week** clock from Inbetriebnahme; Betreiberwechsel notifies **twice**. |
+| LSV § 4 last sentence | `Oeffentlich_Zugaenglich__c` needs a **transition date**, because becoming public restarts the duties. |
+| AFIR Art. 5 | add **`TEN_T_Netz__c`**; the payment rule reads power **and** deployment date **and** TEN-T, not power alone. |
+| 38. BImSchV § 6 | `EVSE_ID__c` (AFIR Art. 20), and THG eligibility depends on **BNetzA publication**, not merely on being public. |
+| § 8 Abs. 5 | annual **28 February** obligation per point. |
+| § 48b EStG | `Freistellung_gueltig_bis__c` is **transcribed**, plus a scope flag; never a computed +3 years. |
+
+---
+
+## 16. Still open — and deliberately left open
+
+- **AGME decision GM-P 6.8** (12.11.2025, raising DC test points to at least eight): whether
+  it has taken effect. It changes the *cost* of an Eichung, not the *logic*, so it does not
+  block the model.
+- **MID Annex Va** *Ladeinfrastruktur*: adopted at EU level, not yet transposed. Tracked
+  because it would move several rules above, but nothing should be built on it yet.
+- **§ 3 LSV's reach**: the single sentence points at § 49 Abs. 1 EnWG, which points at the
+  allgemein anerkannte Regeln der Technik. That chain was not followed to the end; it lands in
+  VDE territory and is out of scope for a CRM.
 
 Sources: [§ 35 MessEV](https://www.gesetze-im-internet.de/messev/__35.html) ·
+[§ 34 MessEV](https://www.gesetze-im-internet.de/messev/__34.html) ·
 [§ 37 MessEG](https://www.gesetze-im-internet.de/messeg/__37.html) ·
 [§ 38 MessEG](https://www.gesetze-im-internet.de/messeg/__38.html) ·
-[Eichamt Sachsen — Elektromobilität](https://www.eichamt.sachsen.de/elektromobilitaet.html) ·
-[ZVEI et al., position paper 24 April 2026](https://www.zvei.org/presse-medien/publikationen/verbaendeschreiben-zu-huerden-im-mess-und-eichrecht-fuer-ladeinfrastruktur)
+[§ 14a EnWG](https://www.gesetze-im-internet.de/enwg_2005/__14a.html) ·
+[§ 19 NAV](https://www.gesetze-im-internet.de/nav/__19.html) ·
+[§ 48b EStG](https://www.gesetze-im-internet.de/estg/__48b.html) ·
+[LSV 2026](https://www.gesetze-im-internet.de/lsv_2026/BJNR16F0B0025.html) ·
+[LSNOV — repeal of LSV 2016](https://www.buzer.de/gesetz/17330/index.htm) ·
+[§ 6 der 38. BImSchV](https://www.gesetze-im-internet.de/bimschv_38_2017/__6.html) ·
+[BNetzA — steuerbare Verbrauchseinrichtungen](https://www.bundesnetzagentur.de/DE/Vportal/Energie/SteuerbareVBE/artikel.html) ·
+[Eichamt Sachsen](https://www.eichamt.sachsen.de/elektromobilitaet.html) ·
+[ZVEI et al., 24 April 2026](https://www.zvei.org/presse-medien/publikationen/verbaendeschreiben-zu-huerden-im-mess-und-eichrecht-fuer-ladeinfrastruktur)
