@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Handwerksrolle_Nr__c</fullName>
+    <description>Handwerksrolle registration. Elektrotechniker is Anlage A Nr. 25 (Meisterpflicht), and deletion from the Handwerksrolle cascades into deletion from the Installateurverzeichnis (Grundsätze §2.3.1). Left optional because §7(2), §7b and §§3/5 HwO give genuine routes in without a Meisterbrief.</description>
+    <externalId>false</externalId>
+    <label>Handwerksrolle-Nr.</label>
+    <length>40</length>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

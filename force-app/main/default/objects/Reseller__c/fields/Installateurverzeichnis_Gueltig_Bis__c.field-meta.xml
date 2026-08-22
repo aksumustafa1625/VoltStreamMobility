@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Installateurverzeichnis_Gueltig_Bis__c</fullName>
+    <description>Expiry of the Installateurverzeichnis entry. Capped at five years with no automatic renewal (BDEW/ZVEH Grundsätze §5.1); §5.2 says the firm should be notified three months before expiry, which is where the reminder window comes from. Once it lapses the partner may not legally perform the installation.</description>
+    <externalId>false</externalId>
+    <label>Installateurverzeichnis gültig bis</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>Date</type>
+</CustomField>

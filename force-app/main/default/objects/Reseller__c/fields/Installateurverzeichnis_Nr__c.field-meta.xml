@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Installateurverzeichnis_Nr__c</fullName>
+    <description>Registration number in a grid operator&apos;s Installateurverzeichnis. NAV §13(2) allows work behind the house fuse only by a registered company, so this is the legal gate on installation work, not a nice-to-have. Registration is company-level and held by exactly ONE grid operator (BDEW/ZVEH Grundsätze §2.1.3), and one entry is valid nationwide (§2.2.6) - which is why this is a single field and not a junction to every DSO.</description>
+    <externalId>false</externalId>
+    <label>Installateurverzeichnis-Nr.</label>
+    <length>40</length>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

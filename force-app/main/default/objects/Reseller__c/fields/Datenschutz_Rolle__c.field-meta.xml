@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Datenschutz_Rolle__c</fullName>
+    <description>GDPR role of this partner, which decides which data-protection instrument is actually required. A reseller contracting in its own name is an independent controller and an Art. 28 AVV is the wrong document - signing one misdescribes the relationship and implies a right to instruct that does not exist (cf. EDPB Guidelines 07/2020, Rn. 68). Modelled as a role picklist rather than an AVV-signed checkbox for exactly that reason.</description>
+    <externalId>false</externalId>
+    <label>Datenschutz-Rolle</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Eigenstaendig Verantwortlicher</fullName>
+                <default>true</default>
+                <label>Eigenständig Verantwortlicher</label>
+            </value>
+            <value>
+                <fullName>Gemeinsam Verantwortlicher Art 26</fullName>
+                <default>false</default>
+                <label>Gemeinsam Verantwortlicher (Art. 26)</label>
+            </value>
+            <value>
+                <fullName>Auftragsverarbeiter Art 28</fullName>
+                <default>false</default>
+                <label>Auftragsverarbeiter (Art. 28)</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

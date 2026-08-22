@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>VEFK_Name__c</fullName>
+    <description>Verantwortliche Elektrofachkraft per DIN VDE 1000-10. The Installateurverzeichnis qualification attaches to this named, permanently employed person, not to the company in the abstract. If the last VEFK leaves, the entry is suspended and deleted after three months (Grundsätze §2.2.5), so an empty value here is a live compliance risk.</description>
+    <externalId>false</externalId>
+    <label>Verantwortliche Elektrofachkraft</label>
+    <length>80</length>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

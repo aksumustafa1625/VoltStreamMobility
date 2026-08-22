@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Netzbetreiber__c</fullName>
+    <description>The grid operator holding this partner&apos;s Installateurverzeichnis entry (their home Niederlassung). Needed to verify the registration and to route NAV §19 notifications.</description>
+    <externalId>false</externalId>
+    <label>Netzbetreiber</label>
+    <length>80</length>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

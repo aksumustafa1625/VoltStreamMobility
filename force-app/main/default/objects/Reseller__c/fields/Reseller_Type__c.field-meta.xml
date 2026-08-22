@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Reseller_Type__c</fullName>
-    <description>Channel partner segment. Drives reporting and dashboard breakdowns.</description>
+    <description>Channel partner segment. Reframed from generic verticals to the German OEM and dealer-network channel, because that is the channel this business actually sells through: vehicles are sold by franchised dealers, and the charging hardware follows the vehicle. Elektroinstallationsunternehmen is the one segment that carries a legal gate rather than a commercial one - only a company entered in a grid operator&apos;s Installateurverzeichnis may work behind the house fuse (NAV §13(2)).</description>
     <externalId>false</externalId>
     <label>Reseller Type</label>
     <required>false</required>
@@ -12,34 +12,44 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>Electrical Contractor</fullName>
+                <fullName>Vertragshaendler</fullName>
                 <default>false</default>
-                <label>Electrical Contractor</label>
+                <label>Vertragshändler (OEM)</label>
             </value>
             <value>
-                <fullName>Auto Dealer</fullName>
+                <fullName>Autohausgruppe</fullName>
                 <default>false</default>
-                <label>Auto Dealer</label>
+                <label>Autohausgruppe</label>
             </value>
             <value>
-                <fullName>Hotel Chain</fullName>
+                <fullName>Werkstattkette</fullName>
                 <default>false</default>
-                <label>Hotel Chain</label>
+                <label>Werkstattkette</label>
             </value>
             <value>
-                <fullName>Mall</fullName>
+                <fullName>Elektroinstallationsunternehmen</fullName>
                 <default>false</default>
-                <label>Mall</label>
+                <label>Elektroinstallationsunternehmen</label>
             </value>
             <value>
-                <fullName>Parking Operator</fullName>
+                <fullName>Flottenbetreiber</fullName>
                 <default>false</default>
-                <label>Parking Operator</label>
+                <label>Flottenbetreiber</label>
             </value>
             <value>
-                <fullName>Energy Company</fullName>
+                <fullName>Energieversorger</fullName>
                 <default>false</default>
-                <label>Energy Company</label>
+                <label>Energieversorger / Stadtwerke</label>
+            </value>
+            <value>
+                <fullName>Parkraumbetreiber</fullName>
+                <default>false</default>
+                <label>Parkraumbetreiber</label>
+            </value>
+            <value>
+                <fullName>Immobilienbetreiber</fullName>
+                <default>false</default>
+                <label>Immobilienbetreiber</label>
             </value>
         </valueSetDefinition>
     </valueSet>

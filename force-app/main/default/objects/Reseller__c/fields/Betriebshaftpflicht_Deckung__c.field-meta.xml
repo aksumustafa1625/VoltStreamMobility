@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Betriebshaftpflicht_Deckung__c</fullName>
+    <description>Public liability cover. There is no statutory insurance duty for electricians, so this is commercial due diligence rather than a legal gate - it warns, it does not block. Market convention is 3 million EUR minimum.</description>
+    <externalId>false</externalId>
+    <label>Betriebshaftpflicht-Deckung</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackHistory>false</trackHistory>
+    <type>Currency</type>
+</CustomField>

@@ -1,8 +1,13 @@
 # Agentforce + German market research — findings
 
-Research date: **2026-08-22**. Six parallel research agents; five completed, the
-E.ON company study was stopped before it produced a report. Everything below is
-sourced; items marked ⚠️ could not be verified and must be checked before use.
+Research date: **2026-08-22**. Parallel research agents covering Agentforce’s metadata,
+testing and grounding model, the public GitHub corpus, the German market, and E.ON as a
+target employer. Everything below is sourced; items marked ⚠️ could not be verified and
+must be checked before use.
+
+One gap remains: the E.ON study covers business, products and the partner ecosystem
+(§11), but the half asking whether E.ON actually runs Salesforce, and what their
+operational bottlenecks are, has not finished. Re-run it before leaning on either.
 
 This file exists so a later session does not have to re-run the research.
 
@@ -682,6 +687,165 @@ installation uplift, and partner-tier `SBQQ__AdditionalDiscount__c` sourced from
 `Reseller__c.Tier__c`.
 
 ---
+
+---
+
+## 11. E.ON — company study
+
+Completed 2026-08-22 for the business/product/partner half. The Salesforce-and-pain-points
+half was still running when research was closed; re-run it before relying on any claim
+about whether E.ON uses Salesforce.
+
+`eon.com` and `eon.de` sit behind Cloudflare/Akamai and return 403 to plain fetching — the
+researcher got through with a full browser header set and parsed E.ON's AEM `eon-ui-*`
+component attributes, where the specs and prices actually live.
+
+### Group structure
+
+Three reporting segments (FY2025): Energy Networks (adj. EBITDA €7.7bn), Energy Retail
+(€1.7bn), Energy Infrastructure Solutions (~€590m).
+
+**EV charging sits in Energy Retail, not in Energy Infrastructure Solutions.** EIS is
+district heating, industrial decarbonisation, data-centre energy and battery storage.
+
+| Entity | Role |
+|---|---|
+| **E.ON Drive Germany GmbH** (München) | Contracting entity for *all* German e-mobility offers. The B2B / behind-the-meter business. |
+| **E.ON Drive Infrastructure GmbH (EDRI)** (Essen, HRB 29338) | The public-network CPO. Owned by E.ON SE + E.ON Solutions GmbH. |
+| Westenergie, Avacon, Bayernwerk, E.DIS, Hansewerk, Lechwerke, Süwag | The DSOs (Energy Networks). They do **not** sell charging hardware. |
+| **E.ON One** | Digitalisation subsidiary bundling **gridX** (XENON platform, gridBox) and **envelio**. |
+
+The E.ON Drive Germany / EDRI split — behind-the-meter B2B versus public CPO — is the
+cleanest structural fact in the group and worth mirroring.
+
+### The finding that matters most
+
+**E.ON has no public, named, certified installer partner programme for EV charging.** For
+e-mobility E.ON writes in the first person — *"unsere qualifizierten Installateure kümmern
+sich um die komplette Installation und Inbetriebnahme"* — i.e. installers are
+subcontractors delivering an E.ON-branded turnkey service, not a branded partner tier.
+
+The tiered, certified partner motion exists **only for E.ON Home** (HEMS / PV / heat pump),
+launched 2026-02-24:
+
+| Tier | Points | Cashback | Benefits |
+|---|---|---|---|
+| **Partner** | 0–29 | to €580 | after-sales support, training, Partner-Portal, guided first install |
+| **Fach Partner** | 30–249 | to €4,980 | + Partner-Tag, marketing material, **named E.ON contact** |
+| **Gold Partner** | 250+ | over €5,000 | + employee incentives, co-branded flyers, **Tiny House showroom**, events |
+
+Points economics: 1 point per installed E.ON Home Box (**€20**), 5 points per concluded
+**E.ON Home Comfort** service contract (**€100**), capped at **€120 per customer**, settled
+annually. The arithmetic is internally consistent (29 × €20 = €580, 249 × €20 = €4,980).
+
+Onboarding is a five-step channel-partner lifecycle: talks and demo → **Rahmenvertrag and
+Partner-ID issued** → Welcome Package with a free Home Box → training plus a live
+first-installation appointment → independent installations. Leads are distributed from
+E.ON's public **Wärmepumpen-Finder** to regional installers. Viessmann Climate Solutions
+partners joined on the same rate card from May 2026, driven by **§14a EnWG** and **§9 EEG**
+remote-control obligations.
+
+**This is the template, and the gap is that E.ON has not applied it to EV charging.** A
+channel CRM that runs an E.ON-Home-style tiered, points-based partner programme *for the
+charging channel* — carrying the compliance gates the heat-pump programme does not
+(Installateurverzeichnis, §48b Freistellungsbescheinigung) — is a proposal about their
+business, not a generic demo.
+
+Three other partner channels exist and none is a certification programme: **Vertriebspartner**
+(self-employed agents under §84 HGB, commission-based), **Handwerkskammer Rahmenverträge**
+(Bavaria and Hesse, TAN-gated member purchasing), and **EDRI Standortpartner** — a
+capex-free site-host model where EDRI finances, installs and operates HPC and the landowner
+takes a revenue share.
+
+### E.ON Drive Booster — the grid-bottleneck product
+
+Battery-buffered plug-and-play DC charger, originally a VW co-development (Sept 2021):
+
+- **2× CCS, up to 150 kW each, 250 kW max total**
+- **193.5 kWh battery on Volkswagen's MEB platform**; second-life EV cells planned
+- **No civil works and no dedicated grid connection** — runs off a plain **16, 32 or 64 A
+  CEE socket**, or on battery alone where no socket exists
+- **4 m² footprint** (2×2 m); load-bearing ground is enough; relocatable
+- 43-inch advertising screen + 10-inch touch panel; connected to E.ON Drive Backend
+- Vertical landing pages for Tankstellen/Raststätten, Logistik-Ladeparks, Stadtwerke/Kommunen
+- **Price not published.** Purchase, **Mietkauf** or leasing via a partner leasing company,
+  offered from roughly 10 AC charge points incl. installation, or 1 DC station
+
+It exists because grid connection is the bottleneck. That is the single best argument for
+why a *Netzanschluss* workflow belongs in the CRM.
+
+### Real E.ON published prices (net, B2B)
+
+| Product | Rating | Price |
+|---|---|---|
+| Alfen Eve Single Pro-line | 3.7–22 kW, 1 CP | **ab €1,090.76** |
+| Alfen Eve Double Pro-line | 3.7–22 kW, 2 CP | **ab €2,799.00** |
+| Compleo eBox Professional | 3.7–22 kW | auf Anfrage |
+| Alpitronic Hypercharger **50** | 50 kW, 2× CCS uncooled | **ab €19,990** |
+| Alpitronic Hypercharger **75 / 150** | 75 / 150 kW | auf Anfrage |
+| Alpitronic Hypercharger **200** | 200 kW, 2× CCS 400 A | **ab €53,990** |
+| Alpitronic Hypercharger **400** | 400 kW | **ab €79,990** |
+
+All Eichrecht-compliant. Card terminal optional on 50/150/200, **included** on 400, **not
+available** on 75. Kempower covers depot/fleet/truck: 4–6 buses or trucks from 2–6
+satellites + 1–3 power units; a modular variant reaches **600 kW across 6–8 charge points**.
+
+### Betriebsführungspakete — the commercial hinge
+
+Three operations tiers, and the revenue split is the whole design:
+
+| | Connect | Flex | Comfort |
+|---|---|---|---|
+| Maintenance & inspection | — | ✓ | ✓ |
+| Billing of sessions | — | ✓ | ✓ |
+| Electricity supplier | free choice | free choice | **E.ON supplies Ökostrom** |
+| **Revenue share to customer** | — | **90%** | **10%** |
+| Static load management | orderable | ✓ | ✓ |
+
+Flex = the customer keeps the revenue. Comfort = E.ON supplies the power and keeps it. That
+is a clean CPQ modelling case: one attribute flips both the price model and the
+revenue-share direction.
+
+### ElectricFleet — three modules
+
+**Charge@Home** (employee owns the hardware, so no asset or liability sits with the
+employer; company-branded webshop; binding installation packages from an online
+configurator; freely chosen **Arbeitgeber-Zuzahlung**; E.ON handles legally compliant
+**Rückvergütung** of home electricity costs), **Charge@Work** (AC and DC, 11–300 kW),
+**Charge@Public** (230,000 public points across 7 countries).
+
+### Public charging tariffs
+
+E.ON Drive Business, incl. VAT, €0.00 monthly base fee: own network **€0.54/kWh AC**,
+**€0.61/kWh DC**; roaming Germany and Europe **€0.59 AC / €0.79 DC**, with blocking fees
+after 180 min (AC) and 45 min (DC).
+
+EDRI ad-hoc: AC <45 kW **from €0.58/kWh**; FC <100 kW and HPC 100–400 kW **from €0.69/kWh**.
+**Plug & Charge via ISO 15118 on all Alpitronic DC chargers**; Autocharge explicitly not
+supported. EDRI runs **9,000+ public points across 11 European markets**, and its truck/MCS
+network is live in DE, SE and DK at **400 kW**, fleet price **€0.399/kWh excl. VAT**, with a
+**TruckReservation** slot-booking platform.
+
+⚠️ E.ON's own pages quote **four mutually inconsistent roaming-reach figures** (230,000 CPs
+/ 8 countries, 13 countries, "bald 200.000", 850,000 CPs / 14 countries). Different page
+vintages. Treat none as canonical.
+
+### Technology partners
+
+**Virta** (Finland) supplies the cloud backend for E.ON Drive's **Dynamic Charge**,
+announced **2026-02-03** — it shifts sessions into cheap spot-price windows using parking
+duration, energy demand and location, claims up to **25% lower charging costs**, and works
+independently of the energy supplier. Hardware OEMs: **Alfen, Compleo, Alpitronic,
+Kempower** (the consumer shop adds Easee, go-e, KEBA, MENNEKES, Phoenix Contact, ABL). E.ON
+runs its own **Drive TestingLab**, used consistently as a differentiator.
+
+### Could not verify
+
+Drive Booster price · Hypercharger 75/150 prices · Compleo eBox price · consumer "Light"
+and "More" tariff prices · Betriebsführungspaket and Montagepaket prices · EDRI's 11th
+country · EDRI's German charge-point count · the exact legal-entity ownership chain
+(northdata paywall) · the E.ON Home Partner-Portal URL · whether the Home partner programme
+continues past end-2026.
 
 ## 10. Open decisions
 

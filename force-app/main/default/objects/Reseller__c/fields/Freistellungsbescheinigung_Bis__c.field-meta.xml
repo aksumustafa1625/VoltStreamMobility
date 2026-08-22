@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Freistellungsbescheinigung_Bis__c</fullName>
+    <description>Expiry of the partner&apos;s exemption certificate under §48b EStG. Wallbox and PV installation count as Bauleistungen, so without a valid certificate VoltStream must withhold 15% Bauabzugsteuer from the payment (§48 EStG) - the money comes out of our side, not theirs. This is the one document whose lapse has a direct cash consequence, which is why it blocks invoicing rather than activation.</description>
+    <externalId>false</externalId>
+    <label>Freistellungsbescheinigung gültig bis</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>Date</type>
+</CustomField>
