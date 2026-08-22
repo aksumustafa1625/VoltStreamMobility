@@ -19,7 +19,7 @@ argument with measurements.
 | Does the classic `sf agent create` path work? | ✅ **Yes.** Bot, BotVersion and Planner created in ~30 s. |
 | Does `AiEvaluationDefinition` deploy to a DE org? | ✅ **Yes.** |
 | Which expectation names does this org actually accept? | **`topic_assertion` / `actions_assertion` / `output_validation`** — *not* the documented `topic_sequence_match` / `action_sequence_match` / `bot_response_rating`. |
-| Was any credit limit hit? | **No.** Six LLM-backed calls, no quota error. |
+| Was any credit limit hit? | **No** — here, and never across two projects and months of credit-heavy work in Developer Edition orgs. |
 
 ---
 
@@ -260,8 +260,7 @@ therefore land around two to three minutes, which is CI-viable without special h
 
 - **What the custom scorer's prompt template actually receives.** Not tested yet, and it
   decides whether a groundedness scorer can be a groundedness scorer at all. Next probe.
-- **Credit consumption per run.** No error occurred, but the Digital Wallet is not available
-  in this edition, so consumption remains unmeasured rather than measured-as-zero.
+- **Credit consumption per run** is unmeasured and, on the evidence, does not need to be. The Digital Wallet is not available in this edition, so no balance can be read — but the operator has run credit-heavy work across two projects and several months in Developer Edition orgs, including a full day of live agent conversation, and has never hit a quota failure. Nothing in this probe did either. **Credits are therefore not treated as a design constraint.** The sibling project’s entire mock-first architecture was built around a fear that its own record shows never materialised.
 - **Whether `topic_assertion`'s truncation is a display artifact or an evaluation-time
   defect.** The value is wrong in both `generatedData.topic` and `actualValue`, which
   suggests the latter.
