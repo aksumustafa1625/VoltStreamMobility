@@ -1957,9 +1957,80 @@ kötü yazılmış ya gerçek defekt — düzelt veya sil. **Ancak sonra** gate 
 > **R8:** *"7. güne kadar gösterilemiyorsa **problem araçlardadır**, ve bunu **diğer beş nesne
 > var olmadan önce** bilmek istersin."*
 
-## Senin vereceğin üç karar 👤
+## Senin verdiğin üç karar ✅ — 2026-08-22
 
-1. **S-01 / S-03** — Proje kimliği: Agentforce projesi mi, **policy engine + Agentforce
-   arayüzü** mü? *(R4, R6, R7, R8 dördü de farklı yollardan aynı yere işaret etti)*
-2. **Z-22** — *"based in Germany"* doğru mu?
-3. **Y-16** — Repodaki AI-atfı başlıkları kaldırılsın mı?
+Sekiz hakemin çözemeyeceği, çünkü çözmesi gereken kişi sen olan üç şey. Üçü de karara bağlandı.
+
+### 1. S-01 / S-03 · Kimlik → **kural motoru + Agentforce arayüzü** ✅
+
+README'nin ilk paragrafı **Alman şarj hukukunu kodda taşıyan motoru** anlatır. Agentforce onun
+sohbet arayüzü olarak gelir. **Hiçbir şey kesilmiyor** — değişen sıra ve vitrin.
+
+Dört hakem buraya farklı yollardan geldi, ve bugünkü domain turu beşinci bir yol açtı:
+
+> Bulduğumuz en güçlü şey — *"tek onay kutusu, beş sonuç, ikisi ters yönde"* — bir **motor**
+> içgörüsü. LSV § 4'ün son cümlesi bir alanı olaya çeviriyor, § 6 onu Eichamt'a aylık olarak
+> iletiyor. Bunu anlatan şey bir agent değil; agent onu **sorulabilir** kılan şey.
+
+Ve R4'ün riskten gelen argümanı Faz 0'dan sonra **artık geçerli değil** — testler DE'de
+koşuyor, kredi bitmiyor. Yani bu karar korkudan değil, **sıralamanın doğrusu** olduğu için
+alındı. Fark önemli: agent ertelenmiyor, temeli önce dökülüyor.
+
+**İnşa sırasına etkisi:** 3–4. günün nesneleri ve `FristenService`'i artık *agent'ın ihtiyacı*
+değil, **ürünün kendisi**. 6–7. günün agent'ı onların üzerine oturuyor. Aynı Apex servisleri
+hem LWC panosunu hem agent'ı besliyor.
+
+### 2. Z-22 · *"based in Germany"* → **"relocating to Germany"** ✅
+
+Değiştirildi (`AGENT_DESIGN_FOR_REVIEW.md` §1.1). Doğru, ve hâlâ güçlü — belirsiz değil,
+yanlış da değil.
+
+### 3. Y-16 · AI atfı → **yazarlık kalır, "Audience" değişir** ✅
+
+`**Author:** Mustafa Aksu, with Claude Opus 4.7` **kalıyor.** Projenin bütün gücü sekiz AI
+hakemin incelemesinden geliyor; bunu saklamak tutarsız olurdu.
+
+`**Audience:** other frontier AI models` → `**Audience:** technical reviewers`. Eski satır
+dokümanın *ne olduğunu* yanlış anlatıyordu.
+
+---
+
+## ⚠️ Üç public-repo sorununun son durumu
+
+| | Sorun | Durum |
+|---|---|---|
+| **Z-22** | *"based in Germany"* | ✅ *"relocating to Germany"* |
+| **Y-16** | AI-atfı başlıkları | ✅ Yazarlık kaldı, Audience düzeltildi |
+| **Y-01** | 13 yanlış `[V]` etiketi | ✅ **Silinmedi — işaretlendi.** ⚠️C1…⚠️C13 + dokümanın başında düzeltme tablosu. Hakemlerin okuduğu metin aynen duruyor; kayıt bozulmadı. |
+
+---
+
+## 🔬 Domain turu 2 — kapanan bayraklar ve açılan yeni bir tanesi
+
+[DOMAIN_VERIFICATION.md](DOMAIN_VERIFICATION.md), tamamı birincil metinden.
+
+| Soru | Cevap |
+|---|---|
+| Stichprobenverfahren şarj noktalarına uygulanır mı? | **Hayır.** § 35 MessEV kapsamı dışında; sektör 24.04.2026'da *talep ediyor*. Cihaz başına saat **doğru**. |
+| § 37 firmware Eingriff'i Eichfrist'i bitirir mi? | **Üç yol var.** Abs. 2 Nr. 2 bitirir · Abs. 5 muaf tutar · Abs. 6 Eichfrist'e dokunmaz ama **cihazı durdurur**. |
+| Kablo değişimi hangisi? | **İkisi birden.** Abs. 5 süreyi korur, ama Nr. 2 *unverzüglich* Nacheichung başvurusu ister. |
+| § 38'in 10 haftası son tarih mi? | **Hayır, koruma süresi.** GESCHÜTZT / ERMESSEN / ABGELAUFEN. |
+| AC ve DC farklı mı? | **Hayır**, ikisi de 8 yıl. |
+| § 14a kamuya açığı dışlıyor mu? | **Evet** — kanunun kendi lafzı: *"nicht öffentlich-zugängliche Ladepunkte"*. |
+| NAV § 19'un iki ayı geçerse onay sayılır mı? | **Hayır. Genehmigungsfiktion yok.** En cazip yanlış cevap; artık bir tripwire vakası. |
+| Eichfrist ne zaman başlar? | **İki dal.** İlk dönem Inverkehrbringen'den, Nacheichung sonrası **Tag der Eichung**'dan. |
+| AFIR retrofit kimi bağlıyor? | Sandığımızdan **dar** — mevcut ≥50 kW için sadece **TEN-T**, 01.01.2027. |
+| **Yeni:** LSV hâlâ geçerli mi? | **Hayır. 01.01.2026'da değişti.** Yeni LSV 6 paragraf, **ödeme kuralı yok** — AFIR doğrudan uygulanıyor. |
+
+Son satır tek başına bir sinyal: *"LSV § 4 Kartenzahlung istiyor"* diyen herkes **yürürlükten
+kalkmış** bir hükmü alıntılıyor — ve bunu 2026 öncesi eğitilmiş her model yapacak.
+
+**Hâlâ açık, bilerek:** AGME GM-P 6.8'in yürürlüğü *(maliyeti değiştirir, mantığı değil)* ·
+MID Anhang Va'nın Almanya'ya aktarımı *(henüz yok, üzerine bir şey kurulmamalı)*.
+
+---
+
+## ▶️ Sıradaki iş
+
+Veri modeli. Girdisi hazır: [DOMAIN_VERIFICATION.md](DOMAIN_VERIFICATION.md) §6 ve §15,
+onaylanmış kimlik kararıyla birlikte.

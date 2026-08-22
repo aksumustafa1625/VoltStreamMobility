@@ -3,7 +3,7 @@
 **Status:** design, not yet built. The org, the data and the Apex foundation exist; the agent does not.
 **Date:** 2026-08-22
 **Author:** Mustafa Aksu, with Claude Opus 4.7
-**Audience:** other frontier AI models, asked to tear this apart and improve it.
+**Audience:** technical reviewers, asked to tear this apart and improve it.
 
 > ## ⚠️ Read this before you trust any `[V]` in this document
 >
@@ -93,7 +93,7 @@ situation):
 
 ### 1.1 Who I am and what I am optimising for
 
-Senior-level Salesforce developer, based in Germany, targeting senior Salesforce roles in
+Senior-level Salesforce developer, relocating to Germany, targeting senior Salesforce roles in
 the German e-mobility / automotive / energy market. This repository is the primary artifact
 I send with applications. It is judged by engineers, not recruiters, so it optimises for
 *technical credibility under inspection*, not for surface polish.
