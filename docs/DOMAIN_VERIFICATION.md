@@ -1058,6 +1058,114 @@ most **four** devices — a fifth needs a second box.)*
 
 ---
 
+
+---
+
+## 18. The forward calendar — what is already law but not yet in force
+
+A compliance CRM that only knows today's rules is a filing cabinet. The dates below are
+**already enacted or already consulted**, and every one of them changes what a partner should
+be selling *now*.
+
+### 18.1 🔴 1 January 2027 — the GEIG amendment changes the product
+
+Adopted **23 July 2026** (BGBl. 2026 I Nr. 226), Artikel 7, in force **1 January 2027**. It is
+published but not yet in force, so the consolidated text still shows the old version — exactly
+the gap where a stale summary does damage.
+
+**New § 5 GEIG:**
+
+> *"Ein Ladepunkt, der **ab dem 1. Januar 2027** errichtet oder ersetzt wird, hat **intelligentes
+> Laden** auf der Grundlage nichtproprietärer und diskriminierungsfreier Kommunikationsprotokolle
+> und Standards, auf interoperable Weise … zu ermöglichen."*
+
+Note **"errichtet oder ersetzt"** — a *replacement* triggers it too. Every unit in the catalogue
+that cannot do smart charging becomes unsellable for new and replacement installations on that
+date, and a quote written in December 2026 for a February 2027 installation is already wrong.
+
+**New § 2 Nr. 14a redefines Vorverkabelung, and kills the cheap answer:**
+
+> *"…eine reine Grund- oder Sammelinstallation, wie beispielsweise eine Hauptzuleitung,
+> Stromschiene oder ein zentraler Verteiler ohne individuelle Abzweigung **oder das Verlegen von
+> Leerrohren oder Kabelkanälen, nicht ausreichend ist**."*
+
+**Empty conduit no longer counts.** There must be a connectable endpoint at the parking space so
+a charger can be attached *"ohne weitere Elektroarbeiten."*
+
+**New § 4 Sätze 5–7 adds a sizing duty:**
+
+> *"Die Leitungsinfrastruktur sowie die Vorverkabelung müssen so dimensioniert werden, dass die
+> nach diesem Gesetz vorgeschriebene Anzahl von Ladepunkten **gleichzeitig und effizient** genutzt
+> werden kann. Bei der Vorverkabelung nicht öffentlich zugänglicher Stellplätze ist die
+> Installation eines **Lademanagementsystems** zu berücksichtigen."*
+
+So load management moves from an upsell to a statutory design consideration, subject only to a
+technical-impossibility or economic-unreasonableness escape.
+
+### 18.2 The dated calendar
+
+| Date | What | Status |
+|---|---|---|
+| **30.09.2026** | Deadline in the BNetzA's **Zwangsgeldandrohung** against two grid operators for not implementing the § 14a Modul 3 tariff | **Enforcement live** |
+| **01.10.2026** | **MiSpeL** Festlegung targeted effective — first time charge points become (partly) eligible for EEG support, treated like storage | Arbeitsstand published 05.08.2026, not yet adopted |
+| **18.09.2026** | **AgNes** consultation closes — the complete rewrite of German network tariffs, ~€37 bn/year, decision targeted for 2026 | Draft published 06.08.2026 |
+| **31.12.2026** | **§ 14a hardship exemption closes** (BK6 Ziff. 10.6) | In force |
+| **01.01.2027** | **GEIG**: intelligent charging mandatory for every point erected *or replaced*; Vorverkabelung redefined | Enacted 23.07.2026 |
+| **01.01.2027** | **AFIR retrofit** for ≥ 50 kW points on TEN-T / secure truck parking | In force |
+| **28.02.2027** | THG filing deadline for 2026 — **four weeks after** the AFIR date, and coupled to it | In force |
+| **31.12.2027** | AFIR TEN-T core raised to ≥ 600 kW pools with 2 × 150 kW | In force |
+| **10.04.2028** | **MID Annex Va** transposition deadline (Richtlinie (EU) 2026/706) | In force since 09.04.2026 |
+| **31.12.2028** | **StromNEV expires**; preventive § 14a control ends | — |
+| **01.01.2029** | **Bestandsanlagen convert** to the § 14a regime (one-way); **AgNes tariffs apply** | In force |
+| **31.12.2032** | 90 % of Pflichteinbaufälle metered (§ 29 MsbG) | Unchanged — the 2025 amendment only made the date precise |
+
+### 18.3 Two negatives worth as much as the positives
+
+**The NAV has not been substantively amended since 19 July 2022.** The December 2025 act touched
+only § 18 Abs. 3, and only to repoint a renumbered cross-reference. So §§ 11, 13 and 19 NAV — the
+three this project models — stand exactly as read. That is a clean, citable stability finding.
+
+**BNetzA has not exercised its § 17 Abs. 4 competence on flexible connection agreements, and
+formally abandoned its attempt to standardise capacity allocation.** BK6-24-245, closed
+05.02.2025:
+
+> *"Nach Sichtung der eingegangenen Stellungnahmen verfolgt die Beschlusskammer das Ziel der
+> Erarbeitung eines Positionspapiers **nicht weiter**. … Es bleibt **jedem Netzbetreiber
+> überlassen**, ein den Anforderungen des § 17 EnWG genügendes Verfahren zu entwickeln und
+> anzuwenden … [muss aber] **auf seiner Internetseite veröffentlicht**"*
+
+**That is the regulator saying, in terms, that the process differs per grid operator.** It is the
+authority for §17.10b's finding that two DSOs read the same statute in opposite orders — and the
+reason `Netzbetreiber__c` has to carry a *process*, not just a name.
+
+### 18.4 Enforcement stopped being theoretical in 2026
+
+Two BNetzA actions this year change the risk picture from "rules exist" to "rules are being
+enforced against grid operators":
+
+- **28.05.2026** — penalty payments threatened against two DSOs over the § 14a tariff reductions,
+  with a **30 September 2026** cure deadline and more operators to follow.
+- **27.03.2026** — **77 proceedings** opened against metering operators that missed the 20 %
+  smart-meter quota.
+
+For a channel business this cuts both ways and both are modellable: a customer's Modul 3 discount
+may be unavailable because *their* DSO is non-compliant, and a § 14a installation may stall
+because the metering operator has not delivered — neither of which is the partner's fault, and
+both of which are documented, citable and therefore escalatable.
+
+### 18.5 One gap that matters for the DC business
+
+**VDE-AR-N 4110 is still the September 2023 edition.** Low voltage got two brand-new editions in
+2026 — **4100:2026-04** (published 06.03.2026) and **4105:2026-03** (27.02.2026, adding
+requirements for *rückspeisefähige Ladeeinrichtungen*) — but medium voltage, which is where HPC
+hubs and truck charging parks actually connect, has had a draft pending since December 2024 with
+no publication.
+
+So the fastest-moving segment of the market is governed by the oldest rule in the family. Worth
+knowing, and worth watching.
+
+---
+
 Sources: [§ 35 MessEV](https://www.gesetze-im-internet.de/messev/__35.html) ·
 [§ 34 MessEV](https://www.gesetze-im-internet.de/messev/__34.html) ·
 [§ 37 MessEG](https://www.gesetze-im-internet.de/messeg/__37.html) ·
