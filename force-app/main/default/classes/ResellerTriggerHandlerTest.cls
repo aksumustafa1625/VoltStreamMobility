@@ -14,7 +14,7 @@ private class ResellerTriggerHandlerTest {
     @IsTest
     static void insert_mixedCaseEmail_storedLowercase() {
         Reseller__c r = TestDataFactory.buildReseller(
-            'Berlin Elektrotechnik', 'KONTAKT@BERLIN-ELEKTRO.EXAMPLE', 'Electrical Contractor'
+            'Berlin Elektrotechnik', 'KONTAKT@BERLIN-ELEKTRO.EXAMPLE', 'Elektroinstallationsunternehmen'
         );
 
         Test.startTest();
@@ -30,7 +30,7 @@ private class ResellerTriggerHandlerTest {
     @IsTest
     static void insert_rawPhone_storedFormatted() {
         Reseller__c r = TestDataFactory.buildReseller(
-            'Hotel X', 'hotel@x.de', 'Hotel Chain'
+            'Hotel X', 'hotel@x.de', 'Immobilienbetreiber'
         );
         r.Phone__c = '1231231212';
 
@@ -47,7 +47,7 @@ private class ResellerTriggerHandlerTest {
     @IsTest
     static void insert_messyName_storedTrimmed() {
         Reseller__c r = TestDataFactory.buildReseller(
-            '  Acme   GmbH ', 'acme@x.de', 'Hotel Chain'
+            '  Acme   GmbH ', 'acme@x.de', 'Immobilienbetreiber'
         );
 
         Test.startTest();
@@ -63,7 +63,7 @@ private class ResellerTriggerHandlerTest {
     @IsTest
     static void update_emailChangeMixedCase_storedLowercase() {
         Reseller__c r = TestDataFactory.buildReseller(
-            'Hotel Y', 'old@y.de', 'Hotel Chain'
+            'Hotel Y', 'old@y.de', 'Immobilienbetreiber'
         );
         insert r;
 
@@ -85,7 +85,7 @@ private class ResellerTriggerHandlerTest {
     @IsTest
     static void insert_mixedCaseEmail_selectorCanMatchByNormalizedQuery() {
         Reseller__c r = TestDataFactory.buildReseller(
-            'Mixed Case Hotel', 'PARTNER@MIXED.DE', 'Hotel Chain'
+            'Mixed Case Hotel', 'PARTNER@MIXED.DE', 'Immobilienbetreiber'
         );
         insert r;
 
@@ -105,7 +105,7 @@ private class ResellerTriggerHandlerTest {
             Reseller__c r = TestDataFactory.buildReseller(
                 'Bulk  ' + i,           // double space in name
                 'BULK' + i + '@X.DE',   // uppercase email
-                'Hotel Chain'
+                'Immobilienbetreiber'
             );
             r.Phone__c = '1231231212';
             resellers.add(r);
@@ -143,7 +143,7 @@ private class ResellerTriggerHandlerTest {
         TriggerHandler.bypass('ResellerTriggerHandler');
 
         Reseller__c r = TestDataFactory.buildReseller(
-            'Bypassed', 'bypass@x.de', 'Hotel Chain'
+            'Bypassed', 'bypass@x.de', 'Immobilienbetreiber'
         );
         r.Phone__c = '1231231212'; // Raw 10 digits — NOT in our canonical format.
 

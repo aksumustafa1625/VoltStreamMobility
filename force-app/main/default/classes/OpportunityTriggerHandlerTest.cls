@@ -24,9 +24,9 @@ private class OpportunityTriggerHandlerTest {
     @TestSetup
     static void setupResellers() {
         insert new List<Reseller__c>{
-            TestDataFactory.buildReseller('Steigenberger Hotels', EMAIL_HOTEL, 'Hotel Chain'),
-            TestDataFactory.buildReseller('Mercedes-Benz Berlin', EMAIL_AUTO, 'Auto Dealer'),
-            TestDataFactory.buildInactiveReseller('Churned Partner GmbH', EMAIL_INACTIVE, 'Electrical Contractor')
+            TestDataFactory.buildReseller('Steigenberger Hotels', EMAIL_HOTEL, 'Immobilienbetreiber'),
+            TestDataFactory.buildReseller('Mercedes-Benz Berlin', EMAIL_AUTO, 'Vertragshaendler'),
+            TestDataFactory.buildInactiveReseller('Churned Partner GmbH', EMAIL_INACTIVE, 'Elektroinstallationsunternehmen')
         };
     }
 

@@ -21,8 +21,8 @@ private class ResellerSelectorTest {
     @TestSetup
     static void setupResellers() {
         insert new List<Reseller__c>{
-            TestDataFactory.buildReseller('Active Selector Reseller', EMAIL_ACTIVE, 'Hotel Chain'),
-            TestDataFactory.buildInactiveReseller('Inactive Selector Reseller', EMAIL_INACTIVE, 'Auto Dealer')
+            TestDataFactory.buildReseller('Active Selector Reseller', EMAIL_ACTIVE, 'Immobilienbetreiber'),
+            TestDataFactory.buildInactiveReseller('Inactive Selector Reseller', EMAIL_INACTIVE, 'Vertragshaendler')
         };
     }
 

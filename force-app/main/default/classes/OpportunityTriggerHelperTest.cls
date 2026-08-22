@@ -25,9 +25,9 @@ private class OpportunityTriggerHelperTest {
     @TestSetup
     static void setupResellers() {
         insert new List<Reseller__c>{
-            TestDataFactory.buildReseller('Helper Test Hotel', EMAIL_HOTEL, 'Hotel Chain'),
-            TestDataFactory.buildReseller('Helper Test Auto', EMAIL_AUTO, 'Auto Dealer'),
-            TestDataFactory.buildInactiveReseller('Helper Test Inactive', EMAIL_INACTIVE, 'Energy Company')
+            TestDataFactory.buildReseller('Helper Test Hotel', EMAIL_HOTEL, 'Immobilienbetreiber'),
+            TestDataFactory.buildReseller('Helper Test Auto', EMAIL_AUTO, 'Vertragshaendler'),
+            TestDataFactory.buildInactiveReseller('Helper Test Inactive', EMAIL_INACTIVE, 'Energieversorger')
         };
     }
 

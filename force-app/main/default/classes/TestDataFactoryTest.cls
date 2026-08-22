@@ -13,11 +13,11 @@ private class TestDataFactoryTest {
     @IsTest
     static void buildReseller_setsExpectedDefaults() {
         Reseller__c r = TestDataFactory.buildReseller(
-            'Acme GmbH', 'kontakt@acme.de', 'Hotel Chain'
+            'Acme GmbH', 'kontakt@acme.de', 'Immobilienbetreiber'
         );
         System.assertEquals('Acme GmbH',          r.Name);
         System.assertEquals('kontakt@acme.de',    r.Company_Email__c);
-        System.assertEquals('Hotel Chain',        r.Reseller_Type__c);
+        System.assertEquals('Immobilienbetreiber',        r.Reseller_Type__c);
         System.assertEquals('Germany',            r.Country__c);
         System.assertEquals(true,                 r.Active__c,
             'buildReseller must default Active__c to true.');
@@ -27,7 +27,7 @@ private class TestDataFactoryTest {
     @IsTest
     static void buildInactiveReseller_setsActiveFalse() {
         Reseller__c r = TestDataFactory.buildInactiveReseller(
-            'Churned GmbH', 'old@churned.de', 'Energy Company'
+            'Churned GmbH', 'old@churned.de', 'Energieversorger'
         );
         System.assertEquals('Churned GmbH', r.Name);
         System.assertEquals(false, r.Active__c,

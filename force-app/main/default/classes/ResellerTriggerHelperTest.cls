@@ -14,7 +14,7 @@ private class ResellerTriggerHelperTest {
     @IsTest
     static void normalizeFields_mixedCaseEmail_lowercased() {
         Reseller__c r = TestDataFactory.buildReseller(
-            'X', 'Partner@Hotel.DE', 'Hotel Chain'
+            'X', 'Partner@Hotel.DE', 'Immobilienbetreiber'
         );
 
         ResellerTriggerHelper.normalizeFields(new List<Reseller__c>{ r });
@@ -27,7 +27,7 @@ private class ResellerTriggerHelperTest {
     @IsTest
     static void normalizeFields_paddedEmail_trimmed() {
         Reseller__c r = TestDataFactory.buildReseller(
-            'X', '  partner@hotel.de  ', 'Hotel Chain'
+            'X', '  partner@hotel.de  ', 'Immobilienbetreiber'
         );
 
         ResellerTriggerHelper.normalizeFields(new List<Reseller__c>{ r });
@@ -40,7 +40,7 @@ private class ResellerTriggerHelperTest {
     @IsTest
     static void normalizeFields_tenDigitPhone_formatted() {
         Reseller__c r = TestDataFactory.buildReseller(
-            'X', 'a@b.de', 'Hotel Chain'
+            'X', 'a@b.de', 'Immobilienbetreiber'
         );
         r.Phone__c = '1231231212';
 
@@ -54,7 +54,7 @@ private class ResellerTriggerHelperTest {
     @IsTest
     static void normalizeFields_internationalPhone_formatted() {
         Reseller__c r = TestDataFactory.buildReseller(
-            'X', 'a@b.de', 'Hotel Chain'
+            'X', 'a@b.de', 'Immobilienbetreiber'
         );
         r.Phone__c = '+49 30 1234 5678';
 
@@ -68,7 +68,7 @@ private class ResellerTriggerHelperTest {
     @IsTest
     static void normalizeFields_nullPhone_staysNull() {
         Reseller__c r = TestDataFactory.buildReseller(
-            'X', 'a@b.de', 'Hotel Chain'
+            'X', 'a@b.de', 'Immobilienbetreiber'
         );
         r.Phone__c = null;
 
@@ -82,7 +82,7 @@ private class ResellerTriggerHelperTest {
     @IsTest
     static void normalizeFields_nameWithExtraSpaces_collapsed() {
         Reseller__c r = TestDataFactory.buildReseller(
-            'Acme   GmbH', 'a@b.de', 'Hotel Chain'
+            'Acme   GmbH', 'a@b.de', 'Immobilienbetreiber'
         );
 
         ResellerTriggerHelper.normalizeFields(new List<Reseller__c>{ r });
@@ -95,7 +95,7 @@ private class ResellerTriggerHelperTest {
     @IsTest
     static void normalizeFields_paddedCountry_trimmed() {
         Reseller__c r = TestDataFactory.buildReseller(
-            'X', 'a@b.de', 'Hotel Chain'
+            'X', 'a@b.de', 'Immobilienbetreiber'
         );
         r.Country__c = '  Germany  ';
 
@@ -109,7 +109,7 @@ private class ResellerTriggerHelperTest {
     @IsTest
     static void normalizeFields_alreadyNormalized_unchanged() {
         Reseller__c r = TestDataFactory.buildReseller(
-            'Clean GmbH', 'clean@hotel.de', 'Hotel Chain'
+            'Clean GmbH', 'clean@hotel.de', 'Immobilienbetreiber'
         );
         r.Phone__c = '(123) 456 78-90';
         r.Country__c = 'Germany';
@@ -140,7 +140,7 @@ private class ResellerTriggerHelperTest {
             Reseller__c r = TestDataFactory.buildReseller(
                 'Acme  ' + i + '  GmbH',          // double-space in name
                 'PARTNER' + i + '@HOTEL.DE',      // uppercase email
-                'Hotel Chain'
+                'Immobilienbetreiber'
             );
             r.Phone__c = '1231231212';
             resellers.add(r);

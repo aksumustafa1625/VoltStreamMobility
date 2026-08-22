@@ -90,16 +90,22 @@ public with sharing class DocumentController {
 
             Id contentDocId = DocumentSelector.getContentDocumentIdForVersion(cv.Id);
 
-            // InternalUsers: the Document Manager is an internal sales-team
-            // tool (Lightning app/home/record pages only, no Experience Cloud
-            // site). Keeping the file off external/portal visibility is the
-            // safe default; widen to 'AllUsers' only if a partner portal ever
-            // needs to see these files.
+            // The Document Manager is an internal sales-team tool, so files
+            // should stay off external/portal visibility. 'InternalUsers' says
+            // exactly that -- but the platform only accepts it once Digital
+            // Experiences is enabled; without it the insert is rejected with
+            // "Visibility InternalUsers is not permitted for this linked
+            // record". With no Experience Cloud site there are no external
+            // users, so 'AllUsers' resolves to the same audience and the
+            // intent survives. The Network object exists only when Digital
+            // Experiences is on, which makes it a reliable switch.
             insert new ContentDocumentLink(
                 ContentDocumentId = contentDocId,
                 LinkedEntityId = doc.Id,
                 ShareType = 'V',
-                Visibility = 'InternalUsers'
+                Visibility = Schema.getGlobalDescribe().containsKey('Network')
+                    ? 'InternalUsers'
+                    : 'AllUsers'
             );
         }
 

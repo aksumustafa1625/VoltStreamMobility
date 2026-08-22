@@ -5,9 +5,8 @@ testing and grounding model, the public GitHub corpus, the German market, and E.
 target employer. Everything below is sourced; items marked ⚠️ could not be verified and
 must be checked before use.
 
-One gap remains: the E.ON study covers business, products and the partner ecosystem
-(§11), but the half asking whether E.ON actually runs Salesforce, and what their
-operational bottlenecks are, has not finished. Re-run it before leaning on either.
+The E.ON study (§11) is complete: business, products, partner ecosystem, the Salesforce
+footprint, and the operational bottlenecks.
 
 This file exists so a later session does not have to re-run the research.
 
@@ -846,6 +845,210 @@ and "More" tariff prices · Betriebsführungspaket and Montagepaket prices · ED
 country · EDRI's German charge-point count · the exact legal-entity ownership chain
 (northdata paywall) · the E.ON Home Partner-Portal URL · whether the Home partner programme
 continues past end-2026.
+
+### E.ON and Salesforce — the earlier "zero roles" finding is REFUTED
+
+The German market scan concluded there were no Salesforce roles at any charging or
+utility company, E.ON included. That was wrong, and the reason is worth recording:
+**E.ON runs two career portals.** `jobs.eon.com` is a JavaScript SPA whose search results
+never render. The real, machine-readable board is **`careers.eon.com`** (SAP
+SuccessFactors), with entity path segments `/deutschland/`, `/EONGrid/`, `/westnetz/`,
+`/hansewerk/`, `/e-dis/`.
+
+`careers.eon.com/search/?q=Salesforce` returned **4 of 428 open jobs** on 2026-08-22:
+
+| Title | Location | Entity | Posted |
+|---|---|---|---|
+| **Senior Salesforce System Engineer (m/w/d)** — Job-ID 244556 | München / Essen | E.ON Energie Deutschland GmbH | 12 Aug 2026 |
+| **Salesforce System Engineer – AI based (m/w/d)** — Job-ID 245393 | München / Essen | E.ON Energie Deutschland GmbH | 13 Aug 2026 |
+| Campaign Data & Automation Manager (m/w/d) | München | E.ON Energie Deutschland GmbH | 17 Aug 2026 |
+| Senior Campaign Manager (m/ž) | České Budějovice | E.ON | 30 Jul 2026 |
+
+From Job-ID 244556 (contact `samy.el-bouz@eon.com`):
+
+> *"Unsere Abteilung CRM treibt die kontinuierliche Weiterentwicklung unserer
+> Implementierung von **Salesforce als zentralem CRM System** voran"*
+> *"Die End-to-End Weiterentwicklung unserer **Salesforce Energy & Utilities Cloud**
+> liegt in Deiner Hand"*
+> *"Routiniert bewegst Du Dich in **Apex, Lightning Web Components, SOQL und Salesforce
+> APIs** und setzt Tools wie GitLab, Salesforce CLI, VS Code sowie Jira und Confluence
+> sicher ein"*
+
+Read the "AI based" variant carefully: its AI scope is **AI-assisted software
+development**, not agentic CRM — *"AI gestützte Softwarentwicklung anwenden und ins Team
+skalieren"*. It also names **MuleSoft** as the integration platform (separately staffed:
+`?q=MuleSoft` → 3 hits including a Lead MuleSoft System Engineer).
+
+**`?q=Agentforce` returns 0 results. There is no Agentforce anywhere at E.ON.**
+
+### Systems by division — it is four CRMs, not one
+
+| Division | Customer-facing system |
+|---|---|
+| **E.ON Energie Deutschland GmbH** (München, retail sales, ~2,200 staff) | **Salesforce Energy & Utilities Cloud** + Marketing Cloud + MuleSoft + Snowflake + COMET/Datacloud |
+| **E.ON Grid Solutions GmbH** (Essen) | **Microsoft Dynamics 365 CE** + Azure + Power Platform, serving the *Meter-to-Cash-Geschäft* for DSOs |
+| **Westnetz** (DSO) | **SAP S/4 Utilities**, SAP MCM, IM4G — including *Verarbeitung der Netzanschlussprozesse* |
+| **E.ON Next** (UK) | **Kraken** (Octopus Energy Group) |
+| **E.ON Drive Germany / Drive Austria** (e-mobility) | generic *"CRM-Systeme"* — **platform never named in any posting** |
+
+SAP is the group backbone: `?q=SAP` → **76 of 428** open roles. E.ON's IT arm is
+**E.ON Digital Technology GmbH**.
+
+### The bottlenecks, with numbers
+
+**Netzanschluss is the binding constraint.** § 19 Abs. 2 NAV makes charging equipment
+notifiable and requires the operator's *Zustimmung* above **12 kVA Summen-Bemessungsleistung**,
+with a duty to answer *"innerhalb von zwei Monaten"*. HPC goes to medium voltage under
+**VDE-AR-N 4110**, chaining Netzanschlussbegehren → Netzverträglichkeitsprüfung →
+Anlagenzertifikat → Konformitätserklärung → Inbetriebsetzung.
+
+Reality, per dena (July 2025): *"vom ersten Planungsschritt bis zur Inbetriebnahme eines
+Ladepunktes **zwei bis drei Jahre** vergehen können, in Einzelfällen **bis zu 10 Jahre**"* —
+first VNB response up to 1 year, connection availability up to 2.5 years, transformers up
+to 12 months. Prof. Markus Lienkamp: *"**Der Netzanschluss ist heute der längste Pfad der
+Elektrifizierung**"*.
+
+**The root cause is administrative, not physical.** Agora Verkehrswende names *"händische
+Bearbeitung von Anfragen bei Netzbetreibern"*, missing grid-utilisation data, and
+*"umfangreiche Abstimmungen zwischen Netzbetreibern und CPO"*. **Germany has 860+ DSOs,
+each with its own TAB.** BDEW issued a **Musterwortlaut TAB Mittelspannung** in February
+2026 proposing a mandatory **10-working-day** response, and **Masterplan Ladeinfrastruktur
+2030 Maßnahme 22** requires that *"Netzanschlussbegehren in der Mittelspannung sollen
+künftig digital gestellt werden können"* with online status tracking. Building to that
+target is forward-looking, not speculative.
+
+Grid connection is **20–25% of HPC capex**. Baukostenzuschüsse under § 11 NAV apply above
+30 kW; a 70×150 kW truck depot needs 5 MW (BKZ ~€425k), a motorway MCS site 28 MW
+(BKZ ~€1.8m).
+
+**§ 14a EnWG — confirmed, and it does NOT cover public charging.** The statute contains no
+numeric threshold; the 4.2 kW comes from **BNetzA Festlegung BK6-22-300** (decided
+27.11.2023, applying 01.01.2024). BNetzA states plainly: *"**Öffentlich zugängliche
+Ladepunkte** i. S. d. § 2 Nr. 5 Ladesäulenverordnung **sind nicht von den Regelungen**
+erfasst"*. The quid pro quo for dimming is an **Anschlusspflicht** — operators may no
+longer refuse or delay connection citing congestion. Where it bites is **non-public depot
+charging**. ⚠️ BK6-22-300's decision text could not be retrieved; the tenor wording comes
+from BNetzA's explainer.
+
+**Standortakquise.** ~40% private / 60% public land (Bundeskartellamt, Oct 2024).
+Concessions run 5–10 years. **§ 7c EnWG bars DSOs from operating charging** — which is
+exactly why E.ON's grid arm and its CPO arm must be separate entities. Vergaberecht is the
+schedule-killer: **Munich's 2,700-charger procurement was ordered restarted in Nov 2023**
+for tendering the wrong instrument; the replacement launched Jan 2025, ~5 years from start
+to first spade. NRW gives *"mindestens 12 Monate"* concept-to-tender, with **8–12 distinct
+counterparties per site** of whom only the landowner is a customer. Useful CRM geography:
+**94% of CPOs consider competitors only within 5 km, 88% within 1 km.**
+
+**Eichrecht is a per-device, per-Land evidence problem.** Eichfrist is **8 years from
+Inverkehrbringen, not installation** — a charger warehoused two years arrives with two
+years burned — running to calendar-year end. Nacheichung must be applied for **≥10 weeks
+before expiry** (§ 38). A **firmware update is prima facie an Eingriff under § 37 Abs. 2
+Nr. 2** requiring separate approval, and the Eichfrist is unaffected by it. Enforcement is
+**Länder** competence with independent queues, and § 55 lets one authority ban a device
+*model* — making a single SKU defect a fleet-wide revenue event. Fines to €50,000.
+
+**THG-Quote — the 2026 EVSE-ID change is confirmed at primary source** (UBA Bekanntmachung,
+10 June 2026, BAnz AT 30.06.2026 B9): *"für jeden Ladepunkt zwingend die gesamte Electric
+Vehicle Supply Equipment ID (EVSEID) anzugeben"*. Deadline **28 February** of the following
+year, an Ausschlussfrist. **§ 8 Abs. 5: incomplete filings are rejected, not queried.** From
+17.04.2026 filing is chargeable at **€94.60–€6,500**, and the fee *"hängt maßgeblich von der
+Qualität der im Antrag übermittelten Daten und Nachweise ab"* — data hygiene now has a
+quotable price.
+
+**The sharpest single fact in the whole study:** § 6 Abs. 4 of the 38. BImSchV requires the
+operator to declare to the UBA that for every charge point in the filing *"die Messgeräte …
+geeicht sind und **die Eichfrist nach § 37 MessEG nicht abgelaufen ist**"*. **An expired
+Eichfrist on one charger converts a metrology lapse into a false declaration to a federal
+authority.**
+
+**Funding is now reverse auctions.** KfW 440/441/442 all closed. Open: Mehrparteienhäuser
+(€500m, closes 10.11.2026) and e-Lkw (€1bn/4yrs, PtJ). All three e-Lkw calls were heavily
+oversubscribed — **Aufruf B was ranked purely by €/kW and the cut fell at ~230 €/kW**;
+Aufruf C was ~6× oversubscribed. A technically flawless bid at 300 €/kW simply loses. The
+classic disqualifier is **vorzeitiger Maßnahmenbeginn**: any binding contract before the
+Zuwendungsbescheid voids the grant, and *grid-connection contracts are the classic
+accidental trigger, since utilities want them signed early.*
+
+### E.ON's own charging position
+
+**EDRI** — CEO **Timo Sillober** since 16.10.2025 (ex-EnBW), **8,000+ points in 10+
+countries**. Deutschlandnetz: **3 Regionallose = 139 sites** plus 30+ Autobahn sites →
+**170+ sites / 1,350+ fast points**, second-largest regional operator. Lkw-Deutschlandnetz
+(July 2026): Los 5 with mblty (Tank & Rast) — 24 sites, 195 points, 101 MCS-capable.
+
+Site acquisition is the core growth motion and it is landowner-partnership-shaped:
+Unibail-Rodamco-Westfield (308 DC points), Retail Match/ILG (350 points at Netto/Aldi
+Süd/OBI/Toom), MediaMarktSaturn (80 stores, ~300 HPC), **BImA — 7,000 Ladepunkte on federal
+property by Q2 2027**, MAN (170 sites / ~400 truck points). Vendor stack: **Ampeco** CPMS
+across 11 countries, Alpitronic, Siemens, Alfen, **Virta** (equity stake 2018, *not* a JV),
+**gridX** (80%).
+
+Market frame: **204,078 public points / 8.9 GW (July 2026)**, >80% operated by BDEW-member
+utilities, and **only 12% average simultaneous occupancy** — the constraint is not charger
+count, it is which sites and when they energise.
+
+### The gap, stated precisely
+
+**No system of record spans a charging site's lifecycle, and the compliance clocks that
+hang off it live nowhere.** Four facts define it:
+
+1. **E.ON runs Salesforce E&U Cloud as central CRM — but only in retail energy sales.**
+   The CPO business never names a platform. Its **Werkstudent Netzanschlussanfragen**
+   posting does the work by hand — *"die Einholung und Aufbereitung aller relevanten
+   Informationen"*, *"Die technischen Antragsunterlagen fertigst du sorgfältig an"* — with
+   **no system named**. The *Planer für Ladeinfrastruktur* works in **AutoCAD, Alpi Caneco,
+   GIS and Office**. This is a student-and-CAD process sitting adjacent to, not inside, the
+   Salesforce org.
+2. **Salesforce's own E&U data model does not cover it.** E&U Customer 360 has Account,
+   Billing Account, Contract, Energy Service Agreement, Location, Product, Service Point —
+   and nothing for a grid-connection request, a charge point as a regulated metering asset,
+   a site-acquisition pipeline, an Eichfrist, or a THG filing. Not a configuration E.ON
+   skipped; it does not ship.
+3. **E.ON sits on both sides of the queue and cannot see across it.** Largest DSO group
+   (Westnetz, HanseWerk, E.DIS, Avacon, Bayernwerk) *and* a top-two CPO — but **§ 7c EnWG**
+   forbids the DSO from operating charging, and the two sides run different stacks.
+4. **They are automating the adjacent problem on the wrong platform.** The **Werkstudent
+   Partner Business Development, KI & Sales Operations** posting (Job-ID 245933) — in
+   **E.ON Energie Deutschland GmbH, the same entity that runs Salesforce** — reads: *"Du
+   gestaltest aktiv den Aufbau und die Weiterentwicklung unseres
+   **Installateur-Partnernetzwerks**"* and *"Du identifizierst innovative KI-Technologien und
+   setzt **Research-Agenten, Automatisierungen sowie digitale Workflows** gezielt ein"* —
+   with tools listed as **Power BI, Power Apps, Microsoft Copilot**.
+
+   A channel-partner network with AI agents is being built on Power Platform, inside the
+   division whose central CRM is Salesforce. **That is exactly what VoltStream is**, and it
+   is a directly demonstrable "you already own the better platform for this" argument.
+
+### The agents that follow from this
+
+Not a chatbot — agents that act on deadlines:
+
+- **Netzanschluss agent** — resolve the responsible VNB out of 860+, retrieve *that*
+  operator's TAB, assemble the Netzanschlussbegehren pack, run the **§ 19 Abs. 2 NAV
+  two-month clock** with escalation.
+- **Compliance-clock agent** — per-device Eichfrist from Inverkehrbringen, raising
+  Nacheichung applications at the **10-week** boundary against the correct Land authority,
+  flagging every firmware push as a § 37 Abs. 2 Nr. 2 Eingriff.
+- **THG filing agent** — validate EVSEID completeness *before* submission, enforce the
+  one-claimant rule, and **block the § 6 Abs. 4 declaration if any charge point in the
+  filing has a lapsed Eichfrist**.
+- **Förderung agent** — compute €/kW bid position against known clearing levels, track
+  De-minimis headroom across linked undertakings, and **flag when the Netzanschluss team is
+  about to sign a Baukostenzuschuss that would trigger *vorzeitiger Maßnahmenbeginn* and
+  void the grant.** A genuine cross-team conflict only a shared CRM record can catch.
+
+### Could not verify (Part A/B/C)
+
+E.ON GPT's content and model partner (eon.com unfetchable) · any Salesforce case study or
+press release naming E.ON · tender documents (TED needs POST) · LinkedIn skill data ·
+whether E.ON's Salesforce org serves B2C only or also B2B/e-mobility — **no posting states
+the segment** · which platform E.ON Drive's "CRM-Systeme" are · BK6-22-300's decision text ·
+the 0.45 Gleichzeitigkeitsfaktor / 1.89 kW depot figures (single trade source) · KfW 440's
+closure on a live KfW page · THG-Quote prices from any authoritative source.
+
+**Two claims to NOT repeat:** there is no evidence EDRI is a JV and no Copenhagen
+Infrastructure Partners stake; and there is no direct E.ON–Vinci partnership (the only link
+is Voltix as an HDV-E consortium member).
 
 ## 10. Open decisions
 
