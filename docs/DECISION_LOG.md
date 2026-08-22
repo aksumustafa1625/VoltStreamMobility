@@ -1,6 +1,6 @@
 # Karar Defteri — Agent Tasarımı
 
-Dört bağımsız hakemin her önerisi, statüsüyle. Amaç: aynı tartışmayı iki kez yapmamak ve
+Beş bağımsız hakemin her önerisi, statüsüyle. Amaç: aynı tartışmayı iki kez yapmamak ve
 hakemlerin **ayrıştığı** yerleri kaybetmemek.
 
 **Kaynak:** [AGENT_DESIGN_FOR_REVIEW.md](AGENT_DESIGN_FOR_REVIEW.md)
@@ -17,6 +17,7 @@ hakemlerin **ayrıştığı** yerleri kaybetmemek.
 | **R2** | Dengeli, çalışan kod verdi | `DateUtils` implementasyonu + beş düşman utterance |
 | **R3** | En teknik | **Parametreler de üretiliyor** — mimari sınırdaki delik |
 | **R4** | En derin, implementasyon seviyesi | **Stratejiyi sorguluyor: motoru önce inşa et** |
+| **R5** | ⚠️ **En zayıfı** — dokümanın §16'sını görmemiş, CPQ'yu merkeze koymuş | Yine de iki gerçek fikir: **repo-tabanlı retriever** ve **takılabilir SecurityChecker** |
 
 ---
 
@@ -30,7 +31,7 @@ hakemlerin **ayrıştığı** yerleri kaybetmemek.
 >
 > *"İki kez oku: **Tasarımın, kırılgan bir Agentforce dağıtımına sarılmış güzel bir regülasyon motoru. Motorla öne çık — agent sarmalayıcısı çökerse elinde hâlâ motor kalır.**"*
 
-**Bu, dört hakem içinde tek stratejik itiraz ve ciddiye alınmalı.**
+**Bu, beş hakem içinde tek stratejik itiraz ve ciddiye alınmalı.**
 
 ### Lehine olan argümanlar
 
@@ -207,7 +208,90 @@ README'ye bir paragraf: etkileşim başına tahmini token, en kötü durum senar
 
 ---
 
-# ⚔️ Dört yönlü çelişki tablosu
+# 🆕 R5'in iki gerçek katkısı
+
+R5, beş hakemin en zayıfı. Kendi ifadesiyle **dokümanın 26 sorusunu hiç görmemiş**
+(*"I do not have the text of Section 16's 26 questions"*), o yüzden cevaplarının bir kısmı
+koşullu tahmin. Ve **CPQ'yu wow listesinin başına koyuyor** — dört hakemin oybirliğiyle
+kesilmesini söylediği şeyi.
+
+Ama iki fikri gerçekten yeni ve ikisi de açık bir problemi çözüyor.
+
+### N-24 · Repo-tabanlı retriever ⭐ ✅ KABUL — **X-06'yı çözüyor**
+
+> **R5:** *"Portfolyo demosu için Data Cloud'a güvenme. Onun yerine **küçük, kaynak-takipli bir retrieval katmanı** kur: kanonik grounding dokümanlarını repoda düz metin olarak sakla, CI harness'ında veya yerel bir serviste **küçük bir vektör deposu** (FAISS ya da embedding'ler üzerinde basit kosinüs benzerliği) implement et. **Yeniden üretilebilir ve org kredisi tüketmeden deseni gösteriyor.**"*
+
+Dört hakem RAG konusunda dört farklı şey söylemişti — R1 markdown'a çevir, R2 v1'de kes,
+R3 markdown + bağlam yeniden yaz, R4 retriever'ı tamamen kes. **Hiçbiri "kendi retriever'ını
+yaz" demedi.**
+
+Ve bu seçenek, kapalı olan her sorunu aynı anda çözüyor:
+
+| Sorun | Repo retriever'ın çözümü |
+|---|---|
+| Data Library kaynak-takipli değil *(§15.4)* | Dosyalar repoda, diff'lenebilir |
+| DE kredi tükenmesi *(B-03)* | Sıfır org kredisi |
+| Data Cloud hibernasyonu 14 günde *(N-05)* | Data Cloud'a hiç dokunmuyor |
+| Search Index sessiz hatası | Yok — index repoda |
+| Yabancı yeniden üretemiyor *(H-09)* | `npm test` yeter |
+| PDF chunking cehennemi *(F-01)* | Chunk'lamayı ben kontrol ediyorum |
+
+Ve **groundedness scorer'ı da kurtarıyor** *(X-08)*: yargılanacak retrieved content var,
+ama maliyeti yok.
+
+**KARAR: X-06 kapandı.** Data Library **v2**'ye ertelenir *(ve README'de "krediler/sandbox
+gerektirir" diye işaretli opsiyonel script olarak kalır — R5'in önerisi)*. v1'de repo
+retriever.
+
+### N-25 · Takılabilir `SecurityChecker` ⭐ ✅ KABUL — **D-05'i test edilebilir yapıyor**
+
+R1, R3 ve R4 üçü de *"FLS'i kanıtlayan bir güvenlik testi yaz"* dedi. **Hiçbiri nasıl
+yapılacağını söylemedi.**
+
+Problem gerçek: FLS'i test etmek için test kullanıcısı, profil ve permission set kurmak
+gerekir — yavaş, kırılgan ve org durumuna bağımlı.
+
+R5'in cevabı **bağımlılık enjeksiyonu**:
+
+```apex
+public virtual class SecurityChecker {
+    public virtual Boolean isFieldAccessible(SObjectType t, String field) { ... }
+}
+
+// testte:
+private class DenyFieldSecurityChecker extends SecurityChecker {
+    public override Boolean isFieldAccessible(SObjectType t, String field) {
+        return field != 'Freistellungsbescheinigung_Bis__c';
+    }
+}
+```
+
+Test deterministik, hızlı, org durumundan bağımsız — ve **"agent göremediği alanı okuyamaz"
+iddiası artık kanıtlanabilir.**
+
+⚠️ **Sadece bu deseni alıyorum, R5'in mimarisini değil** — sebepleri aşağıda.
+
+### N-26 · Commit'lenmiş `evaluation_report.json` ✅ KABUL
+> **R5:** *"Bir 'yeniden üretilebilirlik rozeti': her şeyi yerel çalıştıran ve **deterministik
+> bir artefakt** üreten bir script — `evaluation_report.json` — ki incelemeciler onu repoda
+> inceleyebilsin."*
+
+R4'ün "3 dakika" gözlemine *(S-01)* doğrudan cevap: incelemeci hiçbir şey **çalıştırmadan**
+sonuçları görüyor.
+
+### N-27 · README'de "incelemeciye rehber" bölümü ✅ KABUL
+> **R5:** *"Neyi inceleyeceğini (güvenlik kontrolleri, FLS uygulaması, test harness'ı) ve
+> **neyi yok sayacağını** (kredi gerektiren Data Cloud scriptleri) açıkça söyle."*
+
+Ucuz ve akıllı. İncelemecinin üç dakikasını yönlendiriyor.
+
+### N-28 · 10–20 dakikalık yeniden üretim listesi ✅ KABUL
+H-09'u zaman kutulu hale getiriyor: *"bir incelemecinin 10–20 dakikada koşabileceği minimal
+kontrol listesi — **portfolyo reposu için tek en önemli artefakt.**"*
+
+---
+
+# ⚔️ Beş yönlü çelişki tablosu
 
 | Konu | R1 | R2 | R3 | R4 | **Karar** |
 |---|---|---|---|---|---|
@@ -283,6 +367,50 @@ R4 **4.096** (maksimum) diyor, benim araştırmam Salesforce'un resmî grounding
 ### R1-hata · "Referans sayfası yok ⇒ sandbox-only"
 Non-sequitur, ilk deftere kaydedilmişti. ❌ RED olarak duruyor.
 
+### R5-hata-1 · CPQ'yu wow listesinin başına koyuyor ❌ RED
+> **R5:** *"Apex destekli CPQ aksiyonu + deterministik test harness'ı — **wow #1**, tek
+> geliştirici için fizibilite: **Yüksek**."*
+
+**Dört hakem oybirliğiyle CPQ'yu kes dedi**, ve gerekçeleri kanıta dayanıyordu: CPQ 27 Mart
+2025'te end-of-sale, API'si sadece Apex, ve tek public üretim hesabı (360Learning) **%50'nin
+üzerinde `Unable to lock rows`** raporluyor. R4 bunu *"zamanının %30'unu yer, sıfır getiri"*
+diye özetledi.
+
+R5 bunların hiçbirine değinmiyor — muhtemelen §2.3 ve §15.5'i görmediği için. **Reddediliyor.**
+
+### R5-hata-2 · Güvenlik facade'ının içinde SOQL injection açığı ❌ RED
+```apex
+public static List<SObject> safeQuery(String soql, ...) {
+    List<SObject> rows = Database.query(soql);   // ← ham string
+```
+Güvenliği uygulamak için yazılmış sınıfın kendisi **dinamik SOQL enjeksiyon vektörü**. R5
+bunu 6. bölümde kabul ediyor (*"asla ham kullanıcı girdisini soql string'ine geçirme"*) ama
+**kod yine de öyle yapıyor.**
+
+Mevcut Selector desenim zaten bunu çözüyor: sorgular statik, `WITH USER_MODE` ile.
+
+### R5-hata-3 · Reflection tabanlı dispatch Agentforce için yanlış ❌ RED
+`invokeAction(className, methodName, payload)` → `Type.forName().newInstance()`.
+
+**Agentforce zaten `@InvocableMethod`'u doğrudan çağırıyor.** Araya bir dispatcher koymak,
+platformun kendi mekanizmasını devre dışı bırakıp yerine kırılgan bir reflection katmanı
+koyuyor — ve `@InvocableVariable` description'larının reasoning engine'e ulaşmasını da
+engelliyor *(ki N-13'e göre routing'in çalışması tam olarak onlara bağlı)*.
+
+Ayrıca mevcut dört katmanlı mimarime beşinci bir katman ekliyor.
+
+**Alınan:** takılabilir `SecurityChecker` *(N-25)*. **Reddedilen:** facade + reflection.
+
+### R5-hata-4 · "Ağır işler için İngilizce'ye düş" ❌ RED *(3-1)*
+> **R5:** *"Almancayı UI/diyalog ve küçük testler için kullan; ağır retrieval/LLM işleri için
+> **İngilizce fallback** tut."*
+
+**R4 bunu doğrudan çürütüyor:** *"LLM içeride dil değiştirmiyor; **gördüğü dille yönlendirme
+yapıyor.**"* R2 de aynı yönde şüphe belirtmişti. Karışık dil, routing doğruluğunu düşürüyor
+— tam da kaçınmak istediğimiz şey.
+
+**N-13 geçerli kalıyor: her şey Almanca.**
+
 ---
 
 # Dört hakemin **oybirliğiyle** uzlaştığı
@@ -311,7 +439,7 @@ Non-sequitur, ilk deftere kaydedilmişti. ❌ RED olarak duruyor.
 
 **Nesneler (3 çekirdek):** `Ladestandort__c` · `Ladepunkt__c` · `Compliance_Frist__c`
 Mevcut: `Reseller__c`. Köprü için: `THG_Meldung__c` + junction.
-**Ertelenen:** `Netzbetreiber__c`, `Netzanschluss_Antrag__c`, `Foerderantrag__c`
+**Ertelenen:** `Netzbetreiber__c`, `Netzanschluss_Antrag__c`, `Foerderantrag__c`, Data Library (v2)
 **Kesilen:** tüm CPQ
 
 **Apex:** ~12 sınıf, hepsi `with sharing`, hepsi bulk, hepsinin testi
@@ -349,16 +477,30 @@ R4'ün günlük planı, diğerlerinin tavsiyeleriyle birleştirilmiş:
 
 | Statü | Adet |
 |---|---|
-| ✅ KABUL | 71 |
+| ✅ KABUL | 76 |
 | ⚔️ ÇELİŞKİ (açık) | 1 *(X-10, `Reseller__c` → `Account`)* |
 | 🔬 DOĞRULA | 5 |
-| ⏸️ ERTELE | 4 |
-| ❌ RED | 3 |
+| ⏸️ ERTELE | 5 |
+| ❌ RED | 7 |
 | 👤 SENİN | 2 *(S-01 sıralama, G-02 CPQ)* |
 
-**Dört hakem, on beş noktada çelişti. On dördünü çözdüm.**
+**Beş hakem, on altı noktada çelişti. On beşini çözdüm.**
 
 Ölçek: ilk tasarımın **yaklaşık dörtte biri.**
+
+## Hakem kalitesi — dürüst değerlendirme
+
+| | Kabul | Red | Not |
+|---|---|---|---|
+| R1 | 34 | 1 | Kapsam kesme ve gerçek kod hatası |
+| R2 | yüksek | 0 | Çalışan kod, beş düşman utterance |
+| R3 | yüksek | 0 | **Mimari delik + `BusinessHours` + hibernasyon** |
+| R4 | yüksek | 2 | En derin teknik, ama iki hatalı tavsiye |
+| R5 | **2** | **4** | Dokümanı görmemiş, CPQ'yu merkeze koymuş — ama iki fikri gerçekten yeni |
+
+R5 düşük isabetli ama **sıfır değil**: repo-tabanlı retriever, dört hakemin dört farklı
+şekilde çözmeye çalıştığı grounding problemini tek hamlede kapattı. Zayıf bir hakemin bile
+bir fikri planı değiştirebiliyor — defterin işe yaradığının kanıtı.
 
 ## Senin vereceğin iki karar
 
