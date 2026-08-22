@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Family</fullName>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>AC-Ladestationen</fullName>
+                <default>false</default>
+                <label>AC-Ladestationen</label>
+            </value>
+            <value>
+                <fullName>DC-Schnellladestationen</fullName>
+                <default>false</default>
+                <label>DC-Schnellladestationen</label>
+            </value>
+            <value>
+                <fullName>HPC-Ladestationen</fullName>
+                <default>false</default>
+                <label>HPC-Ladestationen</label>
+            </value>
+            <value>
+                <fullName>Backend und Software</fullName>
+                <default>false</default>
+                <label>Backend und Software</label>
+            </value>
+            <value>
+                <fullName>Installation und Montage</fullName>
+                <default>false</default>
+                <label>Installation und Montage</label>
+            </value>
+            <value>
+                <fullName>Service und Wartung</fullName>
+                <default>false</default>
+                <label>Service und Wartung</label>
+            </value>
+            <value>
+                <fullName>Lastmanagement</fullName>
+                <default>false</default>
+                <label>Lastmanagement</label>
+            </value>
+            <value>
+                <fullName>Zubehoer</fullName>
+                <default>false</default>
+                <label>Zubehör</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
