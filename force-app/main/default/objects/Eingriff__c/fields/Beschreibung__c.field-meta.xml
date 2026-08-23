@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Beschreibung__c</fullName>
+    <description>What was done. Free text on purpose - whether a given intervention CAN affect metrological properties is a judgement the operator records and the authority may test, not something a picklist should pretend to decide.</description>
+    <externalId>false</externalId>
+    <label>Beschreibung</label>
+    <required>false</required>
+    <length>4000</length>
+    <visibleLines>4</visibleLines>
+    <type>LongTextArea</type>
+</CustomField>

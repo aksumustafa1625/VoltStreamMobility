@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Instandsetzer_befugt__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Whether the repair was carried out by a befugtes Instandsetzungsunternehmen. First of the four conditions in § 37 Abs. 5 MessEG. Note that the authorisation is granted by the authority under § 54 MessEV and re-checked at least every five years - a firm can hold every manufacturer certificate and still be legally unable to repair a billing-relevant device.</description>
+    <externalId>false</externalId>
+    <label>Befugter Instandsetzer</label>
+    <trackHistory>true</trackHistory>
+    <type>Checkbox</type>
+</CustomField>

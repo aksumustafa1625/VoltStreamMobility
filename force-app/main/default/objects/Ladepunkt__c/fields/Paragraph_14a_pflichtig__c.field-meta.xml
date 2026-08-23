@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Paragraph_14a_pflichtig__c</fullName>
+    <description>Whether the point is a steuerbare Verbrauchseinrichtung. Encodes both halves of the rule: the 4.2 kW threshold, which appears nowhere in § 14a itself and comes entirely from BNetzA BK6-22-300, and the exclusion the statute does state in its own words - nicht oeffentlich-zugaengliche Ladepunkte fuer Elektromobile. So making a point public switches this OFF while switching four other regimes on. Note the guaranteed 4.2 kW is a dimming floor on what the operator may INSTRUCT, not on what the device does: a relay-only wallbox is lawfully taken to zero and cannot claim the hardship exemption for that inability.</description>
+    <externalId>false</externalId>
+    <formula>AND( Ladeleistung_kW__c &gt; 4.2, NOT(Oeffentlich_zugaenglich__c) )</formula>
+    <formulaTreatBlanksAs>BlankAsBlank</formulaTreatBlanksAs>
+    <label>§ 14a EnWG pflichtig</label>
+    <required>false</required>
+    <type>Checkbox</type>
+</CustomField>

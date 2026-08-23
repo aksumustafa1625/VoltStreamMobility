@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Oeffentlich_seit__c</fullName>
+    <description>The date the point BECAME public. LSV § 4 Abs. 3: the notification duties apply afresh when an existing charge point newly becomes publicly accessible - so this is a transition, not an attribute, and the date is what the two-week clock runs from. A point that was public from the start carries the Inbetriebnahme date here.</description>
+    <externalId>false</externalId>
+    <label>Öffentlich zugänglich seit</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>Date</type>
+</CustomField>

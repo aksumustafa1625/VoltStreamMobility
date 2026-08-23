@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Beendet_Eichfrist__c</fullName>
+    <description>True when this event terminates the Eichfrist early. Either it is an Eingriff under § 37 Abs. 2 Nr. 2, or it is an Instandsetzung that fails to meet all four Abs. 5 conditions together and so falls back to Abs. 2 Nr. 2. The four-way AND is the statute, not a house rule.</description>
+    <externalId>false</externalId>
+    <formula>ISPICKVAL(Typ__c, &apos;Eingriff&apos;) || ( ISPICKVAL(Typ__c, &apos;Instandsetzung&apos;) &amp;&amp; NOT( AND( Instandsetzer_befugt__c, Nacheichung_beantragt__c, Kennzeichnung_41__c, Behoerde_informiert__c ) ) )</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Beendet Eichfrist vorzeitig</label>
+    <type>Checkbox</type>
+</CustomField>

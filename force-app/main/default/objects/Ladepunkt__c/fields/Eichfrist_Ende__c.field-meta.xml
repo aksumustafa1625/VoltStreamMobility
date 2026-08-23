@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Eichfrist_Ende__c</fullName>
+    <description>End of the calibration period. Eight years for both AC and DC - MessEV Anlage 7 Tabelle 1 Nr. 6.7 covers them in a single entry, which is exactly why they are identical - then § 34 Abs. 2 MessEV pushes the end to 31 December of the year in which the period mathematically ends, because the period is at least one year long.</description>
+    <externalId>false</externalId>
+    <formula>IF( ISBLANK(Fristbeginn__c), NULL, DATE( YEAR(Fristbeginn__c) + 8, 12, 31 ) )</formula>
+    <formulaTreatBlanksAs>BlankAsBlank</formulaTreatBlanksAs>
+    <label>Eichfrist Ende</label>
+    <required>false</required>
+    <type>Date</type>
+</CustomField>

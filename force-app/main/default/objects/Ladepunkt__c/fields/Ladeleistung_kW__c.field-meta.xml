@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Ladeleistung_kW__c</fullName>
+    <description>Rated charging power. Carries three separate legal thresholds: above 4.2 kW a non-public point is a steuerbare Verbrauchseinrichtung under BK6-22-300; at 22 kW the BNetzA register switches it from Normal- to Schnellladepunkt; and at 50 kW AFIR Art. 5 stops accepting a QR code and demands a card reader or contactless.</description>
+    <externalId>false</externalId>
+    <label>Ladeleistung (kW)</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <precision>8</precision>
+    <scale>2</scale>
+    <type>Number</type>
+</CustomField>

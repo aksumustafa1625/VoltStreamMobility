@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Behoerdliche_Freigabe_am__c</fullName>
+    <description>Date the authority approved a software update under § 37 Abs. 6 Nr. 1 MessEG in conjunction with § 40 MessEV. Until this is filled the device may not legally operate even though its Eichfrist is untouched and unexpired - the most interesting state in the whole domain, and one the industry reports causes erhebliche Verzoegerungen. Note § 40 Abs. 4 MessEV also requires the operator to have CONSENTED to the update: a manufacturer pushing an OTA without consent is itself unlawful.</description>
+    <externalId>false</externalId>
+    <label>Behördliche Freigabe am</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>Date</type>
+</CustomField>

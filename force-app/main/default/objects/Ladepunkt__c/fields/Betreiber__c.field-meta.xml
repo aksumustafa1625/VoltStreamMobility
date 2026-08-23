@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Betreiber__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Operator of the charge point - the Ladepunktbetreiber in the sense of Art. 2 No. 39 of Regulation (EU) 2023/1804, which is who the LSV § 4 notification duty and the THG claim under § 6 of the 38. BImSchV attach to. Not necessarily the site owner and not necessarily the reseller who installed it.</description>
+    <externalId>false</externalId>
+    <label>Betreiber</label>
+    <referenceTo>Account</referenceTo>
+    <relationshipLabel>Ladepunkte</relationshipLabel>
+    <relationshipName>Ladepunkte</relationshipName>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>Lookup</type>
+</CustomField>

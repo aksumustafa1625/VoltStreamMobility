@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Sperrende_Eingriffe__c</fullName>
+    <description>Count of software updates still waiting on authority approval under § 37 Abs. 6. Any number above zero means the device may not legally operate - regardless of how much Eichfrist is left, which is what makes this state worth surfacing separately.</description>
+    <externalId>false</externalId>
+    <label>Sperrende Eingriffe</label>
+    <summaryFilterItems>
+        <field>Eingriff__c.Sperrt_Betrieb__c</field>
+        <operation>equals</operation>
+        <value>true</value>
+    </summaryFilterItems>
+    <summaryForeignKey>Eingriff__c.Ladepunkt__c</summaryForeignKey>
+    <summaryOperation>count</summaryOperation>
+    <type>Summary</type>
+</CustomField>

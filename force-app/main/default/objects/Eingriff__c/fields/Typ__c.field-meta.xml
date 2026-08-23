@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Typ__c</fullName>
+    <description>Which of the three § 37 MessEG paths this event takes, because the consequence differs per path. Eingriff (Abs. 2 Nr. 2): an intervention that CAN affect metrological properties ends the Eichfrist early - the test is can, not did. Instandsetzung (Abs. 5): repair by an authorised repairer is exempt from that early termination, but only if all four conditions hold together. Software-Update (Abs. 6): the Eichfrist is expressly untouched, yet the device may not operate until the authority approves. Nacheichung: the re-calibration itself, which restarts the period.</description>
+    <externalId>false</externalId>
+    <label>Typ</label>
+    <required>true</required>
+    <trackHistory>true</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Eingriff</fullName>
+                <default>false</default>
+                <label>Eingriff</label>
+            </value>
+            <value>
+                <fullName>Instandsetzung</fullName>
+                <default>false</default>
+                <label>Instandsetzung</label>
+            </value>
+            <value>
+                <fullName>Software-Update</fullName>
+                <default>false</default>
+                <label>Software-Update</label>
+            </value>
+            <value>
+                <fullName>Nacheichung</fullName>
+                <default>false</default>
+                <label>Nacheichung</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

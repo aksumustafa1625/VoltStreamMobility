@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Letzte_Eichung__c</fullName>
+    <description>Date of the most recent re-calibration. This is the second branch of § 34 Abs. 1 MessEV: once a device has been nachgeeicht the next eight years run from the calibration day, not from Inverkehrbringen. MAX rather than a manually maintained field so it cannot drift from the underlying events.</description>
+    <externalId>false</externalId>
+    <label>Letzte Eichung</label>
+    <summarizedField>Eingriff__c.Datum__c</summarizedField>
+    <summaryFilterItems>
+        <field>Eingriff__c.Typ__c</field>
+        <operation>equals</operation>
+        <value>Nacheichung</value>
+    </summaryFilterItems>
+    <summaryForeignKey>Eingriff__c.Ladepunkt__c</summaryForeignKey>
+    <summaryOperation>max</summaryOperation>
+    <type>Summary</type>
+</CustomField>

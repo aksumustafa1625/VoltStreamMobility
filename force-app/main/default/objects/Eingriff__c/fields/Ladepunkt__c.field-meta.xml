@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Ladepunkt__c</fullName>
+    <description>The charge point this event belongs to. Master-detail rather than lookup for one concrete reason: roll-up summary fields only exist on master-detail relationships, and the parent needs to count blocking events and take the latest calibration date declaratively so a list view can show compliance state without running Apex.</description>
+    <externalId>false</externalId>
+    <label>Ladepunkt</label>
+    <referenceTo>Ladepunkt__c</referenceTo>
+    <relationshipLabel>Eingriffe</relationshipLabel>
+    <relationshipName>Eingriffe</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

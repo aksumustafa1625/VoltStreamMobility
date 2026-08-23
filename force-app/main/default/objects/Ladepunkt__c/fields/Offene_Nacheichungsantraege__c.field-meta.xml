@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Offene_Nacheichungsantraege__c</fullName>
+    <description>Count of repairs where the re-calibration required by § 37 Abs. 5 Nr. 2 has not been applied for. The Eichfrist survives such a repair, but an application falls due unverzueglich - so this is an obligation counter, not a failure counter.</description>
+    <externalId>false</externalId>
+    <label>Offene Nacheichungsanträge</label>
+    <summaryFilterItems>
+        <field>Eingriff__c.Nacheichungsantrag_offen__c</field>
+        <operation>equals</operation>
+        <value>true</value>
+    </summaryFilterItems>
+    <summaryForeignKey>Eingriff__c.Ladepunkt__c</summaryForeignKey>
+    <summaryOperation>count</summaryOperation>
+    <type>Summary</type>
+</CustomField>

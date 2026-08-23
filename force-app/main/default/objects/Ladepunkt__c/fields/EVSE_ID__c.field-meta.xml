@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>EVSE_ID__c</fullName>
+    <description>The individual identification code under Art. 20 Abs. 1 Satz 2 of Regulation (EU) 2023/1804. Mandatory per charge point for the THG filing (Bekanntmachung BAnz AT 30.06.2026 B9) but only optional in the BNetzA register - and the regulator&apos;s own example omits the E segment the metrology-quota authority requires. Follow DIN SPEC 91286 and keep the E: DE*ABC*E12345678.</description>
+    <externalId>false</externalId>
+    <label>EVSE-ID</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <length>40</length>
+    <unique>false</unique>
+    <type>Text</type>
+</CustomField>

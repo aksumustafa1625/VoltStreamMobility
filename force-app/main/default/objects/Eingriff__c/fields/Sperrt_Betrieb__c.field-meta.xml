@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Sperrt_Betrieb__c</fullName>
+    <description>True while a software update is waiting on authority approval. § 37 Abs. 6: the Eichfrist is expressly unberuehrt, but the device may not be used until the authority signs off. References only this record&apos;s own fields and no TODAY() - a roll-up summary on the parent filters on it, and roll-up criteria reject cross-object references and runtime date functions.</description>
+    <externalId>false</externalId>
+    <formula>ISPICKVAL(Typ__c, &apos;Software-Update&apos;) &amp;&amp; ISBLANK(Behoerdliche_Freigabe_am__c)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Sperrt Betrieb</label>
+    <type>Checkbox</type>
+</CustomField>

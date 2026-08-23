@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Standort_Adresse__c</fullName>
+    <description>Physical location. Kept as free text in this slice; the site object that will eventually own it (Ladestandort__c) is deliberately out of scope until the Eichrecht path is proven end to end.</description>
+    <externalId>false</externalId>
+    <label>Standort</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>TextArea</type>
+</CustomField>

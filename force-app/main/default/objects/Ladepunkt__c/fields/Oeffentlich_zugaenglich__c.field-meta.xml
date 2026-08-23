@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Oeffentlich_zugaenglich__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Publicly accessible in the sense of § 2 Nr. 2 LSV (new numbering since 1 January 2026, taken verbatim from AFIR). This single flag switches four regimes on - LSV notification, Eichrecht, AFIR and THG eligibility - and switches § 14a EnWG OFF, because the statute covers only nicht oeffentlich-zugaengliche Ladepunkte. Never edit it without setting Oeffentlich_seit__c.</description>
+    <externalId>false</externalId>
+    <label>Öffentlich zugänglich</label>
+    <trackHistory>true</trackHistory>
+    <type>Checkbox</type>
+</CustomField>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Stilllegung_nachgewiesen__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Whether the device is PROVABLY shown to have gone unused for more than a year before this calibration. § 34 Abs. 1 Satz 4 MessEV is relief from the sentence before it: a device calibrated after expiry normally has its new period backdated to the old period&apos;s end (Satz 3), and only a device nachweislich laenger als ein Jahr nicht verwendet gets the Tag der Eichung instead. Nachweislich is a burden of proof, so this must be an explicit claim on the record - never a default. Left false, EichrechtService applies the backdating.</description>
+    <externalId>false</externalId>
+    <label>Stilllegung &gt; 1 Jahr nachgewiesen</label>
+    <trackHistory>true</trackHistory>
+    <type>Checkbox</type>
+</CustomField>

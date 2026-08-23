@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Eichstatus__c</fullName>
+    <description>Legal calibration state, visible in a list view without running an agent or a test. Six values, not a boolean, because § 38 MessEG creates a middle ground: applying at least ten weeks before expiry keeps the device legally equivalent to calibrated (GESCHUETZT), applying later leaves it to the authority (ERMESSEN) - kann, not muss. A blocking software update outranks everything because the device may not operate at all. UNBEKANNT is a first-class value: a missing Inverkehrbringen date is not a passing grade. One honest limit: § 38 grants the automatic protection only to a Verwender who ALSO did or offered das zur Eichung seinerseits Erforderliche. That second condition is a judgement, not a date, so GESCHUETZT here means the ten-week test passed - not that the authority will agree.</description>
+    <externalId>false</externalId>
+    <formula>IF( Sperrende_Eingriffe__c &gt; 0, "BETRIEB GESPERRT (§ 37 VI)", IF( ISBLANK(Fristbeginn__c), "UNBEKANNT", IF( AND( NOT(ISBLANK(Letzter_beendender_Eingriff__c)), OR( ISBLANK(Letzte_Eichung__c), Letzter_beendender_Eingriff__c &gt; Letzte_Eichung__c ) ), "VORZEITIG BEENDET (§ 37 II)", IF( TODAY() &lt;= Eichfrist_Ende__c, "GÜLTIG", IF( AND( NOT(ISBLANK(Nacheichung_beantragt_am__c)), Nacheichung_beantragt_am__c &lt;= Eichfrist_Ende__c - 70 ), "GESCHÜTZT (§ 38)", IF( NOT(ISBLANK(Nacheichung_beantragt_am__c)), "ERMESSEN (§ 38)", "ABGELAUFEN" ) ) ) ) ) )</formula>
+    <formulaTreatBlanksAs>BlankAsBlank</formulaTreatBlanksAs>
+    <label>Eichstatus</label>
+    <required>false</required>
+    <type>Text</type>
+</CustomField>

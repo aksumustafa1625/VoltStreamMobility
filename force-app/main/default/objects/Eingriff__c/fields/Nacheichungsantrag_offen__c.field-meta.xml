@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Nacheichungsantrag_offen__c</fullName>
+    <description>True when a repair was made but the re-calibration has not been applied for. The point of this field is that Abs. 5 relief and Abs. 5 Nr. 2 burden arrive in the same sentence: the Eichfrist survives AND an application falls due immediately. Exempt is not nothing to do.</description>
+    <externalId>false</externalId>
+    <formula>ISPICKVAL(Typ__c, &apos;Instandsetzung&apos;) &amp;&amp; NOT(Nacheichung_beantragt__c)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Nacheichungsantrag offen</label>
+    <type>Checkbox</type>
+</CustomField>

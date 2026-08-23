@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>BNetzA_veroeffentlicht__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Whether the BNetzA has PUBLISHED the point, not merely received the notification. § 6 Abs. 3 Nr. 1 of the 38. BImSchV makes publication - or the operator consenting to publication - a condition of the THG claim. The publication lag is undocumented, which is why the consent alternative matters.</description>
+    <externalId>false</externalId>
+    <label>BNetzA veröffentlicht</label>
+    <trackHistory>true</trackHistory>
+    <type>Checkbox</type>
+</CustomField>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Nacheichung_beantragt_am__c</fullName>
+    <description>Date the re-calibration was applied for. § 38 MessEG is a grace period, not a deadline: applying at least ten weeks before expiry keeps the device legally equivalent to calibrated until the authority checks. Applying later leaves continued use to the authority - kann, not muss. Hence three states, not two.</description>
+    <externalId>false</externalId>
+    <label>Nacheichung beantragt am</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>Date</type>
+</CustomField>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Inverkehrbringen__c</fullName>
+    <description>Date the device was placed on the market. Starts the FIRST Eichfrist under § 37 Abs. 1 Satz 2 MessEG - and only the first. After any Nacheichung the period restarts from the calibration day instead (§ 34 Abs. 1 MessEV), which is why this field alone cannot compute the expiry.</description>
+    <externalId>false</externalId>
+    <label>Inverkehrbringen</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>Date</type>
+</CustomField>

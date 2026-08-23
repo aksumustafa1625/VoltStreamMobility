@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <allowInChatterGroups>false</allowInChatterGroups>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>One event in the life of a charge point that § 37 MessEG cares about. The Eichfrist is not an eight-year timer - the industry counts more than 45,000 re-calibrations a year against an assumed 6,000, driven by cable replacement, maintenance and theft. So calibration status is computed from a chronology of events, and this object is that chronology. § 37 distinguishes three paths with three different consequences, which is why Typ__c is restricted and why three formula checkboxes derive the consequence rather than a person typing it.</description>
+    <enableActivities>false</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>true</enableHistory>
+    <enableReports>true</enableReports>
+    <enableSearch>true</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <externalSharingModel>ControlledByParent</externalSharingModel>
+    <label>Eingriff</label>
+    <nameField>
+        <displayFormat>EG-{00000}</displayFormat>
+        <label>Eingriff-Nr.</label>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>Eingriffe</pluralLabel>
+    <searchLayouts/>
+    <sharingModel>ControlledByParent</sharingModel>
+    <visibility>Public</visibility>
+</CustomObject>

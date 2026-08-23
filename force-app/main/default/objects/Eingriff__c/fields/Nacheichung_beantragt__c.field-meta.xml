@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Nacheichung_beantragt__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Second condition, § 37 Abs. 5 Nr. 2: die erneute Eichung unverzueglich beantragt wird. This is the trap in the exemption - the repair keeps the Eichfrist alive only if a re-calibration is applied for immediately. The industry asked the ministry in April 2026 to delete this Nummer precisely because of what it costs, which tells you it bites.</description>
+    <externalId>false</externalId>
+    <label>Nacheichung unverzüglich beantragt</label>
+    <trackHistory>true</trackHistory>
+    <type>Checkbox</type>
+</CustomField>

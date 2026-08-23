@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Inbetriebnahme__c</fullName>
+    <description>Commissioning date. Starts the two-week LSV § 4 clock for the BNetzA notification, and decides the AFIR Art. 5 payment obligation, which applies to points deployed from 13 April 2024. Not the same as Inverkehrbringen and not interchangeable with it.</description>
+    <externalId>false</externalId>
+    <label>Inbetriebnahme</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>Date</type>
+</CustomField>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Kennzeichnung_41__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Third condition: the repair is marked as required by § 41 MessEV.</description>
+    <externalId>false</externalId>
+    <label>Kennzeichnung nach § 41 angebracht</label>
+    <trackHistory>true</trackHistory>
+    <type>Checkbox</type>
+</CustomField>

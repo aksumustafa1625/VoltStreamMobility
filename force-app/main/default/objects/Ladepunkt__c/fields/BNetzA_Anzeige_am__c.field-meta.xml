@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>BNetzA_Anzeige_am__c</fullName>
+    <description>Date the commissioning was notified to the Bundesnetzagentur. LSV § 4 Abs. 1 requires it within two weeks; decommissioning and a change of operator must be notified unverzueglich, and on a change of operator BOTH the old and the new operator notify. § 6 LSV then forwards the register data monthly to the Land metrology authorities, so this entry is not a private act.</description>
+    <externalId>false</externalId>
+    <label>BNetzA-Anzeige am</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>Date</type>
+</CustomField>
