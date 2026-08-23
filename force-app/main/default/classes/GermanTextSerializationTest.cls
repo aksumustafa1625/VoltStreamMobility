@@ -31,8 +31,8 @@ private class GermanTextSerializationTest {
     static void dieAntwortDerAktionUeberstehtDieSerialisierungUnveraendert() {
         PruefeEichfristen.Antwort antwort = new PruefeEichfristen.Antwort();
         antwort.zusammenfassung = PROBE;
-        antwort.befunde = new List<String>{PROBE};
-        antwort.rechtsgrundlagen = new List<String>{'§ 34 Abs. 1 Satz 3 MessEV'};
+        antwort.befunde = PROBE;
+        antwort.rechtsgrundlagen = '§ 34 Abs. 1 Satz 3 MessEV';
         antwort.hinweis = PROBE;
 
         Test.startTest();
@@ -43,9 +43,9 @@ private class GermanTextSerializationTest {
 
         System.assertEquals(PROBE, zurueck.zusammenfassung,
             'Der Text muss unveraendert zurueckkommen - Zeichen fuer Zeichen.');
-        System.assertEquals(PROBE, zurueck.befunde[0]);
+        System.assertEquals(PROBE, zurueck.befunde);
         System.assertEquals(PROBE, zurueck.hinweis);
-        System.assertEquals('§ 34 Abs. 1 Satz 3 MessEV', zurueck.rechtsgrundlagen[0],
+        System.assertEquals('§ 34 Abs. 1 Satz 3 MessEV', zurueck.rechtsgrundlagen,
             'Das Paragraphenzeichen traegt das Transkript-Gate. Geht es verloren, vergleicht das '
             + 'Gate zwei Zeichenfolgen, die nie uebereinstimmen koennen.');
     }
@@ -54,7 +54,7 @@ private class GermanTextSerializationTest {
     static void imSerialisiertenTextStehtKeineHtmlEntitaet() {
         PruefeEichfristen.Antwort antwort = new PruefeEichfristen.Antwort();
         antwort.zusammenfassung = PROBE;
-        antwort.befunde = new List<String>{PROBE};
+        antwort.befunde = PROBE;
 
         Test.startTest();
         String serialisiert = JSON.serialize(antwort);
@@ -125,9 +125,7 @@ private class GermanTextSerializationTest {
         // nothing along the way flattening a German character.
         System.assert(antworten[0].zusammenfassung.contains('gültig geeicht'),
             'Die Zusammenfassung traegt den Umlaut: ' + antworten[0].zusammenfassung);
-        // Checked across the whole list rather than on the first entry: the citations are sorted,
-        // and "MessEV Anlage 7 ..." sorts ahead of anything beginning with §.
-        System.assert(String.join(antworten[0].rechtsgrundlagen, ' | ').contains('§'),
+        System.assert(antworten[0].rechtsgrundlagen.contains('§'),
             'Die Rechtsgrundlagen tragen das Paragraphenzeichen: '
             + antworten[0].rechtsgrundlagen);
         for (String entitaet : ZERSTOERT_DURCH_ESCAPING) {

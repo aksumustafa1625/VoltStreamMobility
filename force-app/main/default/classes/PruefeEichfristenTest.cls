@@ -58,10 +58,10 @@ private class PruefeEichfristenTest {
 
         System.assertEquals(1, a.anzahlGeprueft);
         System.assertEquals(0, a.anzahlHandlungsbedarf);
-        System.assertEquals(1, a.befunde.size());
-        System.assert(a.befunde[0].startsWith(bestand.get('laufend').Name),
-            'Ein Befund nennt zuerst den Ladepunkt: ' + a.befunde[0]);
-        System.assert(!a.rechtsgrundlagen.isEmpty(),
+        System.assertEquals(1, a.befunde.split('\n').size());
+        System.assert(a.befunde.startsWith(bestand.get('laufend').Name),
+            'Ein Befund nennt zuerst den Ladepunkt: ' + a.befunde);
+        System.assert(String.isNotBlank(a.rechtsgrundlagen),
             'Eine Aussage ohne Rechtsgrundlage waere fuer das Gate unpruefbar.');
         System.assertEquals(Date.today(), a.stichtag);
         System.assertEquals(null, a.hinweis, 'Ein Treffer braucht keinen Hinweis.');
@@ -80,15 +80,16 @@ private class PruefeEichfristenTest {
             + 'vollen Firmennamen.');
         System.assertEquals(3, a.anzahlHandlungsbedarf,
             'Gesperrt, abgelaufen und ohne bestimmbaren Status erfordern eine Massnahme.');
-        System.assertEquals(4, a.befunde.size());
+        System.assertEquals(4, a.befunde.split('\n').size());
 
         // Order is part of the answer: whoever listens to a list hears the first item best.
+        List<String> zeilen = a.befunde.split('\n');
         for (Integer i = 0; i < a.anzahlHandlungsbedarf; i++) {
-            System.assert(!a.befunde[i].contains('(gültig geeicht)'),
-                'Ein unauffaelliger Ladepunkt steht vor einem handlungsbeduerftigen: ' + a.befunde[i]);
+            System.assert(!zeilen[i].contains('(gültig geeicht)'),
+                'Ein unauffaelliger Ladepunkt steht vor einem handlungsbeduerftigen: ' + zeilen[i]);
         }
-        System.assert(a.befunde[3].contains('(gültig geeicht)'),
-            'Und der unauffaellige steht am Ende: ' + a.befunde[3]);
+        System.assert(zeilen[3].contains('(gültig geeicht)'),
+            'Und der unauffaellige steht am Ende: ' + zeilen[3]);
     }
 
     @IsTest
@@ -139,8 +140,8 @@ private class PruefeEichfristenTest {
         Test.stopTest();
 
         System.assertEquals(0, a.anzahlGeprueft);
-        System.assert(a.befunde.isEmpty(), 'Ohne Treffer gibt es nichts zu berichten.');
-        System.assert(a.rechtsgrundlagen.isEmpty(),
+        System.assert(String.isBlank(a.befunde), 'Ohne Treffer gibt es nichts zu berichten.');
+        System.assert(String.isBlank(a.rechtsgrundlagen),
             'Und nichts zu zitieren - sonst koennte der Agent einen Paragraphen nennen, der zu '
             + 'keiner Pruefung gehoert.');
         System.assert(a.hinweis.contains('LP-99999'),

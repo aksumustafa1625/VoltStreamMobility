@@ -4,6 +4,10 @@
         <apexClass>EichrechtCardController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
+    <classAccesses>
+        <apexClass>PruefeEichfristen</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
     <customMetadataTypeAccesses>
         <enabled>true</enabled>
         <name>Rechtsnorm__mdt</name>

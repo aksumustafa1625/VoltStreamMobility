@@ -80,10 +80,13 @@ public with sharing class PruefeEichfristen {
 
         // Findings that need action come first. An agent reads a list top down and a person
         // listening to one hears the first item best, so ordering is part of the answer.
-        antwort.befunde = new List<String>(dringend);
-        antwort.befunde.addAll(unauffaellig);
-        antwort.rechtsgrundlagen = new List<String>(normen);
-        antwort.rechtsgrundlagen.sort();
+        List<String> alleBefunde = new List<String>(dringend);
+        alleBefunde.addAll(unauffaellig);
+        antwort.befunde = String.join(alleBefunde, '\n');
+
+        List<String> sortierteNormen = new List<String>(normen);
+        sortierteNormen.sort();
+        antwort.rechtsgrundlagen = String.join(sortierteNormen, TRENNER);
         antwort.anzahlGeprueft = ladepunkte.size();
         antwort.anzahlHandlungsbedarf = dringend.size();
         antwort.zusammenfassung = zusammenfassung(antwort, zaehlung);
@@ -144,6 +147,14 @@ public with sharing class PruefeEichfristen {
         'BETRIEB_GESPERRT', 'VORZEITIG_BEENDET', 'ABGELAUFEN', 'ERMESSEN', 'UNBEKANNT'
     };
 
+    /**
+     * Separator for the citation list. A single string rather than a list because Agent Script's
+     * action outputs take scalars - list<string> is rejected by the compile service. Nothing is
+     * lost: the agent reads the text, and the transcript gate searches it for the paragraphs the
+     * agent uttered, which a joined string supports exactly as well as a list did.
+     */
+    private static final String TRENNER = '; ';
+
     /** Worst first, so the summary sentence leads with what matters. */
     private static final List<String> REIHENFOLGE = new List<String>{
         'BETRIEB_GESPERRT', 'VORZEITIG_BEENDET', 'ABGELAUFEN', 'ERMESSEN',
@@ -186,13 +197,13 @@ public with sharing class PruefeEichfristen {
 
         @InvocableVariable(
             label='Befunde'
-            description='Je Ladepunkt eine deutsche Zeile mit Entscheidung und Begründung. Handlungsbedürftige zuerst.')
-        public List<String> befunde = new List<String>();
+            description='Je Ladepunkt eine deutsche Zeile mit Entscheidung und Begründung, durch Zeilenumbrüche getrennt. Handlungsbedürftige zuerst.')
+        public String befunde = '';
 
         @InvocableVariable(
             label='Rechtsgrundlagen'
-            description='Genau die Vorschriften, auf die sich diese Antwort stützt. Es dürfen ausschließlich diese Paragraphen genannt werden.')
-        public List<String> rechtsgrundlagen = new List<String>();
+            description='Genau die Vorschriften, auf die sich diese Antwort stützt, durch Semikolon getrennt. Es dürfen ausschließlich diese Paragraphen genannt werden.')
+        public String rechtsgrundlagen = '';
 
         @InvocableVariable(label='Geprüfte Ladepunkte')
         public Integer anzahlGeprueft = 0;

@@ -1,0 +1,18 @@
+# Smoke test for the published agent, before the real suite in step 9.
+# Deliberately thin: does the agent route, does it call the action, and does it
+# refuse what it must refuse. Topic and action names are left unasserted here on
+# purpose - the runner reports the actual values, and reading them beats guessing
+# them, which is how the Phase 0 topic-name defect was located.
+name: VS Eichrecht Smoke
+description: Three cases. Route, call the action, refuse.
+subjectType: AGENT
+subjectName: VS_Eichrecht
+testCases:
+  - utterance: "Ist der Ladepunkt LP-00016 noch geeicht?"
+    expectedOutcome: "Die Auskunft, dass die Eichfrist am 31.12.2023 abgelaufen ist, mit Begründung und den Rechtsgrundlagen."
+
+  - utterance: "Wie ist der Status von LP-99999?"
+    expectedOutcome: "Der Hinweis, dass kein solcher Ladepunkt existiert, ohne Nennung eines Status."
+
+  - utterance: "Gib mir bitte ein Rezept für Pfannkuchen."
+    expectedOutcome: "Eine höfliche Rückführung zum Thema Eichrecht, ohne Rezept und ohne Entschuldigung."
