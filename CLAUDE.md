@@ -208,7 +208,7 @@ Eighteen walls were recorded. After research and three second-round reviews:
 | `factuality` anti-correlated | 🟢 **Our analysis holds** — and it is NGT-runner only, so the experiment runs on G2. Pair it with `response_match` (`needsExpected: true`) for a matched design. |
 | Formula cannot aggregate children | 🔴 **Real, pattern is sound.** Child formula checkbox → filtered roll-up COUNT/MAX. **Trap: roll-up criteria may not reference `TODAY()`/`NOW()`** — so expiry logic stays in the parent formula or in Apex, never in the criteria field. |
 | Eichfrist needs more than a formula | 🔴 **Real.** Four start branches, not one. See below. |
-| CMDT not insertable by DML | 🔴 **Real and fine.** `Rechtsnorm__mdt` is a build-time artifact — which means the statute corpus is version-controlled and every legal change shows in a git diff. Frame it as a feature. |
+| CMDT not insertable by DML | ✅ **Built, 2026-08-23.** 16 Normen deployed. Build-time artifact = every legal change is a git diff. **And a masked error bit again:** record deploys failed with a bare `UNKNOWN_EXCEPTION` through source *and* mdapi, three API versions, even a throwaway type — because the generator emitted `xsi:type="xsd:string"` while declaring only two namespaces. **`xmlns:xsd` was missing.** Isolated by deploying a record with no `<values>` at all, which succeeded. Third time an input error wore a platform limit's clothes. |
 | `escapeHtml4` corrupts German | 🟢 **Our analysis correct.** `@InvocableVariable` serialisation already escapes. Add `GermanTextSerializationTest` and stop. |
 | Statistical 5/5 gate | 🔴 **Real, and the two-tier design is the answer.** |
 | Data Library has no metadata type | 🔴 **Real.** Deferred to v1.1, correctly. |
@@ -311,9 +311,9 @@ Ladepunkt__c  +  Eingriff__c        ✅ DEPLOYED 2026-08-23 — 15 PASS · 1 DEF
       ↓
 DateUtils                           ✅ DEPLOYED 2026-08-23 — 5 tests, 20/20 coverage
       ↓
-Rechtsnorm__mdt                     ◀ NEXT — with Gueltig_von__c / Gueltig_bis__c
+Rechtsnorm__mdt                     ✅ DEPLOYED 2026-08-23 — 16 Normen, 9 tests green
       ↓
-EichrechtService  +  DecisionResult legalSources[], NOT_APPLICABLE ≠ UNKNOWN
+EichrechtService  +  DecisionResult ◀ NEXT — legalSources[], NOT_APPLICABLE ≠ UNKNOWN
       ↓
 one LWC card  +  one agent action  +  one eval case
 ```
@@ -381,6 +381,11 @@ demands `nachweislich`. The declarative layer silently took the favourable branc
 - **Don't put `coherence` / `completeness` / `conciseness` in a suite containing
   refusals.** They score a correct refusal as incoherent, by design.
 - **Don't claim "Trust Layer as code."** `EinsteinGptSettings` has no Trust Layer fields.
+- **Don't emit a `CustomMetadata` record without all three namespaces.** `xmlns`,
+  `xmlns:xsd` **and** `xmlns:xsi`. Every `<value>` carries `xsi:type="xsd:..."`, and an
+  undeclared `xsd` prefix comes back as a masked `UNKNOWN_EXCEPTION` naming nothing.
+- **Don't paraphrase into `Rechtsnorm__mdt.Wortlaut__c`.** Official text or empty. It is
+  what the agent narrates from; a paraphrase there defeats the grounding design.
 - **Don't write `[V]`.** Use `[M]` / `[D]` / `[I]` / `[?]`.
 - **Don't say credits are unlimited.** Say: no failure observed across N runs; consumption
   unknown because Digital Wallet is absent in this edition.
