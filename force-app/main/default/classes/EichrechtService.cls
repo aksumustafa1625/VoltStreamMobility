@@ -64,7 +64,7 @@ public with sharing class EichrechtService {
                          + 'MessEV. Die Eichfrist bleibt davon unberuehrt, der Ladepunkt darf '
                          + 'bis zur Freigabe dennoch nicht betrieben werden.');
             return lage.ende == null ? r
-                 : r.begruende('Die Eichfrist selbst laeuft bis zum ' + lage.ende.format() + '.');
+                 : r.begruende('Die Eichfrist selbst laeuft bis zum ' + DateUtils.deutsch(lage.ende) + '.');
         }
 
         if (lage.ende == null) {
@@ -77,15 +77,15 @@ public with sharing class EichrechtService {
         // § 37 Abs. 2 Nr. 2: an intervention ended the period early and no calibration followed.
         if (lage.vorzeitigBeendet) {
             return ergebnis(DecisionResult.Status.VORZEITIG_BEENDET, tag, lage)
-                .begruende('Am ' + lage.beendetAm.format() + ' wurde ein Eingriff vorgenommen, der '
+                .begruende('Am ' + DateUtils.deutsch(lage.beendetAm) + ' wurde ein Eingriff vorgenommen, der '
                          + 'die messtechnischen Eigenschaften beeinflussen kann. Die Eichfrist ist '
                          + 'damit vorzeitig beendet; eine spaetere Nacheichung liegt nicht vor.');
         }
 
         if (tag <= lage.ende) {
             return ergebnis(DecisionResult.Status.GUELTIG, tag, lage)
-                .begruende('Die Eichfrist laeuft am ' + tag.format() + ' noch und endet am '
-                         + lage.ende.format() + '.');
+                .begruende('Die Eichfrist laeuft am ' + DateUtils.deutsch(tag) + ' noch und endet am '
+                         + DateUtils.deutsch(lage.ende) + '.');
         }
 
         return bewerteNachAblauf(ladepunkt, tag, lage);
@@ -125,7 +125,7 @@ public with sharing class EichrechtService {
             return ergebnis(DecisionResult.Status.NICHT_ANWENDBAR, tag, lage)
                 .zitiere('MessEG_38_1')
                 .begruende('§ 38 MessEG regelt verspaetete Eichungen. Die Eichfrist laeuft am '
-                         + tag.format() + ' noch bis zum ' + lage.ende.format() + ', die '
+                         + DateUtils.deutsch(tag) + ' noch bis zum ' + DateUtils.deutsch(lage.ende) + ', die '
                          + 'Vorschrift ist auf diesen Ladepunkt daher nicht anwendbar. Das ist '
                          + 'ausdruecklich keine Aussage darueber, ob er geschuetzt waere.');
         }
@@ -243,8 +243,8 @@ public with sharing class EichrechtService {
         if (DateUtils.istAntragRechtzeitig(antrag, lage.ende)) {
             return ergebnis(DecisionResult.Status.GESCHUETZT, tag, lage)
                 .zitiere('MessEG_38_1')
-                .begruende('Die Eichfrist ist am ' + lage.ende.format() + ' abgelaufen, die '
-                         + 'erneute Eichung wurde aber am ' + antrag.format() + ' und damit '
+                .begruende('Die Eichfrist ist am ' + DateUtils.deutsch(lage.ende) + ' abgelaufen, die '
+                         + 'erneute Eichung wurde aber am ' + DateUtils.deutsch(antrag) + ' und damit '
                          + 'mindestens zehn Wochen vorher beantragt. Der Ladepunkt steht bis zur '
                          + 'behoerdlichen Ueberpruefung einem geeichten Messgeraet gleich. § 38 '
                          + 'verlangt zusaetzlich, dass der Verwender das seinerseits Erforderliche '
@@ -254,14 +254,14 @@ public with sharing class EichrechtService {
         if (antrag != null) {
             return ergebnis(DecisionResult.Status.ERMESSEN, tag, lage)
                 .zitiere('MessEG_38_2')
-                .begruende('Die Eichfrist ist am ' + lage.ende.format() + ' abgelaufen. Der Antrag '
-                         + 'vom ' + antrag.format() + ' kam spaeter als zehn Wochen vor Ablauf, '
+                .begruende('Die Eichfrist ist am ' + DateUtils.deutsch(lage.ende) + ' abgelaufen. Der Antrag '
+                         + 'vom ' + DateUtils.deutsch(antrag) + ' kam spaeter als zehn Wochen vor Ablauf, '
                          + 'daher besteht kein Anspruch auf Weiterverwendung. Die Behoerde kann '
                          + 'sie gestatten - kann, nicht muss.');
         }
 
         return ergebnis(DecisionResult.Status.ABGELAUFEN, tag, lage)
-            .begruende('Die Eichfrist ist am ' + lage.ende.format() + ' abgelaufen und eine '
+            .begruende('Die Eichfrist ist am ' + DateUtils.deutsch(lage.ende) + ' abgelaufen und eine '
                      + 'erneute Eichung wurde nicht beantragt.');
     }
 

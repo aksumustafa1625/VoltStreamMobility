@@ -47,7 +47,9 @@ public with sharing class LadepunktSelector {
         return [
             SELECT Id, Ladepunkt__c, Typ__c, Datum__c, Beschreibung__c,
                    Beendet_Eichfrist__c, Sperrt_Betrieb__c, Nacheichungsantrag_offen__c,
-                   Stilllegung_nachgewiesen__c, Behoerdliche_Freigabe_am__c
+                   Stilllegung_nachgewiesen__c, Behoerdliche_Freigabe_am__c,
+                   Instandsetzer_befugt__c, Nacheichung_beantragt__c,
+                   Kennzeichnung_41__c, Behoerde_informiert__c
             FROM Eingriff__c
             WHERE Ladepunkt__c IN :ladepunktIds
             WITH USER_MODE

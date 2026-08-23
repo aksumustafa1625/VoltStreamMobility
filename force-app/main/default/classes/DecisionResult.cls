@@ -44,6 +44,14 @@ public with sharing class DecisionResult {
     /** `Norm__c` strings of the provisions this answer rests on, in the order they applied. */
     public List<String> rechtsgrundlagen = new List<String>();
 
+    /**
+     * The same provisions as corpus keys, in the same order. Two lists rather than one because
+     * they serve different readers: the citation string is what the transcript gate compares
+     * against what the agent said, and the key is what lets a caller fetch the wording and the
+     * source link. `zitiere` maintains both, so they cannot fall out of step.
+     */
+    public List<String> normSchluessel = new List<String>();
+
     public Date fristbeginn;
     public Date fristende;
 
@@ -70,17 +78,18 @@ public with sharing class DecisionResult {
      *               and an agent citing a § no action returned is exactly what the gate exists to
      *               catch. `RechtsnormKorpusTest` guards every key this class uses, so reaching
      *               this exception means the corpus was changed without running the tests.
-     * @param  normSchluessel  DeveloperName of a Rechtsnorm__mdt record.
+     * @param  schluessel  DeveloperName of a Rechtsnorm__mdt record.
      * @return  This instance, so citations can be chained onto a construction.
      */
-    public DecisionResult zitiere(String normSchluessel) {
-        Rechtsnorm__mdt norm = Rechtsnorm__mdt.getInstance(normSchluessel);
+    public DecisionResult zitiere(String schluessel) {
+        Rechtsnorm__mdt norm = Rechtsnorm__mdt.getInstance(schluessel);
         if (norm == null) {
             throw new IllegalArgumentException(
-                'Der Normenkorpus kennt den Schluessel nicht: ' + normSchluessel);
+                'Der Normenkorpus kennt den Schluessel nicht: ' + schluessel);
         }
         if (!rechtsgrundlagen.contains(norm.Norm__c)) {
             rechtsgrundlagen.add(norm.Norm__c);
+            normSchluessel.add(schluessel);
         }
         return this;
     }

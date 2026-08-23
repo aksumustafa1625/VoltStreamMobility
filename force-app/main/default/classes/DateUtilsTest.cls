@@ -197,6 +197,32 @@ private class DateUtilsTest {
     }
 
     @IsTest
+    static void deutschSchreibtDatenUnabhaengigVomGebietsschema() {
+        // Asserted under an explicitly English locale, because that is the case that breaks:
+        // Date.format() would render 23.08.2026 as 8/23/2026 and put a US date inside a German
+        // legal sentence that the agent then reads out.
+        User englisch = new User(
+            Alias = 'enloc', Email = 'eichrecht.locale@voltstream.invalid',
+            EmailEncodingKey = 'UTF-8', LastName = 'Locale', LanguageLocaleKey = 'en_US',
+            LocaleSidKey = 'en_US', TimeZoneSidKey = 'Europe/Berlin',
+            ProfileId = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1].Id,
+            UserName = 'eichrecht.locale.' + DateTime.now().getTime() + '@voltstream.invalid');
+        insert englisch;
+
+        Test.startTest();
+        System.runAs(englisch) {
+            System.assertEquals('23.08.2026', DateUtils.deutsch(Date.newInstance(2026, 8, 23)),
+                'Ein englisches Gebietsschema darf die deutsche Schreibweise nicht veraendern.');
+            System.assertEquals('01.01.2027', DateUtils.deutsch(Date.newInstance(2027, 1, 1)),
+                'Tag und Monat werden zweistellig geschrieben.');
+            System.assertEquals('unbekannt', DateUtils.deutsch(null),
+                'Ein fehlendes Datum wird zum deutschen Wort, nicht zur Zeichenfolge "null" '
+                + 'mitten im Satz.');
+        }
+        Test.stopTest();
+    }
+
+    @IsTest
     static void konstanten_stimmenMitDemNormenkorpusUeberein() {
         // One source of truth. Every number below also lives in Rechtsnorm__mdt beside the
         // sentence that sets it, and the corpus is the authority — these constants are only the

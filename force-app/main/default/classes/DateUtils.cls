@@ -31,6 +31,27 @@ public with sharing class DateUtils {
     public static final Integer ANTRAGSFRIST_TAGE = 70;
 
     /**
+     * @description  A date in German notation, independent of who is logged in. `Date.format()`
+     *               follows the running user's locale, so a German sentence assembled with it
+     *               reads "8/23/2026" for an English-locale user — and the engine's Begruendung is
+     *               not only painted on a card, it is the text the agent narrates. A locale
+     *               deciding how German legal prose reads is a defect, not a preference.
+     *
+     *               Deviates from the null contract on purpose: a null here would concatenate into
+     *               a sentence as the word "null", so it yields the German word instead.
+     * @param  wert  The date; may be null.
+     * @return  'TT.MM.JJJJ', or 'unbekannt' when the date is missing.
+     */
+    public static String deutsch(Date wert) {
+        if (wert == null) {
+            return 'unbekannt';
+        }
+        return String.valueOf(wert.day()).leftPad(2, '0') + '.'
+             + String.valueOf(wert.month()).leftPad(2, '0') + '.'
+             + String.valueOf(wert.year());
+    }
+
+    /**
      * @description  End of a calibration period. Two provisions combine: § 34 Abs. 1 MessEV
      *               gives the arithmetic end, then § 34 Abs. 2 moves it to the end of that
      *               calendar year — but only for periods of at least one year. That is a
