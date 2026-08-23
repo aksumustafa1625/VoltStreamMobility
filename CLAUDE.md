@@ -313,9 +313,9 @@ DateUtils                           ✅ DEPLOYED 2026-08-23 — 5 tests, 20/20 c
       ↓
 Rechtsnorm__mdt                     ✅ DEPLOYED 2026-08-23 — 16 Normen, 9 tests green
       ↓
-EichrechtService  +  DecisionResult ◀ NEXT — legalSources[], NOT_APPLICABLE ≠ UNKNOWN
+EichrechtService  +  DecisionResult ✅ DEPLOYED 2026-08-23 — 138 local tests green, 100 % cov
       ↓
-one LWC card  +  one agent action  +  one eval case
+Konsistenztest Formel ↔ Apex        ◀ NEXT — then LWC card, agent action, eval case
 ```
 
 One object, end to end. If a platform blocker exists it surfaces there — early, and on one
@@ -352,6 +352,24 @@ demands `nachweislich`. The declarative layer silently took the favourable branc
 2. **Groundedness is a deterministic transcript gate, not a scorer.** Every `§` the agent cites
    must appear in the `rechtsgrundlage` an action returned that turn. Probe 5 measured why:
    similarity cannot separate a correct German legal sentence from a false one.
+
+### Steps 2–4 are done. Three things they settled
+
+1. **`DateUtils`** — the four § 34 Abs. 1 sentences as pure date arithmetic, table-driven test.
+2. **`Rechtsnorm__mdt`** — **16 Normen**, `Wortlaut__c` verbatim or empty, repealed law kept with
+   `Gueltig_bis__c` + a successor key. `DateUtilsTest` now asserts its constants **against the
+   corpus**, so the number and the sentence that sets it cannot drift.
+3. **`EichrechtService` + `DecisionResult`** — the chronology walk. **Case E is answered**: the
+   engine returns 2031-12-31 where the formula returns 2032-12-31. The formula stays; where they
+   differ the service is the authority.
+
+**`rechtsgrundlagen` is live.** Every answer cites only the branches that fired — a device inside
+its period does **not** cite § 38, and a test asserts that it does not. That list is what the
+transcript gate reads.
+
+**`NICHT_ANWENDBAR` has a real statutory home:** `pruefeVerspaeteteEichung` returns it for a device
+whose Eichfrist still runs, because § 38 governs *verspätete* Eichungen and says nothing about a
+running period. Not the same as `UNBEKANNT`, and neither is "not protected".
 
 **The standing rule:** the next thing committed should be deployed metadata, not another document.
 
