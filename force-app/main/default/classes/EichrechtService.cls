@@ -50,7 +50,7 @@ public with sharing class EichrechtService {
         Date tag = (stichtag == null) ? Date.today() : stichtag;
         if (ladepunkt == null) {
             return new DecisionResult(DecisionResult.Status.UNBEKANNT, tag)
-                .begruende('Es wurde kein Ladepunkt uebergeben.');
+                .begruende('Es wurde kein Ladepunkt übergeben.');
         }
 
         Fristlage lage = laufeChronologie(ladepunkt, eingriffe);
@@ -60,18 +60,18 @@ public with sharing class EichrechtService {
         // does not need the dates to be known.
         if (lage.gesperrt) {
             DecisionResult r = ergebnis(DecisionResult.Status.BETRIEB_GESPERRT, tag, lage)
-                .begruende('Ein Software-Update wartet auf die behoerdliche Freigabe nach § 40 '
-                         + 'MessEV. Die Eichfrist bleibt davon unberuehrt, der Ladepunkt darf '
+                .begruende('Ein Software-Update wartet auf die behördliche Freigabe nach § 40 '
+                         + 'MessEV. Die Eichfrist bleibt davon unberührt, der Ladepunkt darf '
                          + 'bis zur Freigabe dennoch nicht betrieben werden.');
             return lage.ende == null ? r
-                 : r.begruende('Die Eichfrist selbst laeuft bis zum ' + DateUtils.deutsch(lage.ende) + '.');
+                 : r.begruende('Die Eichfrist selbst läuft bis zum ' + DateUtils.deutsch(lage.ende) + '.');
         }
 
         if (lage.ende == null) {
             return new DecisionResult(DecisionResult.Status.UNBEKANNT, tag)
-                .begruende('Der Fristbeginn laesst sich nicht bestimmen: es fehlt sowohl ein Datum '
+                .begruende('Der Fristbeginn lässt sich nicht bestimmen: es fehlt sowohl ein Datum '
                          + 'des Inverkehrbringens als auch eine datierte Nacheichung. Das ist '
-                         + 'keine Unbedenklichkeitsbescheinigung, sondern eine Datenluecke.');
+                         + 'keine Unbedenklichkeitsbescheinigung, sondern eine Datenlücke.');
         }
 
         // § 37 Abs. 2 Nr. 2: an intervention ended the period early and no calibration followed.
@@ -79,12 +79,12 @@ public with sharing class EichrechtService {
             return ergebnis(DecisionResult.Status.VORZEITIG_BEENDET, tag, lage)
                 .begruende('Am ' + DateUtils.deutsch(lage.beendetAm) + ' wurde ein Eingriff vorgenommen, der '
                          + 'die messtechnischen Eigenschaften beeinflussen kann. Die Eichfrist ist '
-                         + 'damit vorzeitig beendet; eine spaetere Nacheichung liegt nicht vor.');
+                         + 'damit vorzeitig beendet; eine spätere Nacheichung liegt nicht vor.');
         }
 
         if (tag <= lage.ende) {
             return ergebnis(DecisionResult.Status.GUELTIG, tag, lage)
-                .begruende('Die Eichfrist laeuft am ' + DateUtils.deutsch(tag) + ' noch und endet am '
+                .begruende('Die Eichfrist läuft am ' + DateUtils.deutsch(tag) + ' noch und endet am '
                          + DateUtils.deutsch(lage.ende) + '.');
         }
 
@@ -111,23 +111,23 @@ public with sharing class EichrechtService {
         Date tag = (stichtag == null) ? Date.today() : stichtag;
         if (ladepunkt == null) {
             return new DecisionResult(DecisionResult.Status.UNBEKANNT, tag)
-                .begruende('Es wurde kein Ladepunkt uebergeben.');
+                .begruende('Es wurde kein Ladepunkt übergeben.');
         }
 
         Fristlage lage = laufeChronologie(ladepunkt, eingriffe);
         if (lage.ende == null) {
             return new DecisionResult(DecisionResult.Status.UNBEKANNT, tag)
-                .begruende('Ohne bestimmbaren Fristbeginn laesst sich nicht sagen, ob die Frist '
+                .begruende('Ohne bestimmbaren Fristbeginn lässt sich nicht sagen, ob die Frist '
                          + 'abgelaufen ist.');
         }
 
         if (tag <= lage.ende) {
             return ergebnis(DecisionResult.Status.NICHT_ANWENDBAR, tag, lage)
                 .zitiere('MessEG_38_1')
-                .begruende('§ 38 MessEG regelt verspaetete Eichungen. Die Eichfrist laeuft am '
+                .begruende('§ 38 MessEG regelt verspätete Eichungen. Die Eichfrist läuft am '
                          + DateUtils.deutsch(tag) + ' noch bis zum ' + DateUtils.deutsch(lage.ende) + ', die '
                          + 'Vorschrift ist auf diesen Ladepunkt daher nicht anwendbar. Das ist '
-                         + 'ausdruecklich keine Aussage darueber, ob er geschuetzt waere.');
+                         + 'ausdruecklich keine Aussage darueber, ob er geschuetzt wäre.');
         }
 
         return bewerteNachAblauf(ladepunkt, tag, lage);
@@ -246,17 +246,17 @@ public with sharing class EichrechtService {
                 .begruende('Die Eichfrist ist am ' + DateUtils.deutsch(lage.ende) + ' abgelaufen, die '
                          + 'erneute Eichung wurde aber am ' + DateUtils.deutsch(antrag) + ' und damit '
                          + 'mindestens zehn Wochen vorher beantragt. Der Ladepunkt steht bis zur '
-                         + 'behoerdlichen Ueberpruefung einem geeichten Messgeraet gleich. § 38 '
-                         + 'verlangt zusaetzlich, dass der Verwender das seinerseits Erforderliche '
-                         + 'getan oder angeboten hat; das ist eine Wertung und hier nicht geprueft.');
+                         + 'behördlichen Überprüfung einem geeichten Messgerät gleich. § 38 '
+                         + 'verlangt zusätzlich, dass der Verwender das seinerseits Erforderliche '
+                         + 'getan oder angeboten hat; das ist eine Wertung und hier nicht geprüft.');
         }
 
         if (antrag != null) {
             return ergebnis(DecisionResult.Status.ERMESSEN, tag, lage)
                 .zitiere('MessEG_38_2')
                 .begruende('Die Eichfrist ist am ' + DateUtils.deutsch(lage.ende) + ' abgelaufen. Der Antrag '
-                         + 'vom ' + DateUtils.deutsch(antrag) + ' kam spaeter als zehn Wochen vor Ablauf, '
-                         + 'daher besteht kein Anspruch auf Weiterverwendung. Die Behoerde kann '
+                         + 'vom ' + DateUtils.deutsch(antrag) + ' kam später als zehn Wochen vor Ablauf, '
+                         + 'daher besteht kein Anspruch auf Weiterverwendung. Die Behörde kann '
                          + 'sie gestatten - kann, nicht muss.');
         }
 
@@ -275,8 +275,8 @@ public with sharing class EichrechtService {
         }
         if (lage.erstfristUnbestimmt) {
             r.begruende('Hinweis: das Inverkehrbringen ist nicht erfasst, die erste Eichfrist '
-                      + 'liess sich daher nicht bestimmen. Ob eine Nacheichung verspaetet war, '
-                      + 'konnte nicht geprueft werden - die guenstigere Auslegung wurde gewaehlt.');
+                      + 'ließ sich daher nicht bestimmen. Ob eine Nacheichung verspätet war, '
+                      + 'konnte nicht geprüft werden - die günstigere Auslegung wurde gewählt.');
         }
         return r;
     }

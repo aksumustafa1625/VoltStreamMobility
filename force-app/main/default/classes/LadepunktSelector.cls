@@ -35,6 +35,56 @@ public with sharing class LadepunktSelector {
     }
 
     /**
+     * @description  Charge points by their auto-number, for a caller who has a name rather than an
+     *               Id — which is every caller that came from a sentence a human typed.
+     * @param  nummer  The record name, e.g. LP-00007. Whitespace is normalised; SOQL string
+     *                 comparison is already case-insensitive, so no case handling is needed here.
+     * @return  Matching charge points; empty when the input is blank or nothing matches.
+     */
+    public static List<Ladepunkt__c> byName(String nummer) {
+        String gesucht = StringUtils.normalizeWhitespace(nummer);
+        if (String.isBlank(gesucht)) {
+            return new List<Ladepunkt__c>();
+        }
+        return [
+            SELECT Id, Name, Inverkehrbringen__c, Nacheichung_beantragt_am__c,
+                   Ladeleistung_kW__c, Oeffentlich_zugaenglich__c, Standort_Adresse__c,
+                   Eichstatus__c, Fristbeginn__c, Eichfrist_Ende__c, Betreiber__r.Name
+            FROM Ladepunkt__c
+            WHERE Name = :gesucht
+            WITH USER_MODE
+            LIMIT 50000
+        ];
+    }
+
+    /**
+     * @description  Every charge point of one operator, matched on a fragment of the account name.
+     *               A fragment rather than an exact match because the caller is quoting a person:
+     *               somebody asks about "Stadtwerke Muenchen" and the account is registered as
+     *               "Stadtwerke Muenchen GmbH". The fragment is a bind variable, so widening the
+     *               match does not widen the injection surface.
+     * @param  betreiber  Part of the operator's account name.
+     * @return  Matching charge points; empty when the input is blank or nothing matches.
+     */
+    public static List<Ladepunkt__c> byBetreiberName(String betreiber) {
+        String gesucht = StringUtils.normalizeWhitespace(betreiber);
+        if (String.isBlank(gesucht)) {
+            return new List<Ladepunkt__c>();
+        }
+        String muster = '%' + gesucht + '%';
+        return [
+            SELECT Id, Name, Inverkehrbringen__c, Nacheichung_beantragt_am__c,
+                   Ladeleistung_kW__c, Oeffentlich_zugaenglich__c, Standort_Adresse__c,
+                   Eichstatus__c, Fristbeginn__c, Eichfrist_Ende__c, Betreiber__r.Name
+            FROM Ladepunkt__c
+            WHERE Betreiber__r.Name LIKE :muster
+            WITH USER_MODE
+            ORDER BY Name ASC
+            LIMIT 50000
+        ];
+    }
+
+    /**
      * @description  Every event belonging to the given charge points, oldest first.
      * @param  ladepunktIds  Parent Ids; null or empty yields an empty list.
      * @return  Events ordered by date, then by type so a calibration sorts after an intervention

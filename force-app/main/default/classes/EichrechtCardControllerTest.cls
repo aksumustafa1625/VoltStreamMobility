@@ -121,7 +121,7 @@ private class EichrechtCardControllerTest {
         System.assertEquals('BETRIEB_GESPERRT', sicht.status);
         System.assertEquals('Betrieb gesperrt', sicht.statusText);
         System.assertEquals('#ba0517', sicht.farbe);
-        System.assert(sicht.begruendung.contains('unberuehrt'),
+        System.assert(sicht.begruendung.contains('unberührt'),
             'Die Begruendung muss sagen, dass die Eichfrist trotzdem weiterlaeuft: '
             + sicht.begruendung);
     }

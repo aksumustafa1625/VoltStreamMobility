@@ -95,6 +95,16 @@ public class TestDataFactory {
     }
 
     /**
+     * @description  Build an unsaved operator account — the Ladepunktbetreiber the LSV notification
+     *               duty and the THG claim attach to.
+     * @param  name  Company name.
+     * @return  Unsaved Account.
+     */
+    public static Account buildBetreiber(String name) {
+        return new Account(Name = name);
+    }
+
+    /**
      * @description  Build an unsaved charge point. Name is an auto-number, so the location string
      *               is what a test uses to identify the record it built.
      * @param  standort           Free-text location, used as the test's own label.

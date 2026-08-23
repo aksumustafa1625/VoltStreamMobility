@@ -30,7 +30,7 @@ public with sharing class EichrechtCardController {
             sicht.status = 'UNBEKANNT';
             sicht.statusText = 'Unbekannt';
             sicht.farbe = FARBEN.get('UNBEKANNT');
-            sicht.begruendung = 'Es wurde kein Ladepunkt uebergeben.';
+            sicht.begruendung = 'Es wurde kein Ladepunkt übergeben.';
             return sicht;
         }
 
@@ -100,8 +100,8 @@ public with sharing class EichrechtCardController {
 
     private static String wirkung(Eingriff__c e) {
         if (e.Sperrt_Betrieb__c == true) {
-            return 'Sperrt den Betrieb bis zur behoerdlichen Freigabe. Die Eichfrist bleibt '
-                 + 'unberuehrt (§ 37 Abs. 6 MessEG).';
+            return 'Sperrt den Betrieb bis zur behördlichen Freigabe. Die Eichfrist bleibt '
+                 + 'unberührt (§ 37 Abs. 6 MessEG).';
         }
         if (e.Typ__c == 'Instandsetzung') {
             return wirkungInstandsetzung(e);
@@ -112,7 +112,7 @@ public with sharing class EichrechtCardController {
         if (e.Typ__c == 'Nacheichung') {
             return 'Setzt eine neue Eichfrist in Gang (§ 34 Abs. 1 MessEV).';
         }
-        return 'Behoerdlich freigegeben - der Betrieb ist wieder zulaessig.';
+        return 'Behördlich freigegeben - der Betrieb ist wieder zulässig.';
     }
 
     /**
@@ -125,16 +125,16 @@ public with sharing class EichrechtCardController {
     private static String wirkungInstandsetzung(Eingriff__c e) {
         List<String> fehlend = new List<String>();
         if (e.Instandsetzer_befugt__c != true)  { fehlend.add('befugter Instandsetzer (Nr. 1)'); }
-        if (e.Nacheichung_beantragt__c != true) { fehlend.add('unverzueglich beantragte erneute Eichung (Nr. 2)'); }
+        if (e.Nacheichung_beantragt__c != true) { fehlend.add('unverzüglich beantragte erneute Eichung (Nr. 2)'); }
         if (e.Kennzeichnung_41__c != true)      { fehlend.add('Kennzeichnung nach § 41 MessEV (Nr. 3)'); }
-        if (e.Behoerde_informiert__c != true)   { fehlend.add('unverzuegliche Information der Behoerde (Nr. 4)'); }
+        if (e.Behoerde_informiert__c != true)   { fehlend.add('unverzügliche Information der Behörde (Nr. 4)'); }
 
         if (fehlend.isEmpty()) {
-            return 'Instandsetzung nach § 37 Abs. 5 MessEG - alle vier Bedingungen erfuellt, die '
-                 + 'Eichfrist laeuft weiter.';
+            return 'Instandsetzung nach § 37 Abs. 5 MessEG - alle vier Bedingungen erfüllt, die '
+                 + 'Eichfrist läuft weiter.';
         }
         return 'Instandsetzung ohne alle vier Bedingungen des § 37 Abs. 5 MessEG. Es fehlt: '
-             + String.join(fehlend, '; ') + '. Damit faellt sie auf Abs. 2 Nr. 2 zurueck und '
+             + String.join(fehlend, '; ') + '. Damit fällt sie auf Abs. 2 Nr. 2 zurück und '
              + 'beendet die Eichfrist vorzeitig.';
     }
 
