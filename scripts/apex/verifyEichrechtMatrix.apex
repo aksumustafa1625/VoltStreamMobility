@@ -1,10 +1,10 @@
-// Sixteen cases against the declarative layer.
+// Sixteen cases across three columns: what the formula produces, what § 34 MessEV requires,
+// and what EichrechtService computes. The three-column form is the point - it shows where the
+// declarative layer is right, where it is not, and that the gap is closed rather than excused.
 //
-// Two expectations per case on purpose. wantEnde is the CONTRACT of the formula - what the
-// declarative layer is built to produce, so this stays a real regression test. statuteEnde is
-// what § 34 MessEV actually requires. Where they differ the case is DEFERRED, not PASS and not
-// FAIL: the gap is real, it is owned by EichrechtService, and printing both numbers keeps it
-// from being quietly rounded into a green run.
+// This runs against the live org and is a demonstration, not the regression suite. The durable
+// checks are EichrechtServiceTest and EichrechtKonsistenzTest, whose fixtures are relative to
+// today; the fixed dates here will need revisiting once the calendar passes them.
 Map<String, String> wantStatus = new Map<String, String>{
   'A' => 'GUELTIG',                     'B' => 'ABGELAUFEN',
   'C' => 'GESCHUETZT (S 38)',           'D' => 'ERMESSEN (S 38)',
@@ -45,8 +45,12 @@ List<Ladepunkt__c> rows = [
   FROM Ladepunkt__c WHERE Standort_Adresse__c LIKE 'PRUEFMATRIX%'
   ORDER BY Standort_Adresse__c LIMIT 50000];
 
-Integer pass = 0, deferred = 0, fail = 0;
-System.debug(LoggingLevel.ERROR, 'K | Eichstatus                   | 14a   | Ende(Formel) | Ende(Gesetz) | Eich       | Beend      | Sp | Off | RESULT');
+// The engine's answer for the same records, on the same day the formula is evaluated.
+Map<Id, DecisionResult> motor = EichrechtService.bewerteEichfrist(
+    new Map<Id, Ladepunkt__c>(rows).keySet(), Date.today());
+
+Integer pass = 0, geloest = 0, fail = 0;
+System.debug(LoggingLevel.ERROR, 'K | Eichstatus                   | Ende(Formel) | Ende(Gesetz) | Ende(Motor)  | Motor-Status       | RESULT');
 for (Ladepunkt__c r : rows) {
   String k = r.Standort_Adresse__c.substringAfterLast(' ');
   String got = (r.Eichstatus__c == null ? '' : r.Eichstatus__c)
@@ -58,10 +62,15 @@ for (Ladepunkt__c r : rows) {
   String off   = (r.Offene_Nacheichungsantraege__c == null) ? '-' : String.valueOf(r.Offene_Nacheichungsantraege__c.intValue());
   String law   = statuteEnde.get(k);
 
+  DecisionResult d = motor.get(r.Id);
+  String motorEnde   = (d.fristende == null) ? '-' : String.valueOf(d.fristende);
+  String motorStatus = String.valueOf(d.ergebnis);
+
   Boolean okS  = got == wantStatus.get(k);
   Boolean ok14 = r.Paragraph_14a_pflichtig__c == want14a.get(k);
   Boolean okE  = ende == wantEnde.get(k);
-  Boolean gap  = wantEnde.get(k) != law;
+  Boolean formelStimmt = (ende == law);
+  Boolean motorStimmt  = (motorEnde == law);
 
   String verdict;
   if (!(okS && ok14 && okE)) {
@@ -70,16 +79,18 @@ for (Ladepunkt__c r : rows) {
       + (okS  ? '' : ' status<want ' + wantStatus.get(k) + '>')
       + (ok14 ? '' : ' 14a<want '    + want14a.get(k)    + '>')
       + (okE  ? '' : ' ende<want '   + wantEnde.get(k)   + '>');
-  } else if (gap) {
-    deferred++;
-    verdict = 'DEFERRED -> EichrechtService (S 34 I 3 backdating; formula is 1 year generous)';
+  } else if (!formelStimmt && motorStimmt) {
+    geloest++;
+    verdict = 'GELOEST vom Motor (S 34 I 3 Rueckdatierung; Formel 1 Jahr zu grosszuegig)';
+  } else if (!formelStimmt) {
+    fail++;
+    verdict = 'FAIL - weder Formel noch Motor treffen das Gesetz';
   } else {
     pass++;
     verdict = 'PASS';
   }
-  System.debug(LoggingLevel.ERROR, k + ' | ' + got.rightPad(28) + ' | '
-      + String.valueOf(r.Paragraph_14a_pflichtig__c).rightPad(5) + ' | ' + ende.rightPad(12) + ' | '
-      + law.rightPad(12) + ' | ' + eich.rightPad(10) + ' | ' + beend.rightPad(10) + ' | '
-      + sp.rightPad(2) + ' | ' + off.rightPad(3) + ' | ' + verdict);
+  System.debug(LoggingLevel.ERROR, k + ' | ' + got.rightPad(28) + ' | ' + ende.rightPad(12)
+      + ' | ' + law.rightPad(12) + ' | ' + motorEnde.rightPad(12) + ' | '
+      + motorStatus.rightPad(18) + ' | ' + verdict);
 }
-System.debug(LoggingLevel.ERROR, '=== ' + pass + ' PASS / ' + deferred + ' DEFERRED / ' + fail + ' FAIL  of ' + rows.size() + ' ===');
+System.debug(LoggingLevel.ERROR, '=== ' + pass + ' PASS / ' + geloest + ' GELOEST / ' + fail + ' FAIL  of ' + rows.size() + ' ===');

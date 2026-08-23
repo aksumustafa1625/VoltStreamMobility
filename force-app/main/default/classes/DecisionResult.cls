@@ -105,4 +105,32 @@ public with sharing class DecisionResult {
     public Boolean hatAussage() {
         return ergebnis != Status.UNBEKANNT && ergebnis != Status.NICHT_ANWENDBAR;
     }
+
+    /**
+     * @description  Translate the declarative layer's answer — the text in
+     *               `Ladepunkt__c.Eichstatus__c` — into the same type the engine returns, so the
+     *               two can be compared instead of merely coexisting.
+     *
+     *               This method is coupled to the literal strings the formula produces, and that
+     *               coupling is the point rather than a flaw: change the formula without changing
+     *               this and the mapping returns null, which `EichrechtKonsistenzTest` reports as
+     *               an unmapped value. Silence would be the failure. The formula never produces
+     *               NICHT_ANWENDBAR — a list view cannot ask which provision was being tested.
+     * @param  formeltext  Value of Eichstatus__c; may be null or blank.
+     * @return  The matching status, or null when the text is blank or unrecognised.
+     */
+    public static Status ausEichstatusFormel(String formeltext) {
+        if (String.isBlank(formeltext)) {
+            return null;
+        }
+        // The three ranked states carry a paragraph in brackets, so they are matched by prefix.
+        if (formeltext.startsWith('BETRIEB GESPERRT'))  { return Status.BETRIEB_GESPERRT; }
+        if (formeltext.startsWith('VORZEITIG BEENDET')) { return Status.VORZEITIG_BEENDET; }
+        if (formeltext.startsWith('GESCHÜTZT'))         { return Status.GESCHUETZT; }
+        if (formeltext.startsWith('ERMESSEN'))          { return Status.ERMESSEN; }
+        if (formeltext == 'GÜLTIG')                     { return Status.GUELTIG; }
+        if (formeltext == 'ABGELAUFEN')                 { return Status.ABGELAUFEN; }
+        if (formeltext == 'UNBEKANNT')                  { return Status.UNBEKANNT; }
+        return null;
+    }
 }
