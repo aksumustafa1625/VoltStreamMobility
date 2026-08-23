@@ -60,9 +60,9 @@ public with sharing class EichrechtService {
         // does not need the dates to be known.
         if (lage.gesperrt) {
             DecisionResult r = ergebnis(DecisionResult.Status.BETRIEB_GESPERRT, tag, lage)
-                .begruende('Ein Software-Update wartet auf die behördliche Freigabe nach § 40 '
-                         + 'MessEV. Die Eichfrist bleibt davon unberührt, der Ladepunkt darf '
-                         + 'bis zur Freigabe dennoch nicht betrieben werden.');
+                .begruende('Ein Software-Update wartet auf die Freigabe durch die Eichbehörde. '
+                         + 'Die Eichfrist bleibt davon unberührt, der Ladepunkt darf bis zur '
+                         + 'Freigabe dennoch nicht betrieben werden.');
             return lage.ende == null ? r
                  : r.begruende('Die Eichfrist selbst läuft bis zum ' + DateUtils.deutsch(lage.ende) + '.');
         }

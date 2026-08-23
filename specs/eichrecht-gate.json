@@ -1,0 +1,9 @@
+{
+  "_kommentar": "Bindet jeden Fall der Eval-Spezifikation an die Eingaben, mit denen die Engine dieselbe Frage beantwortet. Diese Antwort ist die erlaubte Menge; alles darüber hinaus hat der Agent erfunden.",
+  "spec": "specs/eichrecht-smoke.yaml",
+  "faelle": [
+    { "id": "VS Eichrecht Smoke_case_0", "ladepunktNummer": "LP-00016" },
+    { "id": "VS Eichrecht Smoke_case_1", "ladepunktNummer": "LP-99999" },
+    { "id": "VS Eichrecht Smoke_case_2" }
+  ]
+}

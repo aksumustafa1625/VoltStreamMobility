@@ -192,6 +192,41 @@ private class EichrechtServiceTest {
     }
 
     @IsTest
+    static void jederParagraphInDerBegruendungStehtAuchInDenRechtsgrundlagen() {
+        Map<String, Ladepunkt__c> gebaut = baueMatrix();
+
+        Test.startTest();
+        Map<String, DecisionResult> ist = bewerteMatrix(gebaut);
+        Test.stopTest();
+
+        // The invariant the transcript gate depends on. If the engine writes a sentence naming a
+        // paragraph that its own citation list omits, then an agent repeating that sentence word
+        // for word fails the gate - for the engine's mistake, not its own. So the engine may only
+        // utter what it cites, and it is cheaper to enforce here than to debug there.
+        Pattern paragraph = Pattern.compile('\u00a7\\s*(\\d+[a-z]?)');
+        for (String k : ist.keySet()) {
+            DecisionResult d = ist.get(k);
+            if (String.isBlank(d.begruendung)) {
+                continue;
+            }
+            Set<String> zitiert = new Set<String>();
+            for (String norm : d.rechtsgrundlagen) {
+                Matcher m = paragraph.matcher(norm);
+                while (m.find()) {
+                    zitiert.add(m.group(1));
+                }
+            }
+            Matcher gesagt = paragraph.matcher(d.begruendung);
+            while (gesagt.find()) {
+                System.assert(zitiert.contains(gesagt.group(1)),
+                    'Fall ' + k + ': die Begruendung nennt \u00a7 ' + gesagt.group(1)
+                    + ', die Rechtsgrundlagen fuehren ihn aber nicht. Entweder gehoert die Norm '
+                    + 'in die Liste oder der Paragraph aus dem Satz. Begruendung: ' + d.begruendung);
+            }
+        }
+    }
+
+    @IsTest
     static void eineNacheichungHeiltEinenFruererenEingriffAuchAmSelbenTag() {
         Map<String, Ladepunkt__c> gebaut = baueMatrix();
 
