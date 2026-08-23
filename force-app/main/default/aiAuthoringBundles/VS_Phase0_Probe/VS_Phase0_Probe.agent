@@ -6,7 +6,7 @@ system:
 
 config:
     developer_name: "VS_Phase0_Probe"
-    default_agent_user: "your-admin@example.com"
+    default_agent_user: "vs_phase0_probe_classic@00dgl00000lpwon292859819.ext"
     agent_label: "VS Phase0 Probe"
     description: "Beantwortet Fragen zur Eichfrist von Ladepunkten"
 

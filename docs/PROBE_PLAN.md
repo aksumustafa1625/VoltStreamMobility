@@ -172,7 +172,43 @@ sf sobject list --sobject all --target-org VoltStreamAF | grep -c "ssot__"
 ⚠️ **Do not migrate anything yet.** This probe answers one question: does a fresh org have
 what the old one lacks. Migration is a separate decision.
 
-**Result:** _______________
+### ❌ Result — 2026-08-23. **Probe cancelled. The org is already the right kind.**
+
+The premise was R9's: *"pre-2025 classic DE orgs come without Agentforce/Data Cloud
+provisioning and may not be recognised at the SFAP gateway."* **That hypothesis does not
+apply here**, and it took one query to find out:
+
+```
+Name          OrganizationType     InstanceName   CreatedDate                IsSandbox
+Salesforce    Developer Edition    CAN98          2026-02-17T13:10:43.000Z   false
+```
+
+Created **17 February 2026**. The username is `…@**agentforce.com**` and the instance is
+`your-org-**dev-ed**` — the signatures of the *new* Agentforce Developer Edition
+signup flow, not a legacy org. **A fresh org would be the same kind of org.**
+
+#### And Data Cloud is licensed — it is simply not set up
+
+This is the part that reframes wall §3.6. The licence query:
+
+| Permission Set Licence | Total | Used |
+|---|---|---|
+| **Data Cloud** (`GenieDataPlatformStarterPsl`) | **200,000** | **2** |
+| Customer Data Cloud for Marketing | 200,000 | 0 |
+| Agentforce (Default) (`EinsteinGPTCopilotPsl`) | 5 | 1 |
+| **Agentforce Service Agent User** | 200 | **1** |
+| Agentforce Service Agent Builder | 10,000 | 1 |
+| Agent platform builder | 5 | 0 |
+| Einstein Prompt Templates | 5 | 2 |
+
+And yet `ssot__*` / `__dlm` object count is still **0**.
+
+**So the state is "licensed but not provisioned", not "unavailable."** That is a materially
+different diagnosis from the one recorded in Phase 0, and it means the scorer question is now
+about running the Data Cloud setup, not about acquiring an entitlement. **That moves to Probe 4.**
+
+**Decision: no new org.** Probe 2 is closed without action, and the two hours it would have
+cost go into Probe 3 instead — which is what actually broke the wall.
 
 ---
 
@@ -249,7 +285,87 @@ with fallbacks to `test.api.` and `dev.api.` — if all three 404, that is the f
 | Publish succeeds by **any** route | **Agent Script becomes the deployed source**, not merely design source. `before_reasoning` and `@subagent` become available, which restores the single-turn briefing demo. |
 | All routes fail on both orgs | Classic `Bot` path for the runtime; `.agent` stays design source; **and we have a genuine, reproducible, unreported platform bug** with a captured URL. |
 
-**Result:** _______________
+### ✅ Result — 2026-08-23. **PUBLISHED. The wall is gone, and the cause was cause #1.**
+
+The `.agent` file said:
+
+```yaml
+config:
+    default_agent_user: "your-admin@example.com"     # ← System Administrator
+```
+
+That is this project's own admin user. Salesforce's known-issues file states that supplying a
+System Administrator makes the failure **return masked** — and a masked failure at the commit
+step is precisely the bare `ERROR_HTTP_404` recorded in Phase 0.
+
+**The user that publish actually wants was already sitting in the org**, created as a side
+effect of building the classic-path agent months earlier:
+
+```
+Username   vs_phase0_probe_classic@00dgl00000lpwon292859819.ext
+Name       EinsteinServiceAgent User
+Profile    Einstein Agent User          ← the licence the publish step requires
+IsActive   true
+```
+
+**One line changed.** Then:
+
+```
+sf agent validate authoring-bundle  →  {"status": 0, "result": {"success": true}}
+
+sf agent publish authoring-bundle   →  {"status": 0, "result": {
+                                          "success": true,
+                                          "botDeveloperName": "VS_Phase0_Probe",
+                                          "summary": {"retrieved": 3, "deployed": 3}}}
+```
+
+Verified in the org — the Agent Script compiled into real runtime metadata:
+
+```
+BotDefinition   VS_Phase0_Probe   ExternalCopilot   EinsteinServiceAgent
+BotVersion      VS_Phase0_Probe   version 1         Inactive
+```
+
+*(`Inactive` is expected; `sf agent activate` is a separate step.)*
+
+#### What this settles, and it is a lot
+
+**Agent Script is now the deployed source, not design source.** The repository's central claim
+— that the agent is authored as source and deploys from source — holds without a footnote.
+
+**Days 5–6 are Agent Script, not legacy XML.** Which means the control-plane features become
+available and the hero demo returns:
+
+- **`before_reasoning`** — pin the four regulatory checks as deterministic steps *before* the
+  model reasons. Four action invocations in the trace, zero planner discretion, one turn.
+- **`available when`** — gates that re-evaluate every iteration, so `ErstelleAufgabe` unlocks
+  only when a section returns `BLOCKIERT`.
+- **`@subagent.<name>`** — call-and-return delegation, and **`@utils.transition`** — one-way
+  handoff.
+
+That is a stronger demo than the composite Apex action, and it is *more* deterministic, not
+less: the flow is written in the `.agent` file rather than left to the planner.
+
+#### Three things ruled out along the way
+
+| Suspect | Verdict |
+|---|---|
+| The two documented syntax traps — `customerwebclient` instead of `customer_web_client`, and `outbound_route_name` without a `flow://` prefix | **Neither present.** Grepped the bundle; clean. Not the cause. |
+| Org age / SFAP gateway provisioning | **Ruled out by Probe 2.** Org created February 2026. |
+| `default_agent_user` in the wrong block | **Does not apply to this grammar.** R8 said it belongs in `access:`; the CLI-generated file carries it in `config:` and **publishes successfully from there.** Do not move it. |
+
+**So the licence was the sole cause.** One field, one masked error, five months of a wall.
+
+#### The finding worth keeping
+
+Two independent researchers reached this conclusion from documentation; the org confirmed it
+in one query. The generalisable lesson is not about agent users:
+
+> **A masked server-side error is indistinguishable from a platform limit.** Phase 0 recorded
+> this as *"reproduced in two orgs, therefore an edition boundary."* It reproduced in two orgs
+> because **both orgs had the same misconfiguration** — the same `.agent` file was used in
+> both. Reproducibility across environments proves the input is constant, not that the
+> platform is at fault.
 
 ---
 
