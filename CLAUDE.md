@@ -309,9 +309,9 @@ rather than the platform. The score:
 ```
 Ladepunkt__c  +  Eingriff__c        ✅ DEPLOYED 2026-08-23 — 15 PASS · 1 DEFERRED · 0 FAIL
       ↓
-DateUtils                           ◀ NEXT — the four § 34 Abs. 1 sentences, table-driven
+DateUtils                           ✅ DEPLOYED 2026-08-23 — 5 tests, 20/20 coverage
       ↓
-Rechtsnorm__mdt                     with Gueltig_von__c / Gueltig_bis__c
+Rechtsnorm__mdt                     ◀ NEXT — with Gueltig_von__c / Gueltig_bis__c
       ↓
 EichrechtService  +  DecisionResult legalSources[], NOT_APPLICABLE ≠ UNKNOWN
       ↓
