@@ -53,7 +53,86 @@ Also bump the project's API version while here — `sfdx-project.json` says `sou
 |---|---|
 | CLI ≥ 2.148, plugin-agent ≥ 2.0.4, `agent adl` / `trace` / `run-eval` present | Whether Probes 3, 5 and 6 are even testable |
 
-**Result:** _______________
+### ✅ Result — 2026-08-23. Passed, after a Windows detour worth recording.
+
+**Before:** `@salesforce/cli/2.125.2`, published **179 days** earlier (25 Feb 2026).
+`sf agent` carried four leaf commands — `activate`, `create`, `deactivate`, `preview`.
+`sf agent test` carried five — no `run-eval`. No `adl`, no `mcp`, no `trace`. Exactly the
+gap the plan predicted.
+
+**After:** `@salesforce/cli/2.148.3`, and all four missing surfaces present:
+
+```
+agent adl             Commands to manage Agentforce Data Libraries.
+agent mcp             Commands to manage MCP server registrations in the API Catalog.
+agent trace           Delete trace files from an agent preview session.
+agent test run-eval   Run rich evaluation tests against an Agentforce agent.
+```
+
+#### ⚠️ The detour — `sf update` half-failed on Windows
+
+`sf update` downloaded 2.148.3 correctly, then died cleaning up:
+
+```
+Error: EPERM: operation not permitted, unlink
+'C:\Users\DELL\AppData\Local\sf\client\2.125.2-30d6901\bin\node.exe'
+The batch file cannot be found.
+```
+
+The old `node.exe` was the process running the update, so Windows would not let it be
+unlinked. **`sf` then silently fell back to an older bundled copy and reported 2.123.1** — a
+*downgrade*, and one that would have made every later probe meaningless while looking like it
+had worked.
+
+The cause is visible in the launcher, `C:\Program Files\sf\bin\sf.cmd`:
+
+```bat
+if exist "%LOCALAPPDATA%\sf\client\bin\sf.cmd" (
+  "%LOCALAPPDATA%\sf\client\bin\sf.cmd" %*
+) else (
+  "%~dp0\..\client\bin\node.exe" ... rem the bundled fallback
+)
+```
+
+`client\bin` is a **junction** to the active version. The failed cleanup destroyed it, so
+every `sf` call took the else branch into the installer's own bundled copy. Both versions were
+sitting in `client\` — `2.125.2-30d6901` and `2.148.3-ddda74a` — and
+`2.148.3-ddda74a\bin\sf.cmd` ran correctly when invoked directly. **Only the pointer was
+broken.**
+
+**Fix — two lines, no reinstall:**
+
+```powershell
+$c = "$env:LOCALAPPDATA\sf\client"
+New-Item -ItemType Junction -Path "$c\bin" -Target "$c\2.148.3-ddda74a\bin"
+'{"current":"2.148.3"}' | Out-File "$env:LOCALAPPDATA\sf\version" -Encoding ascii -NoNewline
+```
+
+*(The `version` file still read `{"current":"2.125.2"}`; both had to change.)*
+
+**Worth knowing for anyone reproducing this repo on Windows:** a failed `sf update` can leave
+the CLI reporting an **older** version than before, with no error at the point of use. Check
+`sf version` after every update; if it dropped, the junction is the cause, not the download.
+
+#### Two things settled for free
+
+**🟢 Wall §3.5 is dead, and the error message is the proof.** Redeploying the scorer probe now
+fails differently:
+
+| Before | After |
+|---|---|
+| `RegistryError: Missing metadata type definition in registry for id 'AiAgentScorerDefinition'` | `ComponentSetError: No source-backed components present in the package.` |
+
+The second error means the registry **knows the type** and merely found no local file for it —
+which is correct, because there is none in `force-app` yet. The `--metadata-dir` workaround can
+be retired.
+
+**API version aligned.** `sfdx-project.json` said `65.0`; the org reports `67.0`. Bumped to
+`67.0` — `AiAuthoringBundle` requires 65.0+, and Probe 3 should not run against a stale source
+API version.
+
+**Side effects checked:** the linked `sfdx-blast-radius` plugin survived the update, and
+`code-analyzer 5.15.0` came along with the new CLI.
 
 ---
 
