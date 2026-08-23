@@ -323,7 +323,9 @@ Agent-Action (PruefeEichfristen)     ✅ DEPLOYED 2026-08-23 — 162 local tests
       ↓
 Agent Script (VS_Eichrecht)          ✅ PUBLISHED + AKTIV 2026-08-23 — Smoke 3/3 PASS
       ↓
-Transkript-Gate  +  CI               ◀ NEXT
+Transkript-Gate                      ✅ 2026-08-23 — 3/3 PASS, Selbsttest 4/4
+      ↓
+CI                                   ◀ NEXT — der letzte Schritt
 ```
 
 One object, end to end. If a platform blocker exists it surfaces there — early, and on one
@@ -440,6 +442,27 @@ sentence word for word and cites exactly what was handed over:
 right in a language the reviewer may not read is exactly the risk — and it took *two runs of the
 same question* to notice. The gate would have caught it in one.
 
+### Step 9 — the gate, and the instrument that proves itself
+
+`scripts/transkriptGate.mjs`. Every `§` the agent utters must appear in what an action returned
+for that question. **No LLM, no threshold.** Ground truth is not read from the transcript — the
+transcript carries what the agent *said*, not what the action *returned* — it comes from asking the
+engine the same question through anonymous Apex.
+
+**A gate that only ever passes proves nothing**, so it proves on every run that it can fail:
+four fixed cases, no org, and the decisive one is the sentence cosine similarity waved through at
+**0.855** — *"LSV § 4 verlangt Kartenzahlung"*, an ordinance repealed on 1 January 2026. The gate
+rejects it **not because it sounds wrong but because no action returned that paragraph.**
+
+**Building it found a defect one layer down.** The engine's own sentence about a blocked charge
+point named `§ 40 MessEV` while its citation list omitted it — an agent repeating that faithfully
+would have failed for *the engine's* mistake. Removed, and
+`jederParagraphInDerBegruendungStehtAuchInDenRechtsgrundlagen` now asserts the invariant across
+every fact pattern: **the engine may utter only what it cites.**
+
+Granularity is stated, not implied: paragraph + statute. It catches an invented paragraph or a
+repealed ordinance; it does not catch a wrong `Absatz` inside a correct paragraph.
+
 **The standing rule:** the next thing committed should be deployed metadata, not another document.
 
 ---
@@ -488,6 +511,10 @@ same question* to notice. The gate would have caught it in one.
   still compiles, publishes and answers — from the prompt instead of from the action.
 - **`default_locale` takes a language code**: `de`, not `de_DE`.
 - **Action `outputs:` are scalars.** `list<string>` is rejected; join lists into text.
+- **The `sf` debug stream is HTML-escaped.** A marker built on `|` comes back as `&#124;` and
+  never matches. Use `::`. Same family as the `escapeHtml4` trap.
+- **`agent test run-eval` and `apex run` exit non-zero on a good run.** Treat stdout as the
+  result; only an empty run is a failure.
 - **Don't write `[V]`.** Use `[M]` / `[D]` / `[I]` / `[?]`.
 - **Don't say credits are unlimited.** Say: no failure observed across N runs; consumption
   unknown because Digital Wallet is absent in this edition.
