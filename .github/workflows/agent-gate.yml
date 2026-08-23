@@ -1,0 +1,92 @@
+name: Agent gate
+
+# Deliberately not on every push.
+#
+# Two reasons, and both are about honesty rather than caution. The agent lives in a long-lived org
+# because a published, active Agentforce agent is not something a scratch org has - so this job
+# cannot ride along with the scratch-org tests and must target a different org with its own secret.
+# And every run spends real LLM generations against a Developer Edition ceiling of 150 per hour, so
+# a per-push trigger would exhaust the budget on commits that never touched the agent.
+#
+# What runs on every push is the deterministic half: Apex tests, the formula-versus-engine
+# consistency check, and the invariant that the engine may only utter what it cites. That half is
+# free and catches most of what breaks. This job is the other half, run on demand and weekly.
+on:
+  workflow_dispatch:
+    inputs:
+      spec:
+        description: 'Gate configuration to run'
+        required: false
+        default: 'specs/eichrecht-gate.json'
+  schedule:
+    # Monday morning, so a platform change that landed over the weekend is found before the week is
+    # built on top of it.
+    - cron: '0 6 * * 1'
+
+concurrency:
+  group: agent-gate
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: Check agent org credentials
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      can-run: ${{ steps.check.outputs.can-run }}
+    steps:
+      - name: Look for AGENT_ORG_AUTH_URL
+        id: check
+        env:
+          AUTH_URL: ${{ secrets.AGENT_ORG_AUTH_URL }}
+        run: |
+          if [ -n "$AUTH_URL" ]; then
+            echo "can-run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "can-run=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::AGENT_ORG_AUTH_URL is not configured. The agent gate is skipped."
+          fi
+
+  gate:
+    name: Transcript gate against the live agent
+    runs-on: ubuntu-latest
+    needs: preflight
+    if: needs.preflight.outputs.can-run == 'true'
+    timeout-minutes: 25
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Salesforce CLI
+        run: npm install -g @salesforce/cli
+
+      - name: Authorize the agent org
+        env:
+          AUTH_URL: ${{ secrets.AGENT_ORG_AUTH_URL }}
+        run: |
+          echo "$AUTH_URL" > authurl.txt
+          sf org login sfdx-url --sfdx-url-file authurl.txt --alias AgentOrg --set-default
+          rm authurl.txt
+
+      - name: Confirm the agent is published and active
+        # A gate run against an inactive agent produces an empty transcript and would otherwise
+        # pass by having nothing to check. Fail loudly on that instead.
+        run: |
+          AKTIV=$(sf data query \
+            --query "SELECT VersionNumber FROM BotVersion WHERE BotDefinition.DeveloperName = 'VS_Eichrecht' AND Status = 'Active'" \
+            -o AgentOrg --json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).result.totalSize))")
+          echo "Aktive Versionen: $AKTIV"
+          if [ "$AKTIV" -lt 1 ]; then
+            echo "::error::VS_Eichrecht hat keine aktive Version. Ein Gate gegen einen inaktiven Agenten prüft nichts."
+            exit 1
+          fi
+
+      - name: Run the transcript gate
+        # The script self-tests before it touches the org: four fixed cases proving it still
+        # rejects an invented citation. If that disagrees with itself the run stops there.
+        run: node scripts/transkriptGate.mjs "${{ github.event.inputs.spec || 'specs/eichrecht-gate.json' }}" AgentOrg

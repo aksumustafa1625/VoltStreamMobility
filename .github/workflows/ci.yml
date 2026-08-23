@@ -5,6 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 # Cancel in-progress runs on the same branch when a newer commit lands.
 # Prevents the 'Cancelled after Nm' artifact when several commits push
@@ -60,6 +61,13 @@ jobs:
             --rulesets pmd-ruleset.xml \
             --format text \
             --threads 4 || true
+
+      - name: Umlauts in Apex identifiers (hard failure)
+        # Strings and comments must carry umlauts here - the agent speaks German and the corpus
+        # quotes statutes verbatim - but identifiers cannot hold them, and a search-and-replace
+        # restoring German reaches into field API names without saying so. This has happened;
+        # it costs two seconds to prevent and a deploy cycle to diagnose.
+        run: python3 scripts/umlautaudit.py force-app
 
   # ---------------------------------------------------------------------------
   # Preflight: tiny job that checks whether the SFDX_AUTH_URL secret is
@@ -139,8 +147,10 @@ jobs:
       - name: Deploy source
         run: sf project deploy start --source-dir force-app
 
-      - name: Assign permission set
-        run: sf org assign permset --name VoltStream_Reseller_Access
+      - name: Assign permission sets
+        run: |
+          sf org assign permset --name VoltStream_Reseller_Access
+          sf org assign permset --name VoltStream_Eichrecht_Access
 
       - name: Run Apex tests with coverage
         run: |
