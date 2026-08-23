@@ -679,7 +679,93 @@ sf agent test run --api-name <suite> --target-org <org> --json
 |---|---|
 | The real concurrency and turn ceilings | How the ~23-case suite is scheduled — and whether it fits under the **150 LLM generations/hour** Developer Edition limit |
 
-**Result:** _______________
+### ✅ Result — 2026-08-23. **One reviewer was right about the field and wrong about what it does. One question is left open on purpose.**
+
+#### 6a — `EinsteinGptSettings`: we undercounted, R8 was right, and the conclusion survives anyway
+
+Retrieved the live settings. **Thirteen fields, not nine.** The earlier enumeration was incomplete:
+
+```xml
+<disableAIProvAWSBedrock>                        <disableAIProvAzureOpenAI>
+<disableAIProvOpenAI>                            <disableAIProvVertexGemini>
+<disableAIProviderRegionFallback>                <enableAIModelBeta>
+<enableDeployOnlyActivePromptTemplateVersion>    ← not previously recorded
+<enableEinsteinGPTDeployPromptTemplatesAsActive> ← R8's field. It exists.
+<enableEinsteinGptAllowUnsafePTInputChanges>     <enableEinsteinGptGlobalLangSupport>
+<enableEinsteinGptPlatform>true                  <enableEnhancedPromptSecurity>
+<enablePBJinjaSyntaxBeta>
+```
+
+**R8 was right that the field exists.** Our count was wrong and is corrected here.
+
+**But it does not do what the name suggests.** Tested directly:
+
+1. Deployed `enableEinsteinGPTDeployPromptTemplatesAsActive = true` → `Succeeded`
+2. Deployed a fresh Flex template carrying **no** `versionIdentifier` and **no**
+   `activeVersionIdentifier` → `Succeeded` in one deploy
+3. Retrieved it back
+
+| Template | Deploy method | `activeVersionIdentifier` on retrieve |
+|---|---|---|
+| `VS_Scorer_Echo` | Phase 0, **two-step dance** | **present** |
+| `VS_Activation_Probe` | **one deploy**, flag ON | **absent** |
+
+**The template did not come back active.** Read alongside its sibling field
+`enableDeployOnlyActivePromptTemplateVersion`, both flags appear to govern how *existing* active
+state is carried during a deploy — not whether a *new* version is auto-activated.
+
+**Wall §3.7 stands.** The two-deploy dance is real; commit `scripts/prompt-activate.js`.
+
+*(`GenAiPromptTemplateActv` lists nothing for either template — consistent with R9's note that
+the type covers Salesforce-provided templates only. It is not a way to check activation.)*
+
+**And one unexpected detail.** Both templates carry the **identical** version identifier:
+
+```
+KzZqWgd5jMzXkpnhkT4MIUQfuFYllHgFALWfY/Vih28=_1
+```
+
+Their content is completely different. **So the identifier is not a content digest** — Phase 0
+recorded it as "a base64 digest plus an ordinal", which implied hashing. It is org-scoped plus an
+ordinal instead, which makes it **predictable, and therefore scriptable**. That is a small
+correction that makes the activation script simpler than expected.
+
+**Still no Trust Layer fields.** Masking, audit trail and retention are absent from all thirteen.
+The "do not claim Trust Layer as code" rule holds unchanged. *(`enableEnhancedPromptSecurity` is
+security-adjacent and worth a look later, but it is not masking.)*
+
+**Cleanup:** the flag was reverted to `false` and `VS_Activation_Probe` was deleted. The org is
+back to its pre-probe state.
+
+#### 6b — Conversation limits: no client-side limit exists, and the server-side number is left unresolved
+
+The CLI enforces multi-turn constraints through named error messages, and reading them settles
+part of the question:
+
+| Message key | What it enforces |
+|---|---|
+| `ngtTaskResolutionRequiresConversationHistory` | `task_resolution` requires `conversationHistory` on at least one input |
+| `ngtConversationHistoryIndexAllOrNothing` | `index:` is all-or-nothing across turns |
+| `ngtMultiAgentMissingHandoff` | a **multi-agent subject** must include an `agent_handoff_match` scorer with an expected value |
+| `ngtLooksLikeLegacySpec` | *"use `--test-runner testing-center` for legacy authoring, or **hand-edit the deployed XML for `<scorer scorerType="Custom">` blocks on NGT**"* |
+| `ambiguousTestDefinition` | a G1 and a G2 definition sharing one name is an error — do not let both exist |
+
+**There is no `maxTurns`, `max_turns` or concurrency constant anywhere in the client.** So R9's
+*"20 turns"* is not a client-side limit. Whether it is a documented server ceiling could not be
+settled by reading code.
+
+**The concurrency question is deliberately left open.** Settling *3 versus 10 concurrent runs*
+requires firing several suites at the org, and every one consumes against the Developer Edition
+ceiling of **150 LLM generations per hour** — a ceiling this session has already drawn on. With
+exactly one suite in existence, the answer changes nothing today.
+
+**It becomes worth measuring when the suite reaches ~23 cases**, because at that point the
+scheduling question is real. Recorded as open, with the reason, rather than spent now.
+
+*(Also worth carrying forward from `ngtMultiAgentMissingHandoff`: **multi-agent subjects are a
+first-class, testable thing in NGT.** Orchestration was cancelled on 2026-08-22 for cost and
+determinism reasons, not capability ones — and this confirms the testing surface would have been
+there if it were ever revisited.)*
 
 ---
 

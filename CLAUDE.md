@@ -197,10 +197,10 @@ Eighteen walls were recorded. After research and three second-round reviews:
 | Wall | Verdict |
 |---|---|
 | Agent Script publish `404` | ✅ **DEAD, 2026-08-23.** `default_agent_user` was this project's **System Administrator**; Salesforce's known-issues says that returns the failure **masked**, which is the bare 404. The org already held an `EinsteinServiceAgent User` with the `Einstein Agent User` profile. One line changed → publish succeeded, `BotDefinition` + `BotVersion 1` created. **Agent Script is the deployed source. Days 5–6 are Agent Script.** |
-| Scorer template server NPE | 🟡 **Licensed but not provisioned — rediagnosed 2026-08-23.** The org carries **200,000 Data Cloud permission-set licences with 2 in use**, yet still reports **zero `ssot__*` objects**. So this is a setup step, not an entitlement. **Probe 4.** |
+| Scorer template server NPE | ✅ **Off the critical path, 2026-08-23.** The NPE is gone on CLI 2.148.3 — the server now returns a proper validation naming `[AllowedRange, Session]`. `Session` wants an SObject that only exists once Data Cloud is provisioned (licensed, never set up). **But Probe 5 made it optional:** cosine similarity scored a correct German legal statement 0.919 and a lie about repealed law 0.855 — six points. Semantic scoring is the wrong instrument here. **The deterministic transcript gate is the design, not the fallback.** |
 | `AiAgentScorerDefinition` not in CLI registry | ✅ **DEAD, confirmed 2026-08-23.** `sf update` → CLI 2.148.3 → the error changed from `RegistryError` to `ComponentSetError: No source-backed components`, which means the registry now knows the type. |
-| `topic_assertion` truncated to `"p"` | 🔴 **Real, server-side.** Two independent source reads confirm the CLI passes values verbatim. **Nobody has reported this — we would be first.** Route on `actions_assertion` instead. |
-| Quality judges fail a correct refusal | 🔴 **Real but not a bug.** `coherence`/`completeness`/`conciseness`/`factuality` are all `needsExpected: false` — reference-free. Use `bot_response_rating` (`output_validation`, `needsExpected: true`) with an expected refusal, and omit `metrics:` on refusal cases. Per-case opt-in is the spec's design, not a hack. |
+| `topic_assertion` truncated to `"p"` | ✅ **G1-ONLY, proven 2026-08-23.** The same spec through `run-eval` (G3) returns the **full** topic name and passes. The defect belongs to the Testing Center evaluation service, not the platform. Route assertions are usable on G3. |
+| Quality judges fail a correct refusal | ✅ **G1-ONLY, proven 2026-08-23.** G3 translates the case to the reference-based `bot_response_rating` and scored the pancake refusal **5 / PASS** against the spec’s own `expectedOutcome`. No suite-splitting needed — the runner does it. |
 | Standard Knowledge action steals the turn | 🔴 **Real behaviour, cheap fix.** Remove standard actions from the topic. In Agent Script the model can only reach what the `.agent` file declares. |
 | One turn → one subagent | 🟢 **Refuted.** `@subagent.<name>` is call-and-return; `@utils.transition` is one-way; `before_reasoning` pins deterministic actions before the model reasons. The hero demo is back. |
 | Credits unmeasurable in DE | 🟡 **Wallet is a wall; measurement is not.** Derive it: token count from the local transcript × published rate card (`roundup(token/2000) × 10` for Standard). Label `[Derived]`, print the formula. |
@@ -212,8 +212,8 @@ Eighteen walls were recorded. After research and three second-round reviews:
 | `escapeHtml4` corrupts German | 🟢 **Our analysis correct.** `@InvocableVariable` serialisation already escapes. Add `GermanTextSerializationTest` and stop. |
 | Statistical 5/5 gate | 🔴 **Real, and the two-tier design is the answer.** |
 | Data Library has no metadata type | 🔴 **Real.** Deferred to v1.1, correctly. |
-| Trust Layer as deployable metadata | 🔴 **Real and it kills a claim.** `EinsteinGptSettings` has nine fields, **none of them Trust Layer.** Masking, audit trail and retention are configuration, not source. Do not claim "Trust Layer as code." |
-| `isConfirmationRequired` under test | ❓ **Genuinely unknown.** No client-side confirm logic exists in the CLI source. A 30-minute empirical probe would be a publishable finding. |
+| Trust Layer as deployable metadata | 🔴 **Real and it kills a claim.** `EinsteinGptSettings` has **thirteen** fields (verified by retrieve 2026-08-23 — an earlier count of nine was wrong), **none of them Trust Layer.** Masking, audit trail and retention are configuration, not source. Do not claim "Trust Layer as code." |
+| `isConfirmationRequired` under test | ❓ **Still unknown.** Unchanged — no client-side confirm logic exists. A 30-minute empirical probe remains a publishable finding. |
 
 ---
 
@@ -286,19 +286,48 @@ the only technical Salesforce posting in Germany accepting **B2 German**).
 
 ## ▶️ NEXT ACTION
 
-**`docs/PROBE_PLAN.md` — six probes, about two hours.** They decide whether Days 5–6 are
-Agent Script or legacy XML, whether the groundedness claim needs the platform at all, and
-whether a fresh org removes two walls at once.
+**The six probes are finished — 2026-08-23. Results in `docs/PROBE_PLAN.md`.**
 
-After the probes: a **vertical slice** — `Ladepunkt__c` + `Eingriff__c` + `EichrechtService`
-+ `Rechtsnorm__mdt` + one LWC card + one agent action + one eval case, end to end. Then
-Partner and Netzanschluss follow the same template.
+Five of eighteen walls came down, and three of those turned out to be the *old test runner*
+rather than the platform. The score:
 
-**A standing warning, from the ninth reviewer and it is correct:**
+| | |
+|---|---|
+| **Probe 1** — `sf update` | ✅ CLI was 179 days stale. Registry wall died with it. |
+| **Probe 2** — fresh org | ❌ **Cancelled.** The org is already a Feb-2026 Agentforce DE. |
+| **Probe 3** — Agent Script publish | ✅ **PUBLISHED.** The `default_agent_user` was an admin; the error came back masked. |
+| **Probe 4** — Session Tracing | 🟡 NPE gone, schema narrowed to one unknown, blocked on Setup. |
+| **Probe 5** — G3 `run-eval` | ✅ Two more walls were G1-only. And cosine similarity was measured unfit. |
+| **Probe 6** — two contradictions | ✅ Field count corrected; the activation flag does not activate. |
 
-> *"The ninth revision of the documents proves less than the engine's first deploy."*
+**Stop probing. Build the vertical slice.**
 
-8,000 lines of documentation exist. Zero new objects are deployed. **Build now.**
+```
+Ladepunkt__c  +  Eingriff__c        event model, four Eichfrist start branches
+      ↓
+EichrechtService                    the state machine
+      ↓
+Rechtsnorm__mdt                     with Gueltig_von__c / Gueltig_bis__c
+      ↓
+DecisionResult                      legalSources[], NOT_APPLICABLE ≠ UNKNOWN
+      ↓
+one LWC card  +  one agent action  +  one eval case
+```
+
+One object, end to end. If a platform blocker exists it surfaces there — early, and on one
+object instead of six. Partner and Netzanschluss then follow the same template with no new
+architectural risk.
+
+**Two things the probes changed about how to build it:**
+
+1. **The agent is authored in Agent Script and deployed from it.** `before_reasoning` pins the
+   regulatory checks as deterministic steps before the model reasons; `available when` gates the
+   write action on a `BLOCKIERT` section. The flow is written down, not left to the planner.
+2. **Groundedness is a deterministic transcript gate, not a scorer.** Every `§` the agent cites
+   must appear in the `rechtsgrundlage` an action returned that turn. Probe 5 measured why:
+   similarity cannot separate a correct German legal sentence from a false one.
+
+**The standing rule:** the next thing committed should be deployed metadata, not another document.
 
 ---
 
