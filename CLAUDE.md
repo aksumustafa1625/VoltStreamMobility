@@ -321,7 +321,9 @@ LWC-Karte (eichrechtCard)           ✅ DEPLOYED 2026-08-23 — 149 local tests 
       ↓
 Agent-Action (PruefeEichfristen)     ✅ DEPLOYED 2026-08-23 — 162 local tests green
       ↓
-Agent Script Topic  +  Eval-Gate  +  CI  ◀ NEXT
+Agent Script (VS_Eichrecht)          ✅ PUBLISHED + AKTIV 2026-08-23 — Smoke 3/3 PASS
+      ↓
+Transkript-Gate  +  CI               ◀ NEXT
 ```
 
 One object, end to end. If a platform blocker exists it surfaces there — early, and on one
@@ -417,6 +419,27 @@ German had been transliterated (`laeuft`, `unberuehrt`) out of caution the measu
 **The output now reads as German** — which is the point, since the target is German at negotiation
 level and that has to be true of what the agent says, not only of the README.
 
+### Step 8 — the agent, and the failure that argued for step 9
+
+`VS_Eichrecht` is authored in Agent Script, deployed from the file, published and **active**.
+Smoke suite **3/3 PASS**, every case 5/5.
+
+**It failed first, and the failure is the finding.** The script compiled, published and answered in
+fluent German — with the wrong answers. Asked the same question twice it said *"ohne bestimmbaren
+Status"* once and *"für den Betrieb gesperrt"* the next; the truth was *"abgelaufen"*. Both wrong
+answers were **phrases lifted from my own instructions**. The action had never run.
+
+Cause: the action block named `target:` but declared **no `inputs:` and no `outputs:`**, so the
+tool reached the model with nothing to call. With them declared, the agent now returns the engine's
+sentence word for word and cites exactly what was handed over:
+
+> *"Die Eichfrist ist am 31.12.2023 abgelaufen und eine erneute Eichung wurde nicht beantragt."*
+> Rechtsgrundlagen: `MessEV Anlage 7 Tabelle 1 Nr. 6.7; § 34 Abs. 2 MessEV; § 37 Abs. 1 Satz 2 MessEG`
+
+**This is the argument for the transcript gate, made accidentally and early.** An agent that sounds
+right in a language the reviewer may not read is exactly the risk — and it took *two runs of the
+same question* to notice. The gate would have caught it in one.
+
 **The standing rule:** the next thing committed should be deployed metadata, not another document.
 
 ---
@@ -459,6 +482,12 @@ level and that has to be true of what the agent says, not only of the README.
 - **Don't build German text with `Date.format()`.** It follows the running user's locale, so
   `23.08.2026` becomes `8/23/2026` for an English-locale user — inside a sentence the agent
   narrates. Use `DateUtils.deutsch()`.
+- **Never write an `.agent` file with PowerShell `Set-Content -Encoding UTF8`.** It prepends a
+  BOM, and a BOM makes the compile service reject the file with a bare `422`. Use Python.
+- **An Agent Script action needs `inputs:` and `outputs:` declared.** Without them the script
+  still compiles, publishes and answers — from the prompt instead of from the action.
+- **`default_locale` takes a language code**: `de`, not `de_DE`.
+- **Action `outputs:` are scalars.** `list<string>` is rejected; join lists into text.
 - **Don't write `[V]`.** Use `[M]` / `[D]` / `[I]` / `[?]`.
 - **Don't say credits are unlimited.** Say: no failure observed across N runs; consumption
   unknown because Digital Wallet is absent in this edition.
