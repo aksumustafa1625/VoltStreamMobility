@@ -317,7 +317,9 @@ EichrechtService  +  DecisionResult ✅ DEPLOYED 2026-08-23 — 138 local tests 
       ↓
 Konsistenztest Formel ↔ Apex        ✅ DEPLOYED 2026-08-23 — 142 local tests green
       ↓
-LWC-Karte  +  Agent-Action  +  Eval  ◀ NEXT
+LWC-Karte (eichrechtCard)           ✅ DEPLOYED 2026-08-23 — 149 local tests green
+      ↓
+Agent-Action  +  Agent Script  +  Eval  ◀ NEXT
 ```
 
 One object, end to end. If a platform blocker exists it surfaces there — early, and on one
@@ -387,6 +389,14 @@ must map onto the enum (so changing the formula text without the mapping is caug
 **All fixtures are relative to `Date.today()`** — the formula runs on `TODAY()`, and fixed dates
 would rot the suite on a calendar boundary.
 
+**Step 6 made it visible.** `eichrechtCard` on the `Ladepunkt_Eichrecht` record page: verdict,
+German reasoning, both dates, and **every cited provision expandable to its verbatim wording plus
+a link to gesetze-im-internet.de**. That is what turns a status badge into evidence.
+
+⚠️ **One Setup click is outstanding** — the FlexiPage is deployed but Lightning record-page
+*activation* has no metadata representation. Setup → Object Manager → Ladepunkt → Lightning Record
+Pages → `Ladepunkt Eichrecht` → **Activate**.
+
 **The standing rule:** the next thing committed should be deployed metadata, not another document.
 
 ---
@@ -420,6 +430,9 @@ would rot the suite on a calendar boundary.
   undeclared `xsd` prefix comes back as a masked `UNKNOWN_EXCEPTION` naming nothing.
 - **Don't paraphrase into `Rechtsnorm__mdt.Wortlaut__c`.** Official text or empty. It is
   what the agent narrates from; a paraphrase there defeats the grounding design.
+- **Don't build German text with `Date.format()`.** It follows the running user's locale, so
+  `23.08.2026` becomes `8/23/2026` for an English-locale user — inside a sentence the agent
+  narrates. Use `DateUtils.deutsch()`.
 - **Don't write `[V]`.** Use `[M]` / `[D]` / `[I]` / `[?]`.
 - **Don't say credits are unlimited.** Say: no failure observed across N runs; consumption
   unknown because Digital Wallet is absent in this edition.
