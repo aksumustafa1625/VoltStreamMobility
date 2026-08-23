@@ -401,7 +401,72 @@ Two things to remember if it does deploy:
 | Toggle absent | The scorer is out of scope for v1. **Say so plainly and move to Probe 5.** |
 | Toggle present and template deploys | The custom scorer returns, and the `Session` schema question closes |
 
-**Result:** _______________
+### 🟡 Result — 2026-08-23. **The NPE is gone. The schema is narrowed to one unknown. Blocked on Setup UI.**
+
+#### The crash was half the story, and the newer CLI removed it
+
+Redeploying a `scorerMeasurement` template on CLI 2.148.3 no longer crashes the server. Phase 0
+recorded an unhandled null; today the same file returns a **proper validation message**:
+
+| Phase 0 | 2026-08-23 |
+|---|---|
+| `Cannot invoke "…GenAiPromptTypeEnum.getPath()" because …getType() is null` | `Required Generative AI Prompt Template Input definitions are missing: [[AllowedRange, Session]]` |
+
+**The type resolves.** `agentforce_session_tracing__scorerMeasurement` is recognised, and the
+server is now naming what it wants rather than falling over.
+
+#### Walking the remaining schema — five attempts, five distinct answers
+
+Each rejection narrowed the next. This is the useful part of the probe:
+
+| `<definition>` for `Session` | Server response |
+|---|---|
+| *element omitted* | `Required field is missing: definition` — **it is mandatory** |
+| `SOBJECT://AiAgentSession__dlm` | `We can't find the related records for the prompt template` — **the `SOBJECT://` grammar is valid**; the object simply does not exist |
+| `SOBJECT://AiAgentSession` | same — grammar fine, object absent |
+| `primitive://String` | `The … Input primitive://String **doesn't match any supported inputs** for the … Type agentforce_session_tracing__scorerMeasurement` |
+| `agentforce_session_tracing://AiAgentSession` | **the NPE returns** — so the crash is specific to this URI scheme, not to the type |
+
+**Read together:** the `Session` input wants an **SObject that does not exist in this org**. The
+`SOBJECT://` scheme validates; `primitive://` is explicitly not among the supported inputs; and the
+namespaced scheme is what triggers the unhandled null.
+
+That is consistent with, and now independently supports, Probe 2's rediagnosis: **the Session
+Tracing data model is licensed but not provisioned**, so there is no object for `SOBJECT://` to
+resolve against.
+
+The server will not enumerate the whitelist — *"Specify a valid input and try again"* is as far as
+it goes. **One unknown remains: the object name.**
+
+#### What is confirmed absent
+
+```
+PermissionSet WHERE Name LIKE '%Scorer%' OR '%Observ%' OR '%Tracing%'   →  none
+ssot__* / __dlm object count                                            →  0
+CLI command to provision Data Cloud                                     →  none exists
+```
+
+There is no `sf data-cloud` surface. **Provisioning is a Setup wizard, and Setup is not
+scriptable** — this is where the CLI stops.
+
+#### Two things confirmed in passing
+
+The org's retrievable metadata types now include **`AiAgentScorerDefinition`** and
+**`AiTestingDefinition`** — independent confirmation of Probe 1's registry fix. And **`AiRetriever`
+is not in the list**, which matches the research finding that it was never a metadata type at all.
+
+#### Verdict, and why it is deliberately not being pushed further
+
+Two routes remain, both requiring the Setup UI:
+
+1. **Provision Data Cloud**, then retry — if the DMO appears, `SOBJECT://` resolves.
+2. **Build one scorer in Agentforce Studio and retrieve it** — the retrieved XML contains the
+   answer, and bootstrapping a type once through the UI is a footnote rather than a broken claim.
+
+**Neither is being done yet, on purpose.** Probe 5 tests whether the platform's *built-in*
+groundedness evaluators are sufficient. If they are, the custom scorer is not on the critical path
+at all, and the Setup work is optional rather than blocking. **Sequencing matters more than
+completeness here.**
 
 ---
 
@@ -444,7 +509,138 @@ scoring:
 
 **Either outcome is a win.** The second is the one to prefer if both work.
 
-**Result:** _______________
+### ✅ Result — 2026-08-23. **Two more walls turn out to be G1-only. And the groundedness answer is not the one that was expected.**
+
+`sf agent test run-eval` exists on CLI 2.148.3 and accepts the **same YAML spec** as
+`agent test run`. Ran the untouched Phase 0 spec against it. Two findings arrived immediately,
+both larger than the probe's stated goal.
+
+#### 🟢 Wall §3.2 does not exist in G3
+
+Phase 0 recorded, 5 runs out of 5, that a custom topic name came back truncated to `"p"`. The
+same spec, same agent, same org, through the G3 runner:
+
+```json
+{
+  "type": "evaluator.planner_topic_assertion",
+  "score": 1,
+  "is_pass": true,
+  "actual_value":   "p_16jgL000002KylF_Eichfrist_Monitoring",
+  "expected_value": "p_16jgL000002KylF_Eichfrist_Monitoring"
+}
+```
+
+**Full string. Passes.** The truncation is a defect of the **G1 / Testing Center evaluation
+service**, not of the platform. Two independent source reads had already shown the CLI passes
+values verbatim; this locates the fault precisely, because a second runner reading the same
+session does not reproduce it.
+
+**Consequence:** route assertions are usable again — on G3. The advice to abandon
+`topic_assertion` was correct *for G1* and is now scoped rather than general.
+
+#### 🟢 Wall §3.3 does not exist in G3 either
+
+The pancake-refusal case, which G1 scored `coherence: 0 / FAILURE` — *"completely incoherent…
+unrelated to the task"*:
+
+| Runner | Evaluator | Result |
+|---|---|---|
+| G1 | `coherence` (reference-free) | **0 · FAIL** |
+| **G3** | `evaluator.bot_response_rating` (reference-based) | **5 · PASS** |
+
+G3 did not run `coherence` at all. It translated the case into a **reference-based** judge and
+compared against the spec's own `expectedOutcome: "Eine höfliche Ablehnung ohne Rezept."` —
+which is exactly the design R8 and R9 both prescribed, except that **the runner does it
+automatically.** No suite-splitting hack required.
+
+*(Case 0 still fails, and legitimately: `EmployeeCopilot__AnswerQuestionsWithKnowledge` stole
+the turn again — wall §3.4, unchanged — and the trace now shows why it then failed:
+`"We couldn't find a data library assigned to this agent."`)*
+
+#### 📋 The server's complete step-type enum — documented nowhere
+
+Sending an invalid step type makes the evaluation service enumerate every valid one. **56
+types.** This list does not appear in any public documentation:
+
+```
+agent.create_session          agent.create_session_v2       agent.create_preview_session
+agent.send_message            agent.send_message_v2         agent.send_preview_message
+agent.get_state               agent.get_state_v2            agent.get_state_enhanced
+agent.get_state_stdm          agent.get_conversation_state_stdm
+agent.get_plan                agent.end_session             agent.start_voice_conv
+
+evaluator.string_assertion    evaluator.numeric_assertion   evaluator.list_assertion
+evaluator.planner_topic_assertion            evaluator.planner_actions_assertion
+evaluator.conversation_topic_assertion       evaluator.conversation_actions_assertion
+evaluator.agent_handoff_assertion            evaluator.conversation_handoff_assertion
+evaluator.latency_presence_assertion
+evaluator.bot_response_rating evaluator.instruction_adherence
+evaluator.rag_quality         evaluator.sfdc_rag_quality
+evaluator.text_quality        evaluator.text_alignment
+evaluator.custom_aspect_critique             evaluator.task_resolution
+evaluator.formula             evaluator.agentforce_eval
+evaluator.easy_edge.determinism / .quality / .graph_traversal / .implicit_feedback
+
+general.echo                  general.string_concat         llmgw.generate
+retriever.retrieve_text       prompt_engine.generate_prompt / .hydrate_prompt
+```
+
+**`evaluator.instruction_adherence` and `evaluator.custom_aspect_critique` are the two worth
+returning to** — the first is the natural judge for *"never estimate a deadline"*, the second
+takes an arbitrary rubric.
+
+#### ⚠️ The CLI ships evaluator names the server rejects
+
+`evalNormalizer.js` carries `DEFAULT_METRIC_NAMES` for **`evaluator.answer_faithfulness`**,
+**`evaluator.hallucination_detection`** and **`evaluator.citation_recall`**. The server accepts
+none of the three. **The client is ahead of the evaluation service** — those are either
+forthcoming or renamed.
+
+What exists today is `evaluator.rag_quality`, whose `metric_name` the server restricts to
+exactly three values:
+
+```
+'ragas.answer_relevancy' | 'ragas.context_relevancy' | 'ragas.faithfulness'
+```
+
+**`ragas.faithfulness` returned an empty evaluation** — no score, no error. It almost certainly
+requires retrieved contexts, and the CLI's field aliases only map to `generated_output` and
+`reference_answer`. With no retriever provisioned, there is nothing for it to be faithful *to*.
+
+#### 🔴 And the measurement that settles the design question
+
+`evaluator.text_alignment` with `base.cosine_similarity` **works, returns real numbers, needs no
+retriever, no Data Cloud, no scorer.** Three German legal statements against the same reference:
+
+| Case | Statement | Score |
+|---|---|---|
+| Correct | *"Die Eichfrist für Ladepunkte beträgt acht Jahre."* | **0.919** |
+| Wrong | *"Die Eichfrist beginnt mit der Installation und beträgt fünf Jahre."* | **0.888** |
+| Citing repealed law | *"LSV § 4 verlangt Kartenzahlung an allen öffentlichen Ladepunkten."* | **0.855** |
+
+The ordering is right. **The spread is six points between a correct statement and an outright
+falsehood.** German legal prose is lexically similar whether or not it is true — the vocabulary
+is the same, only the numbers and the paragraph references differ, and those are exactly what
+cosine similarity discounts.
+
+**Any threshold in the 0.85–0.92 band would be arbitrary, and the metric would pass a lie about
+a repealed ordinance at 0.855.**
+
+#### Verdict
+
+The probe asked whether a built-in groundedness evaluator makes the custom scorer unnecessary.
+**The answer is better than yes: it makes the whole semantic-scoring approach the wrong
+instrument for this domain, and now there is a number proving it.**
+
+**The deterministic transcript gate is not the fallback. It is the correct design**, and it can
+now be argued from measurement rather than from platform limitation:
+
+> Every `§` the agent cites must appear in the `rechtsgrundlage` returned by an action that ran
+> in that turn. No LLM, no embedding, no threshold to defend. A citation is either handed over
+> by the engine or it is invented — and that is a **binary**, not a similarity.
+
+**Wall §3.6 therefore drops off the critical path.** The custom scorer becomes optional
+enrichment; Probe 4's Setup work is no longer blocking.
 
 ---
 
