@@ -325,7 +325,7 @@ Agent Script (VS_Eichrecht)          ✅ PUBLISHED + AKTIV 2026-08-23 — Smoke 
       ↓
 Transkript-Gate                      ✅ 2026-08-23 — 3/3 PASS, Selbsttest 4/4
       ↓
-CI                                   ◀ NEXT — der letzte Schritt
+CI                                   ✅ 2026-08-23 — Slice geschlossen
 ```
 
 One object, end to end. If a platform blocker exists it surfaces there — early, and on one
@@ -462,6 +462,48 @@ every fact pattern: **the engine may utter only what it cites.**
 
 Granularity is stated, not implied: paragraph + statute. It catches an invented paragraph or a
 repealed ordinance; it does not catch a wrong `Absatz` inside a correct paragraph.
+
+### Step 10 — CI, and the slice closes
+
+**Every push:** the deterministic half — Apex suite, formula-vs-engine consistency, the
+utter-only-what-you-cite invariant, and the **umlaut audit**, which unlike the PMD warm-up beside
+it *fails the build*. Verified by pointing it at a deliberately broken identifier.
+
+**On demand + Montag früh:** `agent-gate.yml` — the transcript gate against the live agent. Not
+per-push, for two honest reasons: a published, active agent is not something a scratch org has, and
+every run spends real generations against a **150/hour** Developer Edition ceiling. It **refuses to
+run against an inactive agent** — an empty transcript passes by having nothing to check.
+
+---
+
+## ✅ THE VERTICAL SLICE IS CLOSED — 2026-08-23
+
+| | | |
+|---|---|---|
+| 1 | `Ladepunkt__c` + `Eingriff__c` | 21 + 13 Felder, Status in der Listenansicht |
+| 2 | `DateUtils` | § 34 Abs. 1, vier Sätze, tabellengetrieben |
+| 3 | `Rechtsnorm__mdt` | 16 Normen, Wortlaut wörtlich oder leer, bitemporal |
+| 4 | `EichrechtService` + `DecisionResult` | Chronologie; `NICHT_ANWENDBAR ≠ UNBEKANNT` |
+| 5 | `EichrechtKonsistenzTest` | 2 **benannte** Divergenzen, beide müssen divergieren |
+| 6 | `eichrechtCard` | Zitat aufklappbar → amtlicher Wortlaut + Quelle |
+| 7 | `PruefeEichfristen` + Serialisierungsbeweis | Aktion entscheidet nichts |
+| 8 | `VS_Eichrecht` (Agent Script) | publiziert, aktiv, Smoke 3/3 |
+| 9 | `transkriptGate.mjs` | binär, mit Selbsttest |
+| 10 | CI | billige Hälfte pro Push, teure auf Abruf |
+
+**163 Apex-Tests · 15 PASS / 1 GELÖST / 0 FAIL in der Live-Matrix · Gate 3/3 · Selbsttest 4/4**
+
+### ⚠️ Was ein Mensch tun muss (nicht deploybar)
+
+1. **Setup → Object Manager → Ladepunkt → Lightning Record Pages → `Ladepunkt Eichrecht` → Activate**
+2. Repo-Secrets: `SFDX_AUTH_URL` (Scratch-Org-Tests) und `AGENT_ORG_AUTH_URL` (Agent-Gate)
+
+### ▶️ Danach
+
+Partner und Netzanschluss folgen **derselben Vorlage** — Objekt → Utils → Korpus → Service →
+Konsistenztest → Karte → Aktion → Topic → Gate. Kein neues architektonisches Risiko; die offenen
+Punkte sind fachlich, nicht technisch (`Absatz`-Granularität im Gate, die Vermutung aus § 34 Abs. 2
+Satz 2, Nr. 6.8 der Anlage 7).
 
 **The standing rule:** the next thing committed should be deployed metadata, not another document.
 
