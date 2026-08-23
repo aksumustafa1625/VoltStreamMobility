@@ -315,7 +315,9 @@ Rechtsnorm__mdt                     ✅ DEPLOYED 2026-08-23 — 16 Normen, 9 tes
       ↓
 EichrechtService  +  DecisionResult ✅ DEPLOYED 2026-08-23 — 138 local tests green, 100 % cov
       ↓
-Konsistenztest Formel ↔ Apex        ◀ NEXT — then LWC card, agent action, eval case
+Konsistenztest Formel ↔ Apex        ✅ DEPLOYED 2026-08-23 — 142 local tests green
+      ↓
+LWC-Karte  +  Agent-Action  +  Eval  ◀ NEXT
 ```
 
 One object, end to end. If a platform blocker exists it surfaces there — early, and on one
@@ -331,12 +333,13 @@ a list view** — no agent, no CI run, which is the whole thesis.
 Verified against **real DML in the live org**, not asserted in a unit test —
 `scripts/apex/seedEichrechtMatrix.apex` → `verifyEichrechtMatrix.apex`, sixteen cases:
 
-> **15 PASS · 1 DEFERRED · 0 FAIL**
+> **15 PASS · 1 GELÖST · 0 FAIL** — and the matrix now prints **three** expiry columns:
+> what the formula produces, what § 34 MessEV requires, and what `EichrechtService` computes.
+> **The engine column equals the statute column in every row**, case `E` included.
 
-The matrix prints **two** expiry columns — what the formula is contracted to produce, and what
-§ 34 MessEV requires. Case `E` differs by exactly one year, so it is counted `DEFERRED` and
-handed to `EichrechtService`. **A green 16/16 would have meant the test was asserting the
-formula against itself** — which is what it was doing, until the statute was re-read.
+Case `E` was `DEFERRED` until step 4 existed. **A green 16/16 on two columns would have meant the
+test was asserting the formula against itself** — which is what it was doing, until the statute
+was re-read.
 
 That re-read is the finding: **§ 34 Abs. 1 has four sentences and this project had read two.**
 Satz 3 backdates a late Nacheichung to the old period's end; Satz 4 is the only escape and
@@ -370,6 +373,19 @@ transcript gate reads.
 **`NICHT_ANWENDBAR` has a real statutory home:** `pruefeVerspaeteteEichung` returns it for a device
 whose Eichfrist still runs, because § 38 governs *verspätete* Eichungen and says nothing about a
 running period. Not the same as `UNBEKANNT`, and neither is "not protected".
+
+**Step 5 turned the claim into a check.** `EichrechtKonsistenzTest` holds both layers against
+each other on twelve fact patterns — ten must agree, two are **named** divergences. The second of
+those is the argument for the whole engine in one assertion:
+
+> the list view reports a charge point as **GÜLTIG** that the ordinance says has been
+> **ABGELAUFEN** since last year.
+
+Two guards keep the exemption list honest: a named divergence must **still diverge** (so repairing
+the formula fails the suite instead of leaving a stale excuse), and every string the formula emits
+must map onto the enum (so changing the formula text without the mapping is caught).
+**All fixtures are relative to `Date.today()`** — the formula runs on `TODAY()`, and fixed dates
+would rot the suite on a calendar boundary.
 
 **The standing rule:** the next thing committed should be deployed metadata, not another document.
 
