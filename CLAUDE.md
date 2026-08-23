@@ -223,11 +223,15 @@ Full detail in `docs/DOMAIN_VERIFICATION.md`. The six facts that carry the proje
 
 1. **12 kVA je elektrischer Anlage** (NAV § 19 Abs. 2), not 11 kW. And **there is no
    Genehmigungsfiktion** — two months binds the operator to answer, silence is not consent.
-2. **The Eichfrist has four start branches**, not one:
-   `Inverkehrbringen` · `Tag der Eichung` · **`Nacheichung_nach_Ablauf`** (calibrated after
-   expiry → the new period starts at the **old period's end**, a backdating penalty) ·
-   **`Nacheichung_nach_Stilllegung`** (unused >1 year → starts at the calibration day).
-   Then § 34 Abs. 2 MessEV pushes the end to **31 December** of that year.
+2. **The Eichfrist start lives in § 34 Abs. 1 MessEV, which has _four sentences_** — and
+   Satz 4 is **relief from Satz 3**, not a fourth independent branch:
+   *S. 1* default is **two years**, so the eight is Anlage 7 Nr. 6.7, a table entry ·
+   *S. 2* `Tag der Eichung`, unless § 37 Abs. 1 S. 2 MessEG gives `Inverkehrbringen` ·
+   *S. 3* calibrated **after** expiry → the new period starts at the **old period's end**,
+   a backdating penalty · *S. 4* the only escape: **`nachweislich`** unused > 1 year → back to
+   the calibration day. Then § 34 Abs. 2 pushes the end to **31 December** of that year.
+   **Defaulting to S. 4 is wrong in the dangerous direction** — measured: the formula returns
+   2032-12-31 where the statute says 2031-12-31. Hence `Stilllegung_nachgewiesen__c`.
 3. **§ 14a EnWG excludes publicly accessible charge points** — in the statute's own words. The
    4.2 kW is BK6-22-300 only, and it is a **dimming floor**, not a shutdown — but a
    relay-only wallbox is lawfully taken to **zero** and cannot claim the hardship exemption.
@@ -303,13 +307,13 @@ rather than the platform. The score:
 **Stop probing. Build the vertical slice.**
 
 ```
-Ladepunkt__c  +  Eingriff__c        event model, four Eichfrist start branches
+Ladepunkt__c  +  Eingriff__c        ✅ DEPLOYED 2026-08-23 — 15 PASS · 1 DEFERRED · 0 FAIL
       ↓
-EichrechtService                    the state machine
+DateUtils                           ◀ NEXT — the four § 34 Abs. 1 sentences, table-driven
       ↓
 Rechtsnorm__mdt                     with Gueltig_von__c / Gueltig_bis__c
       ↓
-DecisionResult                      legalSources[], NOT_APPLICABLE ≠ UNKNOWN
+EichrechtService  +  DecisionResult legalSources[], NOT_APPLICABLE ≠ UNKNOWN
       ↓
 one LWC card  +  one agent action  +  one eval case
 ```
@@ -317,6 +321,28 @@ one LWC card  +  one agent action  +  one eval case
 One object, end to end. If a platform blocker exists it surfaces there — early, and on one
 object instead of six. Partner and Netzanschluss then follow the same template with no new
 architectural risk.
+
+### Step 1 is done, and it produced a finding
+
+21 fields on `Ladepunkt__c`, 13 on `Eingriff__c` (master-detail), permission set
+`VoltStream_Eichrecht_Access`. Four roll-ups and five formulas, so **legal status is a column in
+a list view** — no agent, no CI run, which is the whole thesis.
+
+Verified against **real DML in the live org**, not asserted in a unit test —
+`scripts/apex/seedEichrechtMatrix.apex` → `verifyEichrechtMatrix.apex`, sixteen cases:
+
+> **15 PASS · 1 DEFERRED · 0 FAIL**
+
+The matrix prints **two** expiry columns — what the formula is contracted to produce, and what
+§ 34 MessEV requires. Case `E` differs by exactly one year, so it is counted `DEFERRED` and
+handed to `EichrechtService`. **A green 16/16 would have meant the test was asserting the
+formula against itself** — which is what it was doing, until the statute was re-read.
+
+That re-read is the finding: **§ 34 Abs. 1 has four sentences and this project had read two.**
+Satz 3 backdates a late Nacheichung to the old period's end; Satz 4 is the only escape and
+demands `nachweislich`. The declarative layer silently took the favourable branch. Corrected in
+`docs/DOMAIN_VERIFICATION.md`, and the escape now needs an evidenced checkbox
+(`Eingriff__c.Stilllegung_nachgewiesen__c`) that **defaults to the harsher answer**.
 
 **Two things the probes changed about how to build it:**
 

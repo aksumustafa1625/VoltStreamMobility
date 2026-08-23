@@ -303,6 +303,45 @@ Eichung, not from the day it was first placed on the market. A single
 `Inverkehrbringen__c` field, run through a formula, computes the wrong expiry for every
 re-calibrated charge point in the fleet — which, given the numbers in §5, is most of them.
 
+**Correction, 2026-08-23 — Absatz 1 has _four_ sentences, and this document had read two.**
+The passage quoted above is Satz 2. Two more follow it, and both change the answer for a real
+fleet. `[M]` — read from the statute while building `Eichfrist_Ende__c`, not before.
+
+| Satz | Rule |
+|---|---|
+| 1 | The default Eichfrist is **two years**, *soweit nicht etwas anderes* is prescribed. Anlage 7 Nr. 6.7 is what makes charge points eight — the eight is a table entry, not a property of charge points. |
+| 2 | Fristbeginn is the **Tag der Eichung**, *soweit nicht* § 37 Abs. 1 Satz 2 MessEG applies. |
+| **3** | *"Wird ein Messgerät **nach Ablauf der Eichfrist** geeicht, beginnt die neue Eichfrist mit **Ablauf der vorausgegangenen Eichfrist**."* |
+| **4** | *"Wenn ein Messgerät nach Ablauf der Eichfrist **nachweislich länger als ein Jahr nicht verwendet** wurde, ist für den erneuten Fristbeginn auf den **Tag der Eichung** abzustellen."* |
+
+**Satz 4 is relief from Satz 3, not a fourth independent branch.** Calibrate late and the new
+period is backdated to the end of the old one — the months you were late are deducted from the
+next eight years. The only escape is proving the device sat unused for over a year, and
+*nachweislich* puts that burden squarely on the operator.
+
+So a system that quietly takes the favourable branch is wrong **in the dangerous direction**:
+it grants protection the statute withholds. That is not a hypothetical here, it is measured.
+`Eichfrist_Ende__c` — whose `BLANKVALUE(Letzte_Eichung__c, Inverkehrbringen__c)` cannot see
+chronology — returns **2032-12-31** for a device placed on the market 2015-06-01 and calibrated
+2024-03-10. The statute says **2031-12-31**.
+
+Two consequences, both already built:
+
+- **`Eingriff__c.Stilllegung_nachgewiesen__c`.** The Satz 4 claim is an explicit, evidenced
+  entry on the record. Left false, `EichrechtService` applies the backdating. A checkbox is a
+  poor substitute for proof, but a *defaulted* checkbox would be a lie, and this one defaults
+  to the harsher answer.
+- **The status matrix carries the case as `DEFERRED`, not `PASS`.** Case `E` prints the
+  formula's answer and the statute's answer side by side and is counted separately. The run
+  reads **15 PASS / 1 DEFERRED / 0 FAIL**, which is the honest number — a green 16 would have
+  meant the test was asserting the formula against itself.
+
+**One more thing Absatz 2 and 3 add.** Both close with a *Vermutung*: where the year of
+Inverkehrbringen is not otherwise established, it is **presumed** from the § 14 marking. The
+law supplies a fallback for the missing date. `Eichstatus__c` currently answers `UNBEKANNT`
+there, which is safe but not complete — the presumption is a v1.1 item, and it is recorded
+rather than assumed away.
+
 And **§ 34 Abs. 2 MessEV** is the calendar-year rule the design used, now with its Absatz:
 
 > *"endet diese bei Eichfristen, die **mindestens ein Jahr** betragen, erst mit dem **Ende des
