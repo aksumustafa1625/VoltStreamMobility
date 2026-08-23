@@ -319,7 +319,9 @@ Konsistenztest Formel ↔ Apex        ✅ DEPLOYED 2026-08-23 — 142 local test
       ↓
 LWC-Karte (eichrechtCard)           ✅ DEPLOYED 2026-08-23 — 149 local tests green
       ↓
-Agent-Action  +  Agent Script  +  Eval  ◀ NEXT
+Agent-Action (PruefeEichfristen)     ✅ DEPLOYED 2026-08-23 — 162 local tests green
+      ↓
+Agent Script Topic  +  Eval-Gate  +  CI  ◀ NEXT
 ```
 
 One object, end to end. If a platform blocker exists it surfaces there — early, and on one
@@ -397,6 +399,24 @@ a link to gesetze-im-internet.de**. That is what turns a status badge into evide
 *activation* has no metadata representation. Setup → Object Manager → Ladepunkt → Lightning Record
 Pages → `Ladepunkt Eichrecht` → **Activate**.
 
+**Step 7 put the architecture in a file instead of a claim.** `PruefeEichfristen` resolves which
+charge points a question is about, hands them to the engine, and returns its German sentences
+**unchanged**. It computes no deadline and could not — no date arithmetic exists on that side.
+
+Three properties the agent depends on, each a test:
+- a point **inside** its period does **not** hand over § 38 — otherwise the gate would wave
+  through a citation about a device the norm says nothing about;
+- an unknown charge point returns a **refusal plus an instruction not to name a status**, because
+  silence is the easiest thing for a compliance assistant to report as compliance;
+- a missing date counts as **Handlungsbedarf**, not as quiet.
+
+**`GermanTextSerializationTest` is the escaping rule with teeth** — and one of its tests
+*demonstrates* the damage rather than forbidding it, because a rule nobody can see the reason for
+is a rule somebody will delete. It then justified a change it was not written for: the engine's
+German had been transliterated (`laeuft`, `unberuehrt`) out of caution the measurements disprove.
+**The output now reads as German** — which is the point, since the target is German at negotiation
+level and that has to be true of what the agent says, not only of the README.
+
 **The standing rule:** the next thing committed should be deployed metadata, not another document.
 
 ---
@@ -430,6 +450,12 @@ Pages → `Ladepunkt Eichrecht` → **Activate**.
   undeclared `xsd` prefix comes back as a masked `UNKNOWN_EXCEPTION` naming nothing.
 - **Don't paraphrase into `Rechtsnorm__mdt.Wortlaut__c`.** Official text or empty. It is
   what the agent narrates from; a paraphrase there defeats the grounding design.
+- **Apex identifiers are case-insensitive — a name shadows any class or enum spelled the same
+  in any casing.** A field `ergebnis` hid the enum `Ergebnis`; a local `json` hid the `JSON`
+  class. Both surfaced as baffling "method does not exist" errors.
+- **Identifiers cannot carry umlauts, strings must.** A blunt search-and-replace restoring
+  German broke `Behoerde_informiert__c` and `pruefeVerspaeteteEichung`. Audit with
+  `scratchpad/umlautaudit.py` — it strips strings and comments and reports what is left.
 - **Don't build German text with `Date.format()`.** It follows the running user's locale, so
   `23.08.2026` becomes `8/23/2026` for an English-locale user — inside a sentence the agent
   narrates. Use `DateUtils.deutsch()`.
