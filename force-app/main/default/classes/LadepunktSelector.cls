@@ -35,6 +35,24 @@ public with sharing class LadepunktSelector {
     }
 
     /**
+     * @description  A locator over every charge point, for the nightly sweep.
+     *
+     *               A QueryLocator rather than a list because a batch has to stream: a fleet
+     *               imported over OCPI is not a handful of records, and a method returning
+     *               List<Ladepunkt__c> would put the whole estate in one heap. It still lives here
+     *               rather than in the batch, so the rule holds — every query against this object
+     *               is in this file, and adding a field the sweep needs changes one place.
+     * @return  Locator over all charge points, oldest first.
+     */
+    public static Database.QueryLocator alleFuerPruefung() {
+        return Database.getQueryLocator([
+            SELECT Id, Name, Eichstatus__c, Inverkehrbringen__c, Nacheichung_beantragt_am__c
+            FROM Ladepunkt__c
+            ORDER BY CreatedDate ASC
+        ]);
+    }
+
+    /**
      * @description  Charge points by their auto-number, for a caller who has a name rather than an
      *               Id — which is every caller that came from a sentence a human typed.
      * @param  nummer  The record name, e.g. LP-00007. Whitespace is normalised; SOQL string

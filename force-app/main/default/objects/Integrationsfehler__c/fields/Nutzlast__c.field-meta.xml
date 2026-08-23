@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Nutzlast__c</fullName>
+    <description>The payload as received, truncated. Kept because a mapping defect is unreproducible without the shape that caused it - and asking a CPO to resend yesterday is not an option.</description>
+    <externalId>false</externalId>
+    <label>Nutzlast</label>
+    <required>false</required>
+    <length>32768</length>
+    <visibleLines>6</visibleLines>
+    <type>LongTextArea</type>
+</CustomField>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Zuletzt_importiert_am__c</fullName>
+    <description>When the OCPI import last touched this record. A stale timestamp on a record the CPO stopped sending is itself a finding.</description>
+    <externalId>false</externalId>
+    <label>Zuletzt importiert am</label>
+    <required>false</required>
+    <type>DateTime</type>
+</CustomField>

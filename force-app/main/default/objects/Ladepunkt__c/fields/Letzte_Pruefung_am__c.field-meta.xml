@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Letzte_Pruefung_am__c</fullName>
+    <description>When the batch last evaluated this charge point. A stale timestamp means the sweep did not reach the record - which is a finding about the job, not about the charge point.</description>
+    <externalId>false</externalId>
+    <label>Letzte Prüfung am</label>
+    <required>false</required>
+    <type>DateTime</type>
+</CustomField>

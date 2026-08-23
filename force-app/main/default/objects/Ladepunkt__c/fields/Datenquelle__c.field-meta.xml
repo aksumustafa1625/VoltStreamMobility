@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Datenquelle__c</fullName>
+    <description>Where this charge point came from. The distinction matters for the compliance answer rather than for bookkeeping: a record imported from a CPO backend carries no Inverkehrbringen and no calibration date, because OCPI does not model them - so an imported fleet is UNBEKANNT until somebody supplies what German metrology law needs and OCPI never had.</description>
+    <externalId>false</externalId>
+    <label>Datenquelle</label>
+    <required>false</required>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value><fullName>Manuell</fullName><default>true</default><label>Manuell</label></value>
+            <value><fullName>OCPI</fullName><default>false</default><label>OCPI</label></value>
+        </valueSetDefinition>
+    </valueSet>
+    <type>Picklist</type>
+</CustomField>

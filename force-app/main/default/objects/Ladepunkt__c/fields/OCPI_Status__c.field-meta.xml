@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>OCPI_Status__c</fullName>
+    <description>The operational EVSE status the CPO reports - AVAILABLE, CHARGING, OUTOFORDER and so on. Deliberately kept apart from Eichstatus__c: a charge point can be AVAILABLE and legally unusable at the same time, and conflating the two is exactly the mistake this project exists to avoid.</description>
+    <externalId>false</externalId>
+    <label>OCPI-Status</label>
+    <required>false</required>
+    <length>40</length>
+    <unique>false</unique>
+    <type>Text</type>
+</CustomField>

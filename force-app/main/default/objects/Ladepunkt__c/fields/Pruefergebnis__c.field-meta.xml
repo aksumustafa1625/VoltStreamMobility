@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Pruefergebnis__c</fullName>
+    <description>The verdict EichrechtService reached the last time the nightly batch ran. Persisted rather than recomputed on read, because the engine walks an event history and a formula field cannot. This is the authoritative answer; Eichstatus__c is the one visible without Apex.</description>
+    <externalId>false</externalId>
+    <label>Prüfergebnis (Engine)</label>
+    <required>false</required>
+    <length>40</length>
+    <unique>false</unique>
+    <type>Text</type>
+</CustomField>

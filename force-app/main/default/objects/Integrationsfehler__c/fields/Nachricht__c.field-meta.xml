@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Nachricht__c</fullName>
+    <description>What went wrong, in one readable sentence.</description>
+    <externalId>false</externalId>
+    <label>Nachricht</label>
+    <required>false</required>
+    <length>4000</length>
+    <visibleLines>3</visibleLines>
+    <type>LongTextArea</type>
+</CustomField>
