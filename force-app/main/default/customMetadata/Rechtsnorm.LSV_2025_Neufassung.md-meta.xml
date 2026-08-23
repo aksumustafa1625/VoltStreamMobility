@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <label>Ladesäulenverordnung 2025</label>
+    <protected>false</protected>
+    <values>
+        <field>Norm__c</field>
+        <value xsi:type="xsd:string">Ladesäulenverordnung vom 23. Dezember 2025</value>
+    </values>
+    <values>
+        <field>Gesetz__c</field>
+        <value xsi:type="xsd:string">LSV</value>
+    </values>
+    <values>
+        <field>Gueltig_von__c</field>
+        <value xsi:type="xsd:date">2026-01-01</value>
+    </values>
+    <values>
+        <field>Hinweis__c</field>
+        <value xsi:type="xsd:string">BGBl. 2025 I Nr. 367, in Kraft seit 1. Januar 2026. Sechs Paragraphen. § 4 regelt die Anzeige an die Bundesnetzagentur binnen zwei Wochen nach Inbetriebnahme und lässt die Anzeigepflichten neu entstehen, wenn ein bestehender Ladepunkt erst später öffentlich zugänglich wird — öffentlich zugänglich ist damit ein Übergang, kein Merkmal. § 6 leitet die Registerdaten monatlich an die Eichbehörden weiter. Wortlaut hier leer: der amtliche Text wurde noch nicht im Original erfasst.</value>
+    </values>
+</CustomMetadata>

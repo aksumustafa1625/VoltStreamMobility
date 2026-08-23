@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Parameter_Wert__c</fullName>
+    <description>The operative number the provision fixes, when it fixes one - eight years, ten weeks, 12 kVA, 4.2 kW. Holding it here rather than as an Apex constant is the point: the number and the sentence that sets it travel together, so an engine that uses the number can cite the sentence.</description>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <label>Parameter (Wert)</label>
+    <precision>12</precision>
+    <scale>2</scale>
+    <required>false</required>
+    <unique>false</unique>
+    <type>Number</type>
+</CustomField>

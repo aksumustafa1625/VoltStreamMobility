@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Wortlaut__c</fullName>
+    <description>The provision in its own words, verbatim from the official text. This field holds a quotation or it holds nothing - a paraphrase here would defeat the entire point, because it is what the agent is allowed to narrate from. Where only a clause was captured, the clause is what is stored.</description>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <label>Wortlaut</label>
+    <length>32768</length>
+    <visibleLines>8</visibleLines>
+    <type>LongTextArea</type>
+</CustomField>

@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Hinweis__c</fullName>
+    <description>What a practitioner must not get wrong about this provision - the trap, not a summary. Satz 4 is relief from Satz 3; the two months in NAV § 19 bind the operator and are not a Genehmigungsfiktion; the 4.2 kW is a dimming floor and not a shutdown. Written by us, so the agent may narrate it, while Wortlaut__c stays untouched quotation.</description>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <label>Hinweis</label>
+    <length>4096</length>
+    <visibleLines>4</visibleLines>
+    <type>LongTextArea</type>
+</CustomField>

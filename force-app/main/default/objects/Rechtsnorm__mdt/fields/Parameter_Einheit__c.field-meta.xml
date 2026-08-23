@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Parameter_Einheit__c</fullName>
+    <description>Unit of Parameter_Wert__c - Jahre, Wochen, Tage, kW, kVA. Separate from the value so nothing has to parse a number out of a string.</description>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <label>Parameter (Einheit)</label>
+    <length>20</length>
+    <required>false</required>
+    <unique>false</unique>
+    <type>Text</type>
+</CustomField>

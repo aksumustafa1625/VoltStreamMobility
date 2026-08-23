@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <label>§ 37 Abs. 5 Nr. 2 MessEG</label>
+    <protected>false</protected>
+    <values>
+        <field>Norm__c</field>
+        <value xsi:type="xsd:string">§ 37 Abs. 5 Nr. 2 MessEG</value>
+    </values>
+    <values>
+        <field>Gesetz__c</field>
+        <value xsi:type="xsd:string">MessEG</value>
+    </values>
+    <values>
+        <field>Wortlaut__c</field>
+        <value xsi:type="xsd:string">die erneute Eichung unverzüglich beantragt wird</value>
+    </values>
+    <values>
+        <field>Quelle_URL__c</field>
+        <value xsi:type="xsd:string">https://www.gesetze-im-internet.de/messeg/__37.html</value>
+    </values>
+    <values>
+        <field>Gueltig_von__c</field>
+        <value xsi:type="xsd:date">2015-01-01</value>
+    </values>
+    <values>
+        <field>Hinweis__c</field>
+        <value xsi:type="xsd:string">Abs. 5 befreit die Instandsetzung von der vorzeitigen Beendigung — aber nur, wenn alle vier Bedingungen zusammen erfüllt sind. Nr. 2 ist die teuerste: die Eichfrist überlebt, ein Antrag wird trotzdem sofort fällig. Befreit heißt hier nicht "nichts zu tun". Die Branche hat im April 2026 die Streichung genau dieser Nummer beantragt, was zeigt, was sie kostet.</value>
+    </values>
+</CustomMetadata>

@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Quelle_URL__c</fullName>
+    <description>Link to the official text, so a reviewer can check the Wortlaut against the source in one click.</description>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <label>Quelle</label>
+    <required>false</required>
+    <type>Url</type>
+</CustomField>

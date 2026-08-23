@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Gueltig_von__c</fullName>
+    <description>First day the provision applies. Half of what makes the corpus bitemporal: a compliance answer has to be reproducible for the law as it stood on the day of the facts, not only as it stands today. Honest limit: this currently carries the date the INSTRUMENT entered into force, not the date the individual provision last took its present wording. Per-provision amendment history is real and the corpus does not hold it yet.</description>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <label>Gültig von</label>
+    <type>Date</type>
+</CustomField>

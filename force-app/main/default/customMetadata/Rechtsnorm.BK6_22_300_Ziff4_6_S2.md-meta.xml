@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <label>BNetzA BK6-22-300 Ziff. 4.6 S. 2</label>
+    <protected>false</protected>
+    <values>
+        <field>Norm__c</field>
+        <value xsi:type="xsd:string">BNetzA BK6-22-300 Ziffer 4.6 Satz 2</value>
+    </values>
+    <values>
+        <field>Gesetz__c</field>
+        <value xsi:type="xsd:string">BK6-22-300</value>
+    </values>
+    <values>
+        <field>Wortlaut__c</field>
+        <value xsi:type="xsd:string">Sofern es einer steuerbaren Verbrauchseinrichtung aus technischen Gründen nicht möglich ist, den netzwirksamen Leistungsbezug auf den vom Netzbetreiber vorgegebenen Wert zu reduzieren, muss eine Reduzierung auf den nächstgeringeren Wert, der technisch möglich ist, erfolgen.</value>
+    </values>
+    <values>
+        <field>Gueltig_von__c</field>
+        <value xsi:type="xsd:date">2024-01-01</value>
+    </values>
+    <values>
+        <field>Parameter_Wert__c</field>
+        <value xsi:type="xsd:double">4.2</value>
+    </values>
+    <values>
+        <field>Parameter_Einheit__c</field>
+        <value xsi:type="xsd:string">kW</value>
+    </values>
+    <values>
+        <field>Hinweis__c</field>
+        <value xsi:type="xsd:string">Die 4,2 kW sind eine Dimmschwelle für das, was der Netzbetreiber ANWEISEN darf — keine Garantie dafür, was das Gerät kann. Eine reine Relais-Wallbox ohne Modulation wird rechtmäßig auf null geschaltet, und die Begründung (S. 70) schließt aus, dass genau diese Unfähigkeit als "Unmöglichkeit" für die Härtefallregelung taugt. Nur modulierende Hardware liefert die Zusage tatsächlich.</value>
+    </values>
+</CustomMetadata>

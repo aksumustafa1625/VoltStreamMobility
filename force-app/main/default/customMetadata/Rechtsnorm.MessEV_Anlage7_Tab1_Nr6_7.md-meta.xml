@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <label>MessEV Anlage 7 Tab. 1 Nr. 6.7</label>
+    <protected>false</protected>
+    <values>
+        <field>Norm__c</field>
+        <value xsi:type="xsd:string">MessEV Anlage 7 Tabelle 1 Nr. 6.7</value>
+    </values>
+    <values>
+        <field>Gesetz__c</field>
+        <value xsi:type="xsd:string">MessEV</value>
+    </values>
+    <values>
+        <field>Wortlaut__c</field>
+        <value xsi:type="xsd:string">Messgeräte und Zusatzeinrichtungen bei der Lieferung von Elektrizität für Elektrofahrzeuge und an Ladepunkten mit Ausnahme der Einrichtungen nach Nummer 6.8</value>
+    </values>
+    <values>
+        <field>Quelle_URL__c</field>
+        <value xsi:type="xsd:string">https://www.gesetze-im-internet.de/messev/anlage_7.html</value>
+    </values>
+    <values>
+        <field>Gueltig_von__c</field>
+        <value xsi:type="xsd:date">2015-01-01</value>
+    </values>
+    <values>
+        <field>Parameter_Wert__c</field>
+        <value xsi:type="xsd:double">8</value>
+    </values>
+    <values>
+        <field>Parameter_Einheit__c</field>
+        <value xsi:type="xsd:string">Jahre</value>
+    </values>
+    <values>
+        <field>Hinweis__c</field>
+        <value xsi:type="xsd:string">Ein einziger Tabelleneintrag deckt AC und DC ab — deshalb sind beide Eichfristen identisch, und zwar aus Normsetzung, nicht aus Technik. Offen und bewusst nicht geraten: der Eintrag nimmt "die Einrichtungen nach Nummer 6.8" aus, und was unter 6.8 fällt, wurde nicht erfasst. Vor jeder Aussage zu einer Ausnahme ist Nr. 6.8 zu lesen.</value>
+    </values>
+</CustomMetadata>

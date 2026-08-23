@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <label>§ 34 Abs. 1 Satz 1 MessEV</label>
+    <protected>false</protected>
+    <values>
+        <field>Norm__c</field>
+        <value xsi:type="xsd:string">§ 34 Abs. 1 Satz 1 MessEV</value>
+    </values>
+    <values>
+        <field>Gesetz__c</field>
+        <value xsi:type="xsd:string">MessEV</value>
+    </values>
+    <values>
+        <field>Wortlaut__c</field>
+        <value xsi:type="xsd:string">Die Eichfrist eines Messgeräts beträgt zwei Jahre, soweit nicht etwas anderes bestimmt ist.</value>
+    </values>
+    <values>
+        <field>Quelle_URL__c</field>
+        <value xsi:type="xsd:string">https://www.gesetze-im-internet.de/messev/__34.html</value>
+    </values>
+    <values>
+        <field>Gueltig_von__c</field>
+        <value xsi:type="xsd:date">2015-01-01</value>
+    </values>
+    <values>
+        <field>Parameter_Wert__c</field>
+        <value xsi:type="xsd:double">2</value>
+    </values>
+    <values>
+        <field>Parameter_Einheit__c</field>
+        <value xsi:type="xsd:string">Jahre</value>
+    </values>
+    <values>
+        <field>Hinweis__c</field>
+        <value xsi:type="xsd:string">Die acht Jahre für Ladepunkte sind nicht die Regel, sondern das "etwas anderes" — ein Eintrag in Anlage 7. Wer acht Jahre fest verdrahtet, hat einen Tabellenwert fest verdrahtet, und Tabellenwerte ändern sich durch Verordnung.</value>
+    </values>
+</CustomMetadata>

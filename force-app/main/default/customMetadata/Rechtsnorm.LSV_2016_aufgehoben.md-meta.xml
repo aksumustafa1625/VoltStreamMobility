@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <label>LSV 2016 (aufgehoben)</label>
+    <protected>false</protected>
+    <values>
+        <field>Norm__c</field>
+        <value xsi:type="xsd:string">Ladesäulenverordnung vom 9. März 2016</value>
+    </values>
+    <values>
+        <field>Gesetz__c</field>
+        <value xsi:type="xsd:string">LSV</value>
+    </values>
+    <values>
+        <field>Gueltig_bis__c</field>
+        <value xsi:type="xsd:date">2025-12-31</value>
+    </values>
+    <values>
+        <field>Abgeloest_durch__c</field>
+        <value xsi:type="xsd:string">LSV_2025_Neufassung</value>
+    </values>
+    <values>
+        <field>Hinweis__c</field>
+        <value xsi:type="xsd:string">Vollständig aufgehoben zum 1. Januar 2026 durch die Verordnung zur Neuordnung des Ladesäulenrechts. Wer heute "LSV § 4 verlangt Kartenzahlung" zitiert, zitiert eine aufgehobene Vorschrift: die neue LSV hat sechs Paragraphen und keine Zahlungsregeln — dort gilt AFIR unmittelbar. Der Datensatz bleibt im Korpus, damit die Engine sagen kann, dass ein Zitat einmal richtig war und es nicht mehr ist. Gueltig_von ist offen gelassen: das Datum des Inkrafttretens 2016 wurde nicht im Original erfasst und wird nicht geraten.</value>
+    </values>
+</CustomMetadata>

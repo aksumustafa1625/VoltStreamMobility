@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <label>§ 37 Abs. 6 MessEG</label>
+    <protected>false</protected>
+    <values>
+        <field>Norm__c</field>
+        <value xsi:type="xsd:string">§ 37 Abs. 6 MessEG</value>
+    </values>
+    <values>
+        <field>Gesetz__c</field>
+        <value xsi:type="xsd:string">MessEG</value>
+    </values>
+    <values>
+        <field>Wortlaut__c</field>
+        <value xsi:type="xsd:string">Eichfristen bleiben unberührt</value>
+    </values>
+    <values>
+        <field>Quelle_URL__c</field>
+        <value xsi:type="xsd:string">https://www.gesetze-im-internet.de/messeg/__37.html</value>
+    </values>
+    <values>
+        <field>Gueltig_von__c</field>
+        <value xsi:type="xsd:date">2015-01-01</value>
+    </values>
+    <values>
+        <field>Hinweis__c</field>
+        <value xsi:type="xsd:string">Der interessanteste Zustand der ganzen Domäne. Die Eichfrist läuft unverändert weiter, das Gerät darf aber bis zur behördlichen Freigabe nach § 40 MessEV nicht betrieben werden: gültig geeicht und trotzdem gesperrt. § 40 Abs. 4 MessEV verlangt zusätzlich die Zustimmung des Verwenders — ein Hersteller, der ein Update ohne Zustimmung ausrollt, handelt selbst rechtswidrig.</value>
+    </values>
+</CustomMetadata>

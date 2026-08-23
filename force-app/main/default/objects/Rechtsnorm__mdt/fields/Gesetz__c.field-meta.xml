@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Gesetz__c</fullName>
+    <description>Short name of the instrument - MessEG, MessEV, EnWG, NAV, LSV, 38. BImSchV. Kept separate from Norm__c so the corpus can be filtered by regime without parsing the citation string.</description>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <label>Gesetz</label>
+    <length>80</length>
+    <required>false</required>
+    <unique>false</unique>
+    <type>Text</type>
+</CustomField>

@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Norm__c</fullName>
+    <description>The citation as a practitioner writes it, e.g. § 34 Abs. 1 Satz 3 MessEV. This exact string is what an action hands back as its rechtsgrundlage, and the transcript gate then requires every § the agent utters to appear in one that ran. So the citation is a key, not prose.</description>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <label>Norm</label>
+    <length>255</length>
+    <unique>false</unique>
+    <type>Text</type>
+</CustomField>

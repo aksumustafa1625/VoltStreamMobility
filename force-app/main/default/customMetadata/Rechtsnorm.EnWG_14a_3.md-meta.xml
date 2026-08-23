@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <label>§ 14a Abs. 3 EnWG</label>
+    <protected>false</protected>
+    <values>
+        <field>Norm__c</field>
+        <value xsi:type="xsd:string">§ 14a Abs. 3 EnWG</value>
+    </values>
+    <values>
+        <field>Gesetz__c</field>
+        <value xsi:type="xsd:string">EnWG</value>
+    </values>
+    <values>
+        <field>Wortlaut__c</field>
+        <value xsi:type="xsd:string">nicht öffentlich-zugängliche Ladepunkte für Elektromobile</value>
+    </values>
+    <values>
+        <field>Quelle_URL__c</field>
+        <value xsi:type="xsd:string">https://www.gesetze-im-internet.de/enwg_2005/__14a.html</value>
+    </values>
+    <values>
+        <field>Gueltig_von__c</field>
+        <value xsi:type="xsd:date">2024-01-01</value>
+    </values>
+    <values>
+        <field>Hinweis__c</field>
+        <value xsi:type="xsd:string">Die Ausnahme steht in der Definition selbst. Deshalb schaltet "öffentlich zugänglich" § 14a AUS, während dieselbe Eigenschaft LSV-Anzeige, Eichrecht, AFIR und THG EINschaltet. Der Wortlaut nennt keine 4,2 kW — die stammen ausschließlich aus BK6-22-300 und sind damit Festlegung, nicht Gesetz.</value>
+    </values>
+</CustomMetadata>

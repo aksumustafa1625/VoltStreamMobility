@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <label>§ 34 Abs. 1 Satz 3 MessEV</label>
+    <protected>false</protected>
+    <values>
+        <field>Norm__c</field>
+        <value xsi:type="xsd:string">§ 34 Abs. 1 Satz 3 MessEV</value>
+    </values>
+    <values>
+        <field>Gesetz__c</field>
+        <value xsi:type="xsd:string">MessEV</value>
+    </values>
+    <values>
+        <field>Wortlaut__c</field>
+        <value xsi:type="xsd:string">Wird ein Messgerät nach Ablauf der Eichfrist geeicht, beginnt die neue Eichfrist mit Ablauf der vorausgegangenen Eichfrist.</value>
+    </values>
+    <values>
+        <field>Quelle_URL__c</field>
+        <value xsi:type="xsd:string">https://www.gesetze-im-internet.de/messev/__34.html</value>
+    </values>
+    <values>
+        <field>Gueltig_von__c</field>
+        <value xsi:type="xsd:date">2015-01-01</value>
+    </values>
+    <values>
+        <field>Hinweis__c</field>
+        <value xsi:type="xsd:string">Rückdatierung als Verspätungsfolge: die Monate der Verspätung gehen von den nächsten acht Jahren ab. Ein System, das still den Tag der Eichung nimmt, schenkt dem Betreiber Schutz, den das Gesetz nicht gewährt — also einen Fehler in der gefährlichen Richtung. Gemessen an einem Ladepunkt: Formel 2032-12-31, Gesetz 2031-12-31.</value>
+    </values>
+</CustomMetadata>

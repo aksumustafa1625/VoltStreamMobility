@@ -197,12 +197,25 @@ private class DateUtilsTest {
     }
 
     @IsTest
-    static void konstanten_entsprechenDemGesetz() {
-        System.assertEquals(2, DateUtils.EICHFRIST_STANDARD_JAHRE,
-            '§ 34 Abs. 1 Satz 1 MessEV: der gesetzliche Regelfall sind zwei Jahre.');
-        System.assertEquals(8, DateUtils.EICHFRIST_LADEPUNKT_JAHRE,
-            'MessEV Anlage 7 Tabelle 1 Nr. 6.7 — ein Eintrag fuer AC und DC.');
-        System.assertEquals(70, DateUtils.ANTRAGSFRIST_TAGE,
-            '§ 38 Satz 1 MessEG: zehn Wochen.');
+    static void konstanten_stimmenMitDemNormenkorpusUeberein() {
+        // One source of truth. Every number below also lives in Rechtsnorm__mdt beside the
+        // sentence that sets it, and the corpus is the authority — these constants are only the
+        // convenience. This test is what stops the two from drifting: a Verordnung that changes
+        // the corpus then fails the build instead of quietly disagreeing with the engine.
+        System.assertEquals(
+            DateUtils.EICHFRIST_STANDARD_JAHRE,
+            Rechtsnorm__mdt.getInstance('MessEV_34_1_1').Parameter_Wert__c.intValue(),
+            '§ 34 Abs. 1 Satz 1 MessEV: der gesetzliche Regelfall.');
+
+        System.assertEquals(
+            DateUtils.EICHFRIST_LADEPUNKT_JAHRE,
+            Rechtsnorm__mdt.getInstance('MessEV_Anlage7_Tab1_Nr6_7').Parameter_Wert__c.intValue(),
+            'MessEV Anlage 7 Tabelle 1 Nr. 6.7: acht Jahre, ein Eintrag fuer AC und DC.');
+
+        // The statute counts weeks and the arithmetic counts days. Asserting the conversion
+        // rather than the bare 70 keeps the constant tied to what § 38 actually says.
+        Decimal wochen = Rechtsnorm__mdt.getInstance('MessEG_38_1').Parameter_Wert__c;
+        System.assertEquals(DateUtils.ANTRAGSFRIST_TAGE, (wochen * 7).intValue(),
+            '§ 38 Satz 1 MessEG: zehn Wochen sind siebzig Tage.');
     }
 }
