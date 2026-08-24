@@ -701,6 +701,16 @@ The suite is **layered**:
 
 ---
 
+## Decisions
+
+Eighteen architecture decision records live in [`docs/adr/`](docs/adr/) — seven
+for the platform foundation, eleven for the compliance engine and the agent over
+it. Each names the constraint that ruled out the obvious answer.
+
+Start with [the index](docs/adr/README.md); it flags the three worth reading
+first, including the one written from a failure that was observed rather than
+anticipated.
+
 ## Design decisions
 
 A few non-obvious choices, called out so reviewers don't have to guess:
