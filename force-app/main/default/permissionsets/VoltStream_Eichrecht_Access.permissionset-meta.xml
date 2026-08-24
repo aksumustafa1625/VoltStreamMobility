@@ -267,4 +267,16 @@
         <object>Eingriff__c</object>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
+    <tabSettings>
+        <tab>Ladepunkt__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>Eingriff__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>Integrationsfehler__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
 </PermissionSet>

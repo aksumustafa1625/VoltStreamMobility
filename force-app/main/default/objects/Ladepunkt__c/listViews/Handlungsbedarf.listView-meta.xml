@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Handlungsbedarf</fullName>
+    <columns>NAME</columns>
+    <columns>Eichstatus__c</columns>
+    <columns>Eichfrist_Ende__c</columns>
+    <columns>Pruefergebnis__c</columns>
+    <columns>Datenquelle__c</columns>
+    <columns>Betreiber__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>Eichstatus__c</field>
+        <operation>notEqual</operation>
+        <value>GÜLTIG</value>
+    </filters>
+    <label>Handlungsbedarf</label>
+</ListView>

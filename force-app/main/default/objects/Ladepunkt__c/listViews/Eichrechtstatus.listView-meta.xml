@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Eichrechtstatus</fullName>
+    <columns>NAME</columns>
+    <columns>Eichstatus__c</columns>
+    <columns>Eichfrist_Ende__c</columns>
+    <columns>Pruefergebnis__c</columns>
+    <columns>Abweichung__c</columns>
+    <columns>Datenquelle__c</columns>
+    <columns>Ladeleistung_kW__c</columns>
+    <columns>Betreiber__c</columns>
+    <filterScope>Everything</filterScope>
+    <label>Eichrechtstatus</label>
+</ListView>
