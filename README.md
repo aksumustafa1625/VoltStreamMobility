@@ -1,17 +1,78 @@
 # VoltStream Mobility — Salesforce CRM
 
-> A Salesforce DX portfolio project that models a B2B EV charging infrastructure supplier in Germany. Sales reps enter a single field on an Opportunity, an Apex trigger built on the **Kevin O'Hara `sfdc-trigger-framework`** auto-links the deal to the right channel partner, and reports surface revenue per reseller. Two later phases add a **Document Manager LWC** (folder cards, real file upload, preview, share-to-Chatter) and a **bulkified Task-count rollup** onto Opportunity that replaces a DLRS package.
+> A Salesforce DX portfolio project modelling a B2B EV charging supplier in Germany. It began as a
+> channel-partner CRM — one field on an Opportunity, an Apex trigger on the **Kevin O'Hara
+> `sfdc-trigger-framework`** auto-linking the deal to the right reseller — and grew into something
+> with a sharper point: **a German charging-law compliance engine, with an Agentforce agent as its
+> interface and a deterministic gate that stops the agent inventing law.**
+>
+> The charge points arrive over **OCPI** from a charge point operator's backend, a nightly batch
+> evaluates the fleet against **MessEG** and **MessEV**, and the legal status of every charge point
+> is a column you can sort a list view by.
 
 [![Trigger framework](https://img.shields.io/badge/trigger--framework-Kevin%20O%27Hara-blue)](https://github.com/kevinohara80/sfdc-trigger-framework)
 [![API version](https://img.shields.io/badge/API-65.0-orange)]()
-[![Test coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)]()
-[![Tests](https://img.shields.io/badge/tests-108%2F108%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-181%2F181%20passing-brightgreen)]()
+[![Coverage](https://img.shields.io/badge/org--wide%20coverage-98%25-brightgreen)]()
+[![Agent](https://img.shields.io/badge/Agentforce-Agent%20Script-blue)]()
+[![Domain](https://img.shields.io/badge/domain-MessEG%20%C2%B7%20MessEV%20%C2%B7%20OCPI-lightgrey)]()
 
 ---
 
 ## Why this project
 
-The German Salesforce market is hiring aggressively in **e-mobility and automotive** (EnBW mobility+, Ionity, Allego, Mercedes-Benz Mobility). This project demonstrates the exact skill mix those job posts ask for: a real custom-object + trigger + test + dashboard scenario, built with industry-standard patterns rather than the inline "logic-in-the-trigger" style typical of beginner work.
+The German Salesforce market is hiring in **e-mobility and automotive** (EnBW mobility+, Ionity,
+Allego, Mercedes-Benz Mobility). The first phases demonstrate the skill mix those posts ask for: a
+real custom-object + trigger + test scenario built with industry-standard patterns rather than the
+inline "logic-in-the-trigger" style typical of beginner work.
+
+The later phase answers a harder question. Anyone can wire an LLM to a CRM. **The problem is that a
+model asked about German metrology law will answer fluently and sometimes wrongly, in a language
+the reviewer may not read.** That is not a prompt-engineering problem; it is an architecture
+problem, and this repository is one answer to it.
+
+---
+
+## The decision that shapes everything
+
+> **The engine decides. The agent explains.**
+
+Per-record legal status is a **formula field visible in a list view** — a reviewer sees compliance
+state without running an agent and without running a test. Chronology that a formula cannot express
+is **Apex**. The agent's only job is to pick which deterministic check runs and to narrate the
+result in German. It never makes a legal decision, and it cannot: no date arithmetic exists on its
+side of the call.
+
+Then a gate checks it kept its place. Every `§` the agent utters must appear in what an action
+returned for that question — no model, no embedding, no threshold. A citation was either handed
+over by the engine or it was invented, and that is a binary.
+
+**This was not a precaution. It was measured.** During the build the agent answered the same
+question twice and gave two different wrong answers, both of them phrases lifted out of its own
+instructions, because a misconfigured action never ran. It sounded correct in fluent German both
+times. That is the failure mode the whole design exists to remove.
+
+---
+
+## Where the proof is
+
+Six claims, and the file that makes each one checkable rather than asserted.
+
+| Claim | Proof |
+|---|---|
+| The agent cannot get the legal decision wrong, because it does not make it | [`PruefeEichfristen.cls`](force-app/main/default/classes/PruefeEichfristen.cls) — resolves records, calls the engine, returns its sentences unchanged |
+| The agent cannot invent a citation | [`scripts/transkriptGate.mjs`](scripts/transkriptGate.mjs) — binary check, and it proves on every run that it can fail |
+| The law is versioned metadata, not a string in a class | [`customMetadata/Rechtsnorm.*`](force-app/main/default/customMetadata/) — 16 provisions, verbatim wording, valid-from/valid-to dates |
+| The declarative layer is wrong in exactly one place, and that place is named | [`EichrechtKonsistenzTest.cls`](force-app/main/default/classes/EichrechtKonsistenzTest.cls) — two named divergences that must **still** diverge |
+| German survives corpus → engine → action → JSON | [`GermanTextSerializationTest.cls`](force-app/main/default/classes/GermanTextSerializationTest.cls) — one test demonstrates the damage rather than forbidding it |
+| A fleet imported from a CPO backend has **no** legal status | [`OcpiImportServiceTest.cls`](force-app/main/default/classes/OcpiImportServiceTest.cls) — OCPI carries no calibration data at all |
+
+The last row is the one worth opening first. OCPI models availability, power and connector type. It
+carries no date of placing on the market, no day of calibration, no re-calibration — so a CPO can
+hand over ten thousand charge points and **not one of them can be assessed** under the German
+measurement act. Every imported record evaluates to `UNBEKANNT`, and `UNBEKANNT` already counts as
+work to do. The distinction between *"we cannot tell"* and *"nothing to report"* stopped being a
+design principle there and became the default state of an entire estate.
 
 ---
 
@@ -37,24 +98,59 @@ VoltStream Mobility GmbH (fictional) is a B2B supplier of EV charging hardware a
 ## Demo
 
 > Screenshots pending — [`docs/screenshots/`](docs/screenshots/) is empty for now.
-> Planned captures: Resellers tab and list view, Opportunity edit form with the
-> Channel Partner section and the auto-populated lookup, the Documents LWC, and
-> the Apex test run (108 methods, 100% coverage on custom Apex at last org run).
-
-The fastest way to reproduce the demo end to end:
 
 ```bash
 sf project deploy start --source-dir force-app --test-level RunLocalTests
 sf org assign permset --name VoltStream_Reseller_Access
+sf org assign permset --name VoltStream_Eichrecht_Access
 sf apex run --file scripts/apex/seedData.apex
 sf org open
 ```
 
-Then open Sales > Resellers > "All Resellers" and any seeded Opportunity to
-see the auto-linked Reseller. The Documents tab hosts the Document Manager
-LWC (seeded with demo documents by the same script), and creating or
-completing a Task on any Opportunity updates its Score / Completed Tasks
-counts via the rollup trigger.
+**The channel-partner path.** Sales > Resellers > "All Resellers", then any seeded Opportunity to
+see the auto-linked Reseller. The Documents tab hosts the Document Manager LWC, and creating or
+completing a Task on an Opportunity updates its Score / Completed Tasks via the rollup trigger.
+
+**The compliance path** — four things, in the order they are worth seeing:
+
+```bash
+# 1. Sixteen fact patterns against the live org: formula, statute, engine, side by side
+sf apex run --file scripts/apex/seedEichrechtMatrix.apex
+sf apex run --file scripts/apex/verifyEichrechtMatrix.apex
+```
+
+```
+K | Eichstatus                   | Ende(Formel) | Ende(Gesetz) | Ende(Motor)  | RESULT
+E | GUELTIG                      | 2032-12-31   | 2031-12-31   | 2031-12-31   | GELOEST vom Motor
+=== 15 PASS / 1 GELOEST / 0 FAIL  of 16 ===
+```
+
+2. **Open a `Ladepunkt__c` record.** The Eichrecht card shows the verdict, the German reasoning,
+   both dates, and every provision the answer rests on — each expanding to the official wording with
+   a link to `gesetze-im-internet.de`. Below it, the event history that produced the verdict.
+   *(Requires the record page to be activated once — see Setup.)*
+
+3. **Ask the agent, in German.** *"Ist der Ladepunkt LP-00016 noch geeicht?"*
+
+   > Der Ladepunkt LP-00016 hat eine abgelaufene Eichfrist. Die Eichfrist ist am 31.12.2023
+   > abgelaufen und eine erneute Eichung wurde nicht beantragt. Es besteht Handlungsbedarf.
+   > Rechtsgrundlagen: MessEV Anlage 7 Tabelle 1 Nr. 6.7; § 34 Abs. 2 MessEV; § 37 Abs. 1 Satz 2 MessEG.
+
+   That sentence is the engine's, word for word, and those three citations are exactly what the
+   engine handed over — no more.
+
+4. **Prove it.** The gate self-tests before it touches the org, then checks every paragraph the
+   agent uttered against what an action actually returned:
+
+```bash
+node scripts/transkriptGate.mjs specs/eichrecht-gate.json
+```
+
+```
+Selbsttest: 4 Fälle, das Gate erkennt Erfundenes und lässt Übergebenes durch.
+PASS VS Eichrecht Smoke_case_0 — 2 Paragraphen genannt, alle übergeben
+=== 3 PASS / 0 FAIL von 3 ===
+```
 
 ## Data model
 
@@ -86,6 +182,48 @@ erDiagram
 The relationship is **lookup**, not master-detail — Opportunities survive
 deletion of their Reseller (the lookup goes null via `deleteConstraint=SetNull`)
 because revenue data must outlive partner churn.
+
+### Phase 4 — the compliance model
+
+The charge point and its event log. Everything the legal answer depends on lives here, and every
+field description states the provision it exists for — so a reviewer who cannot judge German
+metrology law can still read why the column is there.
+
+```mermaid
+erDiagram
+    ACCOUNT ||--o{ LADEPUNKT : "Betreiber — the operator the notification duty attaches to"
+    LADEPUNKT ||--o{ EINGRIFF : "master-detail — roll-ups need it"
+
+    LADEPUNKT {
+        AutoNumber Name "LP-00000"
+        Date Inverkehrbringen__c "§ 37 Abs. 1 Satz 2 MessEG — starts the FIRST period only"
+        Date Nacheichung_beantragt_am__c "§ 38 MessEG — the ten-week grace line"
+        Number Ladeleistung_kW__c "4.2 / 22 / 50 kW are three different legal thresholds"
+        Checkbox Oeffentlich_zugaenglich__c "a transition, not an attribute"
+        Text EVSE_ID__c "External Id — the only key OCPI and the law share"
+        Formula Eichstatus__c "the answer, visible in a list view"
+        Text Pruefergebnis__c "the engine's answer, written by the nightly batch"
+        Checkbox Abweichung__c "set where the two layers disagree"
+    }
+
+    EINGRIFF {
+        Picklist Typ__c "Eingriff · Instandsetzung · Software-Update · Nacheichung"
+        Date Datum__c "order is the meaning"
+        Checkbox Instandsetzer_befugt__c "§ 37 Abs. 5 Nr. 1"
+        Checkbox Nacheichung_beantragt__c "Nr. 2 — the expensive one"
+        Checkbox Kennzeichnung_41__c "Nr. 3"
+        Checkbox Behoerde_informiert__c "Nr. 4 — all four or none"
+        Checkbox Stilllegung_nachgewiesen__c "§ 34 Abs. 1 Satz 4 — needs evidence, defaults to the harsher answer"
+        Formula Sperrt_Betrieb__c "§ 37 Abs. 6 — calibrated and still unusable"
+    }
+```
+
+Two more objects sit beside them: **`Rechtsnorm__mdt`**, the statute corpus — 16 provisions with
+their verbatim wording, source link and validity dates, deployed as metadata so every legal change
+arrives as a git diff — and **`Integrationsfehler__c`**, one row per failed exchange with an
+external system.
+
+---
 
 ## Architecture
 
@@ -175,6 +313,56 @@ The Helper runs **one bulkified SOQL** per batch (handles 200-record inserts wit
 - `TaskTrigger` → `TaskTriggerHandler` → `TaskTriggerHelper` → `TaskSelector` recompute `Opportunity.Score__c` (total Tasks) and `Opportunity.completed_task__c` (Completed Tasks) on after insert / update / delete / undelete — **one aggregate SOQL + one DML update** for any number of Tasks, where the DLRS package queried per record.
 - `TaskSelector` and `TaskTriggerHelper` are **deliberately `without sharing`** and the aggregate query omits `WITH USER_MODE`: a rollup must count every child Task regardless of the running user's visibility, and must be able to write the system-owned counts onto a parent the Task-editing user may not be allowed to edit — exactly what DLRS did in system context. The justification lives in each class header.
 
+### Phase 4 — Eichrecht compliance engine + Agentforce
+
+Ten stages, each one deployed and verified before the next began.
+
+| | Stage | What it settles |
+|---|---|---|
+| 1 | `Ladepunkt__c` + `Eingriff__c` | Legal status becomes a **list-view column** — no agent, no test run |
+| 2 | `DateUtils` | § 34 Abs. 1 MessEV as pure date arithmetic, **table-driven** |
+| 3 | `Rechtsnorm__mdt` | The law as versioned metadata; repealed provisions keep an end date and a successor |
+| 4 | `EichrechtService` + `DecisionResult` | The chronology walk; `NICHT_ANWENDBAR` ≠ `UNBEKANNT` |
+| 5 | `EichrechtKonsistenzTest` | Formula vs. engine on twelve fact patterns, two **named** divergences |
+| 6 | `eichrechtCard` (LWC) | Every citation expands to the official wording and a link to the source |
+| 7 | `PruefeEichfristen` | The invocable action — it decides nothing, by construction |
+| 8 | `VS_Eichrecht` (Agent Script) | Authored in a file, deployed from it, published and active |
+| 9 | `scripts/transkriptGate.mjs` | The deterministic gate, with a self-test |
+| 10 | CI | Deterministic half per push, the expensive half on demand |
+
+**The eight states, and why it is not a boolean.** § 38 MessEG creates a middle ground: apply at
+least ten weeks before expiry and the device stands legally equal to a calibrated one until the
+authority checks (`GESCHUETZT`); apply later and continued use is at the authority's discretion —
+*kann*, not *muss* (`ERMESSEN`). A software update awaiting approval blocks operation while the
+period runs on untouched (`BETRIEB_GESPERRT`). And two of the eight are deliberately **not answers**:
+`NICHT_ANWENDBAR` means the provision has nothing to say about this device, `UNBEKANNT` means the
+data does not permit an answer. Collapse either into a negative and a missing date starts reading
+like a clean bill of health.
+
+**The one case the declarative layer gets wrong, and says so.** § 34 Abs. 1 MessEV has four
+sentences. Satz 3 backdates a late re-calibration to the *end of the previous period* — the months
+of lateness come out of the next eight years. Satz 4 is the only escape and demands the dormancy be
+*nachweislich* proven. A formula cannot see which event came first, so it silently takes the
+favourable branch and grants a year of protection the ordinance withholds. `EichrechtKonsistenzTest`
+holds both layers against each other and names that divergence; a second guard asserts the
+divergence is **still** there, so repairing the formula fails the suite instead of leaving a stale
+excuse passing forever.
+
+### Phase 4b — OCPI import and the nightly sweep
+
+- **`OcpiImportService`** pulls Locations from a charge point operator's backend over **OCPI 2.2.1**
+  through a Named Credential and upserts each EVSE on the eMI3 `evse_id` — the only identifier a CPO
+  backend and German metrology law have in common. Partial success throughout: a malformed EVSE, a
+  duplicate id, a refused call and an unreachable endpoint each leave a row in
+  `Integrationsfehler__c` with its payload and let the rest of the import through. A callout that
+  returns nothing looks exactly like a callout that found nothing, and a silent empty run reports an
+  empty fleet as a clean one.
+- **`EichrechtBatch`** (`Batchable` + `Schedulable`) evaluates the fleet nightly, writes the engine's
+  verdict onto the record and flags every charge point where the engine and the formula disagree.
+  That turns a question twelve fixtures answer in a test into a column somebody can sort a fleet by.
+- The operational status the operator reports lives in its own field and is **never** mixed into the
+  legal one. A charge point can be `AVAILABLE` to a driver and legally unusable at the same time.
+
 ### Apex
 
 | Class | Layer | Purpose | Coverage |
@@ -235,6 +423,11 @@ The Helper runs **one bulkified SOQL** per batch (handles 200-record inserts wit
 
 ```
 force-app/main/default/
+├── aiAuthoringBundles/       Agent Script — the agent as deployable source
+│   └── VS_Eichrecht/                 (one topic, one action, published + active)
+├── customMetadata/           The statute corpus — 16 provisions, one file each
+│   └── Rechtsnorm.MessEV_34_1_3...   (verbatim wording, source link, validity dates)
+├── namedCredentials/         OCPI_CPO — the charge point operator endpoint
 ├── classes/                  Apex classes + tests
 │   ├── TriggerHandler.cls            (framework base)
 │   ├── TriggerHandler_Test.cls       (framework tests)
@@ -307,15 +500,19 @@ sf org login web --alias VoltStreamDev --set-default
 sf project deploy start --source-dir force-app --test-level RunLocalTests
 ```
 
-Expected result: all components deployed, 108 tests passing, 100% coverage on custom Apex at last org run.
+Expected result: all components deployed, 181 tests passing, 98% org-wide coverage, 0 failures.
 
 ### Step 3 — Assign the permission set to your user
 
 ```bash
 sf org assign permset --name VoltStream_Reseller_Access
+sf org assign permset --name VoltStream_Eichrecht_Access
 ```
 
-This is required — without it, custom fields are invisible to the running user (Salesforce field-level security).
+Both are required — without them, custom fields are invisible to the running user (Salesforce
+field-level security). The second one grants every derived field **read-only**, which is not a
+policy preference: a value the engine computes must not be typeable, or the list view stops being
+evidence.
 
 ### Step 4 — Seed demo data
 
@@ -332,6 +529,35 @@ sf org open
 ```
 
 Navigate: **App Launcher → Sales → Resellers** (switch the list view from "Recently Viewed" to "All Resellers"). Open any reseller to see its related Opportunities, populated by the trigger.
+
+### Step 6 — the two things that cannot be deployed
+
+Listed openly rather than left as a surprise, because a repository that quietly depends on manual
+setup is worse than one that names it.
+
+1. **Activate the record page.** Lightning record-page *activation* has no metadata representation,
+   so the page deploys but does not become the default:
+
+   > Setup → Object Manager → **Ladepunkt** → Lightning Record Pages → `Ladepunkt Eichrecht` →
+   > **Activate**
+
+   Everything works without this; only the card is invisible.
+
+2. **Configure the CI secrets**, if you want the workflows to run: `SFDX_AUTH_URL` for the scratch
+   org tests and `AGENT_ORG_AUTH_URL` for the agent gate. Both jobs skip cleanly when the secret is
+   absent rather than failing a run nobody asked for.
+
+### Optional — the compliance walkthrough
+
+```bash
+sf apex run --file scripts/apex/seedEichrechtMatrix.apex   # sixteen fact patterns
+sf apex run --file scripts/apex/verifyEichrechtMatrix.apex # formula · statute · engine
+node scripts/transkriptGate.mjs specs/eichrecht-gate.json  # the agent, checked
+```
+
+The gate needs a published, active agent in the target org. It refuses to run against an inactive
+one — an empty transcript would otherwise pass by having nothing to check, which is the worst way
+for a check to succeed.
 
 ### Validation deploy (recommended before merging changes)
 
@@ -358,7 +584,7 @@ Run the Apex test suite locally with code coverage:
 sf apex run test --test-level RunLocalTests --code-coverage --result-format human --synchronous
 ```
 
-Expected: **108 tests pass, 100% coverage on custom Apex at last org run, 0 failures.**
+Expected: **181 tests pass, 98% org-wide coverage, 0 failures.**
 
 Test methods per class (counted from the `@IsTest` methods in the source):
 
@@ -376,7 +602,40 @@ Test methods per class (counted from the `@IsTest` methods in the source):
 | `TestDataFactoryTest` | 7 |
 | `ResellerSelectorTest` | 5 |
 | `TaskTriggerHelperTest` | 3 |
-| **Total** | **108** |
+| — *Phase 4 below* — | |
+| `EichrechtServiceTest` | 12 |
+| `PruefeEichfristenTest` | 8 |
+| `OcpiImportServiceTest` | 8 |
+| `EichrechtCardControllerTest` | 6 |
+| `EichrechtBatchTest` | 6 |
+| `DateUtilsTest` | 6 |
+| `GermanTextSerializationTest` | 5 |
+| `DecisionResultTest` | 5 |
+| `RechtsnormKorpusTest` | 4 |
+| `IntegrationsfehlerLoggerTest` | 4 |
+| `EichrechtKonsistenzTest` | 4 |
+| `LadepunktSelectorTest` | 3 |
+| `VSPhase0ProbeActionTest` | 2 |
+| **Total** | **181** |
+
+**Four of these are worth opening even if you skip the rest.**
+
+- **`DateUtilsTest`** — the four sentences of § 34 Abs. 1 MessEV as a table, every row carrying the
+  sentence it encodes, and the rows that earn their place are the boundaries: the last lawful day
+  and the first late one, one day apart. Every fixture is relative to `Date.today()`, because the
+  formula runs on `TODAY()` and fixed dates would rot the suite on a calendar boundary.
+- **`EichrechtKonsistenzTest`** — the whole argument in one assertion: *the list view reports a
+  charge point as validly calibrated that the ordinance says has been out of calibration since last
+  year.*
+- **`GermanTextSerializationTest`** — one test **demonstrates** what `escapeHtml4` does to German
+  rather than forbidding it, because a rule nobody can see the reason for is a rule somebody will
+  delete.
+- **`OcpiImportServiceTest`** — an imported charge point is `UNBEKANNT`, asserted rather than
+  assumed.
+
+No mocks for data anywhere: the engine reads formula fields the platform has to compute, so a
+mocked record would assert against a value the test invented. The only mock in the codebase is an
+`HttpCalloutMock`, where there is genuinely nothing else to stand in for a CPO backend.
 
 The suite is **layered**:
 
@@ -417,24 +676,96 @@ A few non-obvious choices, called out so reviewers don't have to guess:
 - **Test data is built via `TestDataFactory`.** No test class re-implements the Reseller / Opportunity / Task constructor pattern. Schema changes propagate through one file.
 - **The Task rollup is the one deliberate `without sharing` exception.** Every other class that touches data is `with sharing` and queries `WITH USER_MODE`; `TaskSelector` and `TaskTriggerHelper` are not, because a rollup that only counted the Tasks the current user can see would write wrong numbers onto the Opportunity. The reasoning is in each class header so the exception cannot be mistaken for an oversight.
 
+**Phase 4:**
+
+- **The formula field stays, even where it is wrong.** `Eichstatus__c` is knowingly one year too
+  generous for a late re-calibration, and it is not deleted, because a legal status visible in a
+  list view without running anything is the whole thesis. Where the two layers differ the engine is
+  the authority, the field descriptions have said so since the model was deployed, and a test names
+  the divergence rather than a comment mentioning it.
+- **`Rechtsnorm__mdt.Wortlaut__c` holds official text or it holds nothing.** Two records are
+  deliberately text-free because the original was not read, and they say so. It is the field the
+  agent narrates from; a paraphrase there would defeat the grounding design.
+- **Custom metadata cannot be inserted by DML, and that is the feature.** The corpus is a build
+  artifact, so every legal change shows up in a diff and gets reviewed like code instead of being
+  typed into production by whoever noticed the gazette.
+- **The reference date is a parameter, never `TODAY()`.** The same facts always produce the same
+  answer, so a test can assert the last lawful day and the first unlawful one on identical records —
+  which is not possible against a clock — and an audit can reproduce what the engine said in March.
+- **An unresolvable citation key throws instead of being skipped.** A silently empty source list is
+  precisely what would let the transcript gate pass on nothing.
+- **The gate's granularity is stated, not implied.** It matches at paragraph and statute level, so
+  it catches an invented paragraph or a repealed ordinance and does **not** catch a wrong `Absatz`
+  inside a correct paragraph. A check described as tighter than it is would be worse than no check.
+- **The agent gate is not on every push.** A published, active agent is not something a scratch org
+  has, and every run spends real generations against a Developer Edition ceiling of 150 an hour. The
+  deterministic half — Apex, the consistency check, the utter-only-what-you-cite invariant, the
+  umlaut audit — runs on every push and costs nothing.
+- **Identifiers are ASCII, strings are German.** Apex rejects umlauts in identifiers and this
+  project needs them everywhere else, so `scripts/umlautaudit.py` strips strings and comments and
+  fails the build on anything left standing. It exists because a bulk replace restoring German once
+  reached into a field API name.
+
 ---
 
 ## Roadmap
 
-Shipped:
+**Shipped:**
 
-- **Phase 1 — Channel Partner auto-linking** (Reseller__c, Opportunity trigger family, Selector, StringUtils, permission set, seed script)
-- **Phase 2 — Document Manager LWC** (`Document__c`, `documentManager`, `DocumentController` + `DocumentSelector`)
-- **Phase 3 — Task rollup onto Opportunity** (`TaskTrigger` family + `TaskSelector`, replaces DLRS)
+- **Phase 1 — Channel Partner auto-linking** — `Reseller__c`, the Opportunity trigger family,
+  Selector, `StringUtils`, permission set, seed script
+- **Phase 2 — Document Manager LWC** — `Document__c`, `documentManager`, `DocumentController`
+- **Phase 3 — Task rollup onto Opportunity** — replaces a DLRS package with one aggregate query
+- **Phase 4 — Eichrecht compliance engine + Agentforce** — ten stages, the transcript gate, CI
+- **Phase 4b — OCPI import + nightly sweep** — the fleet arrives from a CPO backend and gets a
+  legal status it did not arrive with
 
-Planned next phases (not built yet):
+**Next, in the order it is worth doing:**
 
-- **Reseller Tier picklist** + commission rate per tier + rollup of YTD commission
-- **Reports**: Opportunities per Reseller, Pipeline by Reseller Type, Commission Forecast
-- **Dashboard** combining the above with bar / pie / KPI tiles
-- **Notification on new match**: post a Chatter message to the reseller's Chatter feed when a new Opportunity is auto-linked
-- **Second LWC**: "My Channel Pipeline" tile for the rep home page (the Document Manager LWC already ships — see Phase 2)
-- **Async Apex** (Batch / Queueable): nightly reseller sync from an external partner master
+1. **Screenshots** — the card, the list view, the agent conversation. The work exists; it is not
+   yet visible to anyone who does not clone the repo.
+2. **A restricted-user security test** — `WITH USER_MODE` is written everywhere and proven nowhere.
+   `System.runAs` with a user who lacks the permission set turns a claim into a demonstration.
+3. **§ 14a EnWG as a second regime** — roughly 70 % of it already exists: the field, the corpus
+   entries for the statute and for BNetzA BK6-22-300, the 4.2 kW threshold. Finishing it proves the
+   "second regime, same template" claim at a fraction of the cost of a regime built from scratch.
+4. **Partner and Netzanschluss** — the remaining regimes. They widen the project; they do not change
+   its category, and that is worth knowing before spending the time.
+
+---
+
+## Honest limits
+
+Stated here rather than left to be discovered, because a portfolio that only lists what works is
+harder to trust than one that knows where it stops.
+
+**Domain**
+
+- The transcript gate matches paragraph and statute, not `Absatz`. It catches an invented paragraph
+  or a repealed ordinance; it does not catch a wrong subsection inside a correct paragraph.
+- § 34 Abs. 2 Satz 2 MessEV supplies a **presumption** about the year of placing on the market, from
+  the marking under § 14. The engine answers `UNBEKANNT` there instead. That is safe but not
+  complete — and since the OCPI import arrives with no market-entry date at all, it is no longer
+  theoretical.
+- MessEV Anlage 7 Nr. 6.7 excludes "die Einrichtungen nach Nummer 6.8". Nr. 6.8 has not been read,
+  so nothing is claimed about it.
+- `Rechtsnorm__mdt.Gueltig_von__c` currently carries the date the *instrument* entered into force,
+  not the date the individual provision last took its present wording. Per-provision amendment
+  history is real and the corpus does not hold it yet.
+- § 38 MessEG grants its protection only to a user who **also** did or offered what the calibration
+  required of them. That is a judgement, not a date, so `GESCHUETZT` here means the ten-week test
+  passed — not that the authority will agree.
+
+**Platform and scope**
+
+- One Developer Edition org. No unlocked package, no sandbox chain.
+- The OCPI endpoint is a Named Credential pointing at a placeholder host; the protocol is real, the
+  mapping is tested against a realistic payload, and no public CPO has been called.
+- Three custom objects plus the corpus and the error log. A production charging CRM has an order of
+  magnitude more.
+- Sharing is org-wide defaults. No role hierarchy, no sharing rules, no Shield.
+- Two things cannot be deployed and need a person: activating the Lightning record page, and
+  configuring the two repository secrets. Both are listed under Setup.
 
 ---
 
