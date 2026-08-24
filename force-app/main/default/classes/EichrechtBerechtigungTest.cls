@@ -48,12 +48,17 @@ private class EichrechtBerechtigungTest {
             ProfileId = minimal.Id,
             UserName = 'eichrecht.rechte.' + DateTime.now().getTime() + '@voltstream.invalid'
         );
-        insert u;
-        insert new PermissionSetAssignment(
-            AssigneeId = u.Id,
-            PermissionSetId = [SELECT Id FROM PermissionSet
-                               WHERE Name = 'VoltStream_Eichrecht_Access' LIMIT 1].Id
-        );
+        // User and PermissionSetAssignment are setup objects; the charge point and its operator
+        // are not, and Salesforce refuses both in one transaction. Running the setup DML as the
+        // current user is the platform's own escape hatch for exactly this.
+        System.runAs(new User(Id = UserInfo.getUserId())) {
+            insert u;
+            insert new PermissionSetAssignment(
+                AssigneeId = u.Id,
+                PermissionSetId = [SELECT Id FROM PermissionSet
+                                   WHERE Name = 'VoltStream_Eichrecht_Access' LIMIT 1].Id
+            );
+        }
         return u;
     }
 
@@ -156,7 +161,9 @@ private class EichrechtBerechtigungTest {
             EmailEncodingKey = 'UTF-8', LastName = 'OhneRechte', LanguageLocaleKey = 'en_US',
             LocaleSidKey = 'de_DE', TimeZoneSidKey = 'Europe/Berlin', ProfileId = minimal.Id,
             UserName = 'ohne.rechte.' + DateTime.now().getTime() + '@voltstream.invalid');
-        insert ohne;
+        System.runAs(new User(Id = UserInfo.getUserId())) {
+            insert ohne;
+        }
         Ladepunkt__c lp = abgelaufenerLadepunkt();
 
         Boolean verweigert = false;

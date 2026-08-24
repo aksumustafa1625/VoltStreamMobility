@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Quell_ID__c</fullName>
+    <description>The identifier the source system uses, prefixed by the source: OSM:1244644142. The upsert key for every import that is not OCPI. Kept apart from EVSE_ID__c because an OpenStreetMap node id is not an eMI3 EVSE-ID, and treating them as interchangeable would silently merge records that may or may not be the same physical charge point. Reconciling identifiers ACROSS sources needs geographic matching and is a real problem this project does not solve - so it is named here rather than papered over.</description>
+    <externalId>true</externalId>
+    <label>Quell-ID</label>
+    <length>80</length>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>Text</type>
+    <unique>true</unique>
+</CustomField>
