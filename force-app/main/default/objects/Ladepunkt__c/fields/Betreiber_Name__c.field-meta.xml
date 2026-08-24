@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Betreiber_Name__c</fullName>
+    <description>The operator name, denormalised. Exists so the fleet query can filter on it without the caller needing any permission on Account: a cross-object formula is evaluated in system context, while traversing Betreiber__r in a WHERE clause requires read access to the whole object. The agent runs as a service user and has no business holding Account access to answer a question about charge points.</description>
+    <externalId>false</externalId>
+    <formula>BLANKVALUE(Betreiber__r.Name, &apos;&apos;)</formula>
+    <formulaTreatBlanksAs>BlankAsBlank</formulaTreatBlanksAs>
+    <label>Betreiber (Name)</label>
+    <required>false</required>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

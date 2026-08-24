@@ -57,6 +57,12 @@ public with sharing class LadepunktSelector {
      *               Id — which is every caller that came from a sentence a human typed.
      * @param  nummer  The record name, e.g. LP-00007. Whitespace is normalised; SOQL string
      *                 comparison is already case-insensitive, so no case handling is needed here.
+     *
+     *                 Deliberately does NOT select the operator's name. Nothing on this path reads
+     *                 it, and under WITH USER_MODE a cross-object field drags that object's
+     *                 permissions into the dependency - which is how a working agent began
+     *                 answering "status cannot be determined" for a charge point whose status was
+     *                 perfectly determinable. Select what you use.
      * @return  Matching charge points; empty when the input is blank or nothing matches.
      */
     public static List<Ladepunkt__c> byName(String nummer) {
@@ -67,7 +73,7 @@ public with sharing class LadepunktSelector {
         return [
             SELECT Id, Name, Inverkehrbringen__c, Nacheichung_beantragt_am__c,
                    Ladeleistung_kW__c, Oeffentlich_zugaenglich__c, Standort_Adresse__c,
-                   Eichstatus__c, Fristbeginn__c, Eichfrist_Ende__c, Betreiber__r.Name
+                   Eichstatus__c, Fristbeginn__c, Eichfrist_Ende__c
             FROM Ladepunkt__c
             WHERE Name = :gesucht
             WITH USER_MODE
@@ -81,6 +87,12 @@ public with sharing class LadepunktSelector {
      *               somebody asks about "Stadtwerke Muenchen" and the account is registered as
      *               "Stadtwerke Muenchen GmbH". The fragment is a bind variable, so widening the
      *               match does not widen the injection surface.
+     *
+     *                Filters on the denormalised formula rather than traversing Betreiber__r,
+     *                because a relationship in a WHERE clause needs read access to the whole
+     *                target object while a cross-object formula is evaluated in system context.
+     *                The agent runs as a service user; handing it Account access to answer a
+     *                question about charge points is a grant nobody should have to make.
      * @param  betreiber  Part of the operator's account name.
      * @return  Matching charge points; empty when the input is blank or nothing matches.
      */
@@ -93,9 +105,9 @@ public with sharing class LadepunktSelector {
         return [
             SELECT Id, Name, Inverkehrbringen__c, Nacheichung_beantragt_am__c,
                    Ladeleistung_kW__c, Oeffentlich_zugaenglich__c, Standort_Adresse__c,
-                   Eichstatus__c, Fristbeginn__c, Eichfrist_Ende__c, Betreiber__r.Name
+                   Eichstatus__c, Fristbeginn__c, Eichfrist_Ende__c, Betreiber_Name__c
             FROM Ladepunkt__c
-            WHERE Betreiber__r.Name LIKE :muster
+            WHERE Betreiber_Name__c LIKE :muster
             WITH USER_MODE
             ORDER BY Name ASC
             LIMIT 50000
