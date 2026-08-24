@@ -6,16 +6,21 @@
 > with a sharper point: **a German charging-law compliance engine, with an Agentforce agent as its
 > interface and a deterministic gate that stops the agent inventing law.**
 >
-> The charge points arrive over **OCPI** from a charge point operator's backend, a nightly batch
-> evaluates the fleet against **MessEG** and **MessEV**, and the legal status of every charge point
-> is a column you can sort a list view by.
+> The charge points are **real and pulled live**: twenty-five in central Berlin, operated by
+> Allego, Vattenfall, Shell Recharge, Berliner Stadtwerke and E.ON among others, fetched from the
+> public map with no API key. A nightly batch evaluates the fleet against **MessEG** and **MessEV**,
+> and the legal status of every charge point is a column you can sort a list view by.
+>
+> **Every one of the twenty-five comes back `UNBEKANNT`** — because no public charge point database
+> carries what German calibration law requires, and a missing date is not a clean bill of health.
 
 [![Trigger framework](https://img.shields.io/badge/trigger--framework-Kevin%20O%27Hara-blue)](https://github.com/kevinohara80/sfdc-trigger-framework)
 [![API version](https://img.shields.io/badge/API-65.0-orange)]()
-[![Tests](https://img.shields.io/badge/tests-181%2F181%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-191%2F191%20passing-brightgreen)]()
 [![Coverage](https://img.shields.io/badge/org--wide%20coverage-98%25-brightgreen)]()
 [![Agent](https://img.shields.io/badge/Agentforce-Agent%20Script-blue)]()
 [![Domain](https://img.shields.io/badge/domain-MessEG%20%C2%B7%20MessEV%20%C2%B7%20OCPI-lightgrey)]()
+[![Live data](https://img.shields.io/badge/live%20data-OpenStreetMap%20Overpass-blue)]()
 
 ---
 
@@ -65,14 +70,17 @@ Six claims, and the file that makes each one checkable rather than asserted.
 | The law is versioned metadata, not a string in a class | [`customMetadata/Rechtsnorm.*`](force-app/main/default/customMetadata/) — 16 provisions, verbatim wording, valid-from/valid-to dates |
 | The declarative layer is wrong in exactly one place, and that place is named | [`EichrechtKonsistenzTest.cls`](force-app/main/default/classes/EichrechtKonsistenzTest.cls) — two named divergences that must **still** diverge |
 | German survives corpus → engine → action → JSON | [`GermanTextSerializationTest.cls`](force-app/main/default/classes/GermanTextSerializationTest.cls) — one test demonstrates the damage rather than forbidding it |
-| A fleet imported from a CPO backend has **no** legal status | [`OcpiImportServiceTest.cls`](force-app/main/default/classes/OcpiImportServiceTest.cls) — OCPI carries no calibration data at all |
+| A fleet imported from a real source has **no** legal status | [`OsmLadepunktImportTest.cls`](force-app/main/default/classes/OsmLadepunktImportTest.cls) — twenty-five live Berlin charge points, all `UNBEKANNT` |
+| `WITH USER_MODE` is proven, not claimed | [`EichrechtBerechtigungTest.cls`](force-app/main/default/classes/EichrechtBerechtigungTest.cls) — runs as a user holding the permission set and nothing else |
 
-The last row is the one worth opening first. OCPI models availability, power and connector type. It
-carries no date of placing on the market, no day of calibration, no re-calibration — so a CPO can
-hand over ten thousand charge points and **not one of them can be assessed** under the German
-measurement act. Every imported record evaluates to `UNBEKANNT`, and `UNBEKANNT` already counts as
-work to do. The distinction between *"we cannot tell"* and *"nothing to report"* stopped being a
-design principle there and became the default state of an entire estate.
+The third-from-last row is the one worth opening first, and it is not a fixture. Twenty-five charge
+points were pulled from the live map: they arrive with an operator, a socket type and sometimes a
+power figure, and with **no date of placing on the market, no day of calibration and no
+re-calibration** — because no public charge point database exists to answer a German metrology
+question. Every one of them evaluates to `UNBEKANNT`, and `UNBEKANNT` already counts as work to do.
+
+The distinction between *"we cannot tell"* and *"nothing to report"* stopped being a design
+principle there and became the observed state of an estate.
 
 ---
 
@@ -111,7 +119,23 @@ sf org open
 see the auto-linked Reseller. The Documents tab hosts the Document Manager LWC, and creating or
 completing a Task on an Opportunity updates its Score / Completed Tasks via the rollup trigger.
 
-**The compliance path** — four things, in the order they are worth seeing:
+**The compliance path** — five things, in the order they are worth seeing:
+
+```bash
+# 0. Pull twenty-five real charge points from the live map. No API key.
+sf apex run --file scripts/apex/importiereBerlinLive.apex
+```
+
+```
+Spiegel       : callout:Overpass_Primary
+Gelesen       : 25   Uebernommen  : 25   Ohne Betreiber: 1
+
+LP-00047 | Allego              | UNBEKANNT | 52.5101851, 13.4032066
+LP-00044 | Berliner Stadtwerke | UNBEKANNT | 52.5282104, 13.3910860
+LP-00034 | E.ON                | UNBEKANNT | 52.5187782, 13.4091253
+```
+
+Real operators, real coordinates, and not one of them assessable under German metrology law.
 
 ```bash
 # 1. Sixteen fact patterns against the live org: formula, statute, engine, side by side
@@ -348,15 +372,26 @@ holds both layers against each other and names that divergence; a second guard a
 divergence is **still** there, so repairing the formula fails the suite instead of leaving a stale
 excuse passing forever.
 
-### Phase 4b — OCPI import and the nightly sweep
+### Phase 4b — two import sources, one of them live, and the nightly sweep
 
+- **`OsmLadepunktImport`** is the one that actually answers. It pulls real charge points from
+  **OpenStreetMap over the Overpass API** — no key, no fixture — and upserts each node on a
+  source-prefixed key. Two mirrors are tried in order, because the public instances are free shared
+  infrastructure and returned 502 or 504 as often as 200 when measured; a single endpoint would make
+  the demo a coin toss. Nothing is tidied on the way in: a node with no operator keeps its
+  coordinates and is counted, an unreadable power figure stays empty rather than being guessed, and
+  one operator arrives spelled `Tgenologies` and is stored that way, because the source really does
+  say that. An import that quietly corrects its input is one you cannot reason about.
 - **`OcpiImportService`** pulls Locations from a charge point operator's backend over **OCPI 2.2.1**
   through a Named Credential and upserts each EVSE on the eMI3 `evse_id` — the only identifier a CPO
   backend and German metrology law have in common. Partial success throughout: a malformed EVSE, a
   duplicate id, a refused call and an unreachable endpoint each leave a row in
   `Integrationsfehler__c` with its payload and let the rest of the import through. A callout that
   returns nothing looks exactly like a callout that found nothing, and a silent empty run reports an
-  empty fleet as a clean one.
+  empty fleet as a clean one. **It has no public endpoint to call, and that is the protocol's
+  design rather than an omission here**: every operator's OCPI interface requires a negotiated token
+  and a Credentials handshake. The shape is correct and tested against a realistic payload; the live
+  fleet comes from the source above.
 - **`EichrechtBatch`** (`Batchable` + `Schedulable`) evaluates the fleet nightly, writes the engine's
   verdict onto the record and flags every charge point where the engine and the formula disagree.
   That turns a question twelve fixtures answer in a test into a column somebody can sort a fleet by.
@@ -500,7 +535,7 @@ sf org login web --alias VoltStreamDev --set-default
 sf project deploy start --source-dir force-app --test-level RunLocalTests
 ```
 
-Expected result: all components deployed, 181 tests passing, 98% org-wide coverage, 0 failures.
+Expected result: all components deployed, 191 tests passing, 98% org-wide coverage, 0 failures.
 
 ### Step 3 — Assign the permission set to your user
 
@@ -584,7 +619,7 @@ Run the Apex test suite locally with code coverage:
 sf apex run test --test-level RunLocalTests --code-coverage --result-format human --synchronous
 ```
 
-Expected: **181 tests pass, 98% org-wide coverage, 0 failures.**
+Expected: **191 tests pass, 98% org-wide coverage, 0 failures.**
 
 Test methods per class (counted from the `@IsTest` methods in the source):
 
@@ -614,9 +649,11 @@ Test methods per class (counted from the `@IsTest` methods in the source):
 | `RechtsnormKorpusTest` | 4 |
 | `IntegrationsfehlerLoggerTest` | 4 |
 | `EichrechtKonsistenzTest` | 4 |
+| `OsmLadepunktImportTest` | 6 |
+| `EichrechtBerechtigungTest` | 4 |
 | `LadepunktSelectorTest` | 3 |
 | `VSPhase0ProbeActionTest` | 2 |
-| **Total** | **181** |
+| **Total** | **191** |
 
 **Four of these are worth opening even if you skip the rest.**
 
@@ -630,8 +667,14 @@ Test methods per class (counted from the `@IsTest` methods in the source):
 - **`GermanTextSerializationTest`** — one test **demonstrates** what `escapeHtml4` does to German
   rather than forbidding it, because a rule nobody can see the reason for is a rule somebody will
   delete.
-- **`OcpiImportServiceTest`** — an imported charge point is `UNBEKANNT`, asserted rather than
-  assumed.
+- **`OsmLadepunktImportTest`** — an imported charge point is `UNBEKANNT`, asserted rather than
+  assumed, on a payload captured from a live call with its imperfections left in. Its mirror-
+  fallback case found a real defect: logging the first mirror's failure opened a transaction, and
+  Apex forbids a callout once there is uncommitted work, so the second mirror was unreachable. In
+  production that would have turned a fallback into decoration.
+- **`EichrechtBerechtigungTest`** — the compliance path run as a user holding the permission set and
+  nothing else, with a negative control holding none. Every other test runs as an administrator,
+  which is the single user whose permissions prove nothing.
 
 No mocks for data anywhere: the engine reads formula fields the platform has to compute, so a
 mocked record would assert against a value the test invented. The only mock in the codebase is an
@@ -717,15 +760,16 @@ A few non-obvious choices, called out so reviewers don't have to guess:
 - **Phase 2 — Document Manager LWC** — `Document__c`, `documentManager`, `DocumentController`
 - **Phase 3 — Task rollup onto Opportunity** — replaces a DLRS package with one aggregate query
 - **Phase 4 — Eichrecht compliance engine + Agentforce** — ten stages, the transcript gate, CI
-- **Phase 4b — OCPI import + nightly sweep** — the fleet arrives from a CPO backend and gets a
-  legal status it did not arrive with
+- **Phase 4b — two import sources + nightly sweep** — a real fleet arrives from the live map and
+  gets a legal status it did not arrive with; the roaming protocol is implemented alongside it
 
 **Next, in the order it is worth doing:**
 
 1. **Screenshots** — the card, the list view, the agent conversation. The work exists; it is not
    yet visible to anyone who does not clone the repo.
-2. **A restricted-user security test** — `WITH USER_MODE` is written everywhere and proven nowhere.
-   `System.runAs` with a user who lacks the permission set turns a claim into a demonstration.
+2. **Open Charge Map as a second live source** — purpose-built for EV charging, with power,
+   connector and operator fields that map more cleanly than a general-purpose map. Needs a free API
+   key, which is the only reason it is not in yet.
 3. **§ 14a EnWG as a second regime** — roughly 70 % of it already exists: the field, the corpus
    entries for the statute and for BNetzA BK6-22-300, the 4.2 kW threshold. Finishing it proves the
    "second regime, same template" claim at a fraction of the cost of a regime built from scratch.
@@ -759,8 +803,17 @@ harder to trust than one that knows where it stops.
 **Platform and scope**
 
 - One Developer Edition org. No unlocked package, no sandbox chain.
-- The OCPI endpoint is a Named Credential pointing at a placeholder host; the protocol is real, the
-  mapping is tested against a realistic payload, and no public CPO has been called.
+- The live source is OpenStreetMap, not an operator's own system. It is real, current and
+  community-mapped — which means it is also incomplete and occasionally misspelled, and the import
+  carries both faithfully. **OCPI is the protocol E.ON and every other operator actually roam on,
+  and it has no public endpoint**: the implementation is correct and tested, and has never called a
+  real CPO, because doing so requires a negotiated token and a Credentials handshake with that
+  operator. Live data here proves the pipeline and the finding; it does not make this an
+  operator-grade integration, and saying otherwise would be the kind of claim this file exists to
+  avoid.
+- Records imported from different sources are not reconciled with each other. An OpenStreetMap node
+  id and an eMI3 EVSE-ID may denote the same physical charge point; matching them needs geographic
+  reasoning and is not attempted.
 - Three custom objects plus the corpus and the error log. A production charging CRM has an order of
   magnitude more.
 - Sharing is org-wide defaults. No role hierarchy, no sharing rules, no Shield.
