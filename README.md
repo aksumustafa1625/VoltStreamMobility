@@ -14,6 +14,14 @@
 > **Every one of the twenty-five comes back `UNBEKANNT`** — because no public charge point database
 > carries what German calibration law requires, and a missing date is not a clean bill of health.
 
+> **How this was built.**
+>
+> I used Claude to build this repository, the way an engineer today uses an IDE — I would rather say it first than have it asked. The model wrote code; I set the structure, and every decision went through me.
+>
+> So the question worth asking is not *whether* AI wrote it, but **who decided and who verified.** That record is in [`docs/adr/`](docs/adr/): **18 architecture decision records**, each naming the constraint, the choice, the alternatives rejected, and what rejecting them cost. A model does not turn down three options and price the fourth.
+>
+> **What this is not:** a demonstration, not a production system with real users. Built alone, so no colleague reviewed it. Every number is mine — please run them yourself.
+
 [![Trigger framework](https://img.shields.io/badge/trigger--framework-Kevin%20O%27Hara-blue)](https://github.com/kevinohara80/sfdc-trigger-framework)
 [![API version](https://img.shields.io/badge/API-65.0-orange)]()
 [![Tests](https://img.shields.io/badge/tests-191%2F191%20passing-brightgreen)]()
